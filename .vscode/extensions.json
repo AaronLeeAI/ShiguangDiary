@@ -1,0 +1,37 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=827846
+  // for the documentation about the extensions.json format
+  "recommendations": [
+    // Essential
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "EditorConfig.EditorConfig",
+    "ms-vscode.vscode-typescript-next",
+
+    // React Native
+    "msjsdiag.vscode-react-native",
+    "expo.vscode-expo-tools",
+    "ms-vscode.vscode-react-native-typescript",
+
+    // Style & Quality
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight",
+    "gruntfuggly.todo-tree",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
+
+    // Useful
+    "christian-kohler.path-intellisense",
+    "wix.vscode-import-cost",
+    "formulahendry.auto-rename-tag",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.cpptools"
+  ],
+  "unwantedRecommendations": []
+}
