@@ -70,17 +70,39 @@ const toAlbumDomain = (m: AlbumModel): Album => ({
 
 const diaryModelFromDomain = (d: Partial<Diary>): Partial<DiaryModel> => {
   const out: Partial<DiaryModel> = {}
-  if (d.id !== undefined) out.id = d.id
-  if (d.notebookId !== undefined) out.notebookId = d.notebookId
-  if (d.title !== undefined) out.title = d.title
-  if (d.content !== undefined) out.content = d.content
-  if (d.cover !== undefined) out.cover = d.cover
-  if (d.weather !== undefined) out.weather = d.weather
-  if (d.location !== undefined) out.location = d.location
-  if (d.mood !== undefined) out.mood = d.mood
-  if (d.isPinned !== undefined) out.isPinned = d.isPinned ? 1 : 0
-  if (d.isEncrypted !== undefined) out.isEncrypted = d.isEncrypted ? 1 : 0
-  if (d.isDraft !== undefined) out.isDraft = d.isDraft ? 1 : 0
+  if (d.id !== undefined) {
+    out.id = d.id
+  }
+  if (d.notebookId !== undefined) {
+    out.notebookId = d.notebookId
+  }
+  if (d.title !== undefined) {
+    out.title = d.title
+  }
+  if (d.content !== undefined) {
+    out.content = d.content
+  }
+  if (d.cover !== undefined) {
+    out.cover = d.cover
+  }
+  if (d.weather !== undefined) {
+    out.weather = d.weather
+  }
+  if (d.location !== undefined) {
+    out.location = d.location
+  }
+  if (d.mood !== undefined) {
+    out.mood = d.mood
+  }
+  if (d.isPinned !== undefined) {
+    out.isPinned = d.isPinned ? 1 : 0
+  }
+  if (d.isEncrypted !== undefined) {
+    out.isEncrypted = d.isEncrypted ? 1 : 0
+  }
+  if (d.isDraft !== undefined) {
+    out.isDraft = d.isDraft ? 1 : 0
+  }
   return out
 }
 
@@ -286,7 +308,9 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
   error: null,
 
   init: async () => {
-    if (get().initialized || get().loading) return
+    if (get().initialized || get().loading) {
+      return
+    }
     set({ loading: true, error: null })
 
     try {
@@ -329,7 +353,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       })
     } catch (e: unknown) {
       // 数据库失败 → 降级到 mock
-      // eslint-disable-next-line no-console
+
       console.warn('[DiaryStore] DB init failed, fallback to mock:', e)
       set({
         diaries: SEED_DIARIES,
@@ -376,7 +400,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       set(state => ({ diaries: [newDiary, ...state.diaries] }))
       return newDiary
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] createDiary failed:', e)
       set(state => ({ diaries: [newDiary, ...state.diaries] }))
       return newDiary
@@ -397,7 +420,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
       }))
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] updateDiary failed:', e)
       set(state => ({
         diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
@@ -414,7 +436,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       await diaryService.remove(id)
       set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] removeDiary failed:', e)
       set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     }
@@ -422,7 +443,9 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
 
   togglePin: async id => {
     const cur = get().diaries.find(d => d.id === id)
-    if (!cur) return
+    if (!cur) {
+      return
+    }
     await get().updateDiary(id, { isPinned: !cur.isPinned })
   },
 
@@ -449,7 +472,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       set(state => ({ notebooks: [nb, ...state.notebooks] }))
       return nb
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] createNotebook failed:', e)
       set(state => ({ notebooks: [nb, ...state.notebooks] }))
       return nb
@@ -470,7 +492,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
       }))
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] updateNotebook failed:', e)
       set(state => ({
         notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
@@ -487,7 +508,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       await notebookService.remove(id)
       set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] removeNotebook failed:', e)
       set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     }
@@ -517,7 +537,6 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       set(state => ({ albums: [al, ...state.albums] }))
       return al
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[DiaryStore] createAlbum failed:', e)
       set(state => ({ albums: [al, ...state.albums] }))
       return al

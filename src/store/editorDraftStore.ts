@@ -19,6 +19,14 @@ export const useEditorDraftStore = create<EditorDraftState>()(
           drafts: { ...state.drafts, [key]: { content, updatedAt: Date.now() } },
         })),
       getDraft: key => get().drafts[key]?.content,
+      setSnapshot: (key, snapshot) =>
+        set(state => ({
+          drafts: {
+            ...state.drafts,
+            [key]: { ...snapshot, updatedAt: Date.now() },
+          },
+        })),
+      getSnapshot: key => get().drafts[key],
       removeDraft: key =>
         set(state => {
           const drafts = { ...state.drafts }

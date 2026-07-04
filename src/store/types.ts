@@ -87,6 +87,11 @@ export interface SessionState {
 
 export interface EditorDraft {
   content: string
+  /** 完整编辑快照（Task10 编辑引擎使用；旧数据可缺省） */
+  title?: string
+  weather?: string | null
+  mood?: string | null
+  location?: string | null
   updatedAt: number
 }
 
@@ -94,6 +99,10 @@ export interface EditorDraftState {
   drafts: Record<string, EditorDraft>
   setDraft: (key: string, content: string) => void
   getDraft: (key: string) => string | undefined
+  /** 写入完整编辑快照（标题/正文/天气/心情/位置）。 */
+  setSnapshot: (key: string, snapshot: Omit<EditorDraft, 'updatedAt'>) => void
+  /** 读取完整编辑快照。 */
+  getSnapshot: (key: string) => EditorDraft | undefined
   removeDraft: (key: string) => void
   clearDrafts: () => void
 }
