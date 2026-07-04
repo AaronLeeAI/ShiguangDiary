@@ -16,8 +16,6 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg'
 import { useTheme } from '@theme'
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle)
-
 const ARC_TIMING = {
   duration: 1000,
   easing: Easing.linear,

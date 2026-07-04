@@ -13,8 +13,6 @@
  *   - 音频：audio_<purpose>.<ext>
  */
 
-import { Image } from 'react-native'
-
 // ============ Types ============
 
 export interface PlaceholderImages {

@@ -4,7 +4,7 @@
  * 颜色/间距/字号严格遵循 @theme，禁止硬编码。
  */
 import { StyleSheet } from 'react-native'
-import { colors, radius, spacing, typography } from '@theme'
+import { colors, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {

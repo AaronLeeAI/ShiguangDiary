@@ -4,7 +4,6 @@
  * 底部弹起的操作列表（iOS 风格 Action Sheet）。
  */
 
-import type { ReactNode } from 'react'
 import type { ViewStyle } from 'react-native'
 import type { IconName } from '@/components/Icon'
 

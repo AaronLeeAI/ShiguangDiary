@@ -208,7 +208,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
     return (
       <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Text style={styles.resultCount}>
-          共 {results.length} 条与"{submitted}"相关的日记
+          共 {results.length} 条与&ldquo;{submitted}&rdquo;相关的日记
         </Text>
       </View>
     )
