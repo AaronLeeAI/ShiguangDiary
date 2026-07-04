@@ -18,7 +18,9 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
 import {ROUTES} from '@constants/routes';
 import {RootStackParamList, TabParamList} from '@navigation/types';
+import {DiaryViewScreen} from '@/screens/DiaryView';
 import {HomeScreen} from '@/screens/Home';
+import {NotebookScreen} from '@/screens/Notebook';
 
 // Splash：自动跳转到 MainTabs（1.5s 后）
 const Splash = ({navigation}: {navigation: any}) => {
@@ -31,12 +33,12 @@ const Splash = ({navigation}: {navigation: any}) => {
   return null;
 };
 
-// 已实现：Home；其余后续实现
+// 已实现：Home / Notebook / DiaryView；其余后续实现
 const Home = HomeScreen;
-const Notebook = () => null;
+const Notebook = NotebookScreen;
 const Album = () => null;
 const Profile = () => null;
-const DiaryView = () => null;
+const DiaryView = DiaryViewScreen;
 const DiaryEdit = () => null;
 const NotebookCreate = () => null;
 const NotebookSort = () => null;
