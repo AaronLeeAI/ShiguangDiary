@@ -1,18 +1,48 @@
 /**
  * SettingsRow 样式
- *
- * 当前 Task1 阶段留空。后续 Task 补充具体样式。
- *
- * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
  */
 import {StyleSheet} from 'react-native';
-import {radius, spacing, typography, colors} from '@theme';
+import {colors, spacing, typography} from '@theme';
+
+export const SETTINGS_ROW_HEIGHT = 52;
 
 export const styles = StyleSheet.create({
   container: {
-    padding: spacing.base,
-    backgroundColor: colors.semantic.bg.card,
-    borderRadius: radius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: SETTINGS_ROW_HEIGHT,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+  },
+  pressed: {
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  iconWrap: {
+    marginRight: spacing.md,
+  },
+  labelWrap: {
+    flex: 1,
+  },
+  label: {
+    ...typography.bodyL,
+    color: colors.semantic.text.primary,
+  },
+  labelDestructive: {
+    color: colors.func.danger,
+  },
+  labelDisabled: {
+    color: colors.semantic.text.disabled,
+  },
+  hint: {
+    ...typography.bodyS,
+    color: colors.semantic.text.tertiary,
+    marginRight: spacing.sm,
+  },
+  arrowWrap: {
+    marginLeft: spacing.xs,
   },
 });
 

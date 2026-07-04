@@ -1,28 +1,37 @@
 /**
- * SettingsGroup
+ * SettingsGroup - 设置项容器
  *
- * 设置分组
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
+ * 自动为子节点添加分隔线（最后一项除外）。子节点应为 SettingsRow。
  */
 
-import React from 'react';
-import {View, Text, ViewStyle} from 'react-native';
+import React, {Children} from 'react';
+import {Text, View} from 'react-native';
 
-export interface SettingsGroupProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string;
-  style?: ViewStyle;
-}
+import {styles} from './styles';
+import type {SettingsGroupProps} from './types';
 
 /**
  * SettingsGroup 组件
  */
-export const SettingsGroup: React.FC<SettingsGroupProps> = ({testID, style}) => {
+export const SettingsGroup: React.FC<SettingsGroupProps> = ({
+  children,
+  title,
+  style,
+  testID,
+}) => {
+  const arr = Children.toArray(children);
+
   return (
-    <View testID={testID} style={style}>
-      <Text>SettingsGroup Skeleton</Text>
+    <View style={[styles.container, style]} testID={testID}>
+      {title && <Text style={styles.title}>{title}</Text>}
+      <View style={styles.card}>
+        {arr.map((child, idx) => (
+          <React.Fragment key={(child as {key?: string}).key ?? idx}>
+            {child}
+            {idx < arr.length - 1 && <View style={styles.separator} />}
+          </React.Fragment>
+        ))}
+      </View>
     </View>
   );
 };

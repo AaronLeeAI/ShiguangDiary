@@ -1,29 +1,74 @@
 /**
- * SettingsRow
+ * SettingsRow - 单行设置项
  *
- * 设置项行
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
+ * icon + label + (hint | right | chevron)
  */
 
 import React from 'react';
-import {View, Text, ViewStyle} from 'react-native';
+import {Pressable, Text, View} from 'react-native';
 
-export interface SettingsRowProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string;
-  style?: ViewStyle;
-}
+import {Icon} from '@/components/Icon';
+import {colors} from '@theme';
+import {styles} from './styles';
+import type {SettingsRowProps} from './types';
 
 /**
  * SettingsRow 组件
  */
-export const SettingsRow: React.FC<SettingsRowProps> = ({testID, style}) => {
+export const SettingsRow: React.FC<SettingsRowProps> = ({
+  icon,
+  label,
+  hint,
+  right,
+  showArrow = true,
+  disabled = false,
+  destructive = false,
+  onPress,
+  style,
+  testID,
+  accessibilityLabel,
+}) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>SettingsRow Skeleton</Text>
-    </View>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{disabled}}
+      testID={testID}
+      onPress={onPress}
+      disabled={disabled}
+      style={({pressed}) => [
+        styles.container,
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabled,
+        style,
+      ]}>
+      {icon && (
+        <View style={styles.iconWrap}>
+          <Icon
+            name={icon}
+            size={22}
+            color={destructive ? colors.func.danger : colors.semantic.icon.primary}
+          />
+        </View>
+      )}
+      <View style={styles.labelWrap}>
+        <Text
+          style={[
+            styles.label,
+            destructive && styles.labelDestructive,
+            disabled && styles.labelDisabled,
+          ]}
+          numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+      {!!hint && <Text style={styles.hint}>{hint}</Text>}
+      {right ?? (showArrow && (
+        <View style={styles.arrowWrap}>
+          <Icon name="chevronRight" size={16} color={colors.semantic.icon.tertiary} />
+        </View>
+      ))}
+    </Pressable>
   );
 };
 

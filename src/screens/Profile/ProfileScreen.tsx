@@ -1,24 +1,22 @@
 /**
  * Profile Screen - P004 个人中心
  *
- * 整合组件：
- * - TopBar：标题"我的"
- * - Avatar：用户头像
- * - 统计栏：日记数 / 日记本数 / 相册数
- * - 设置菜单：点击跳转到对应页面
- * - BottomTabBar
+ * 数据源：useDiaryStore（真实统计）
+ * UI：SettingsGroup + SettingsRow 组件化
  */
 
 import React, {useCallback, useEffect, useMemo} from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
+import {ScrollView, Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {Avatar} from '@/components/Avatar';
 import {BottomTabBar} from '@/components/BottomTabBar';
-import {Icon} from '@/components/Icon';
+import {Pressable} from 'react-native';
+import {SettingsGroup} from '@/components/SettingsGroup';
+import {SettingsRow} from '@/components/SettingsRow';
 import {TopBar} from '@/components/TopBar';
 import {ROUTES} from '@constants/routes';
-import {colors, spacing} from '@theme';
+import {colors, spacing, typography} from '@theme';
 import {useDiaryStore} from '@store/diaryStore';
 
 import {styles} from './styles';
@@ -42,13 +40,9 @@ const MENU_GROUPS: ProfileMenuItem[][] = [
   ],
 ];
 
-/**
- * ProfileScreen 组件
- */
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({navigation}) => {
   const insets = useSafeAreaInsets();
 
-  // 从 store 读取真实数据
   const diaries = useDiaryStore(s => s.diaries);
   const notebooks = useDiaryStore(s => s.notebooks);
   const albums = useDiaryStore(s => s.albums);
@@ -123,46 +117,32 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({navigation}) => {
           ))}
         </View>
 
-        {/* 菜单组 */}
-        {MENU_GROUPS.map((group, gIdx) => (
-          <View key={`group-${gIdx}`} style={styles.menuGroup}>
-            {group.map((item, iIdx) => (
-              <Pressable
+        {/* 菜单组（组件化） */}
+        {MENU_GROUPS.map(group => (
+          <SettingsGroup key={group[0]?.key ?? 'group'}>
+            {group.map(item => (
+              <SettingsRow
                 key={item.key}
+                icon={item.icon}
+                label={item.label}
+                hint={item.hint}
+                showArrow={item.showArrow !== false}
+                destructive={item.destructive}
                 onPress={() => handleItemPress(item)}
-                style={({pressed}) => [
-                  styles.menuItem,
-                  iIdx === group.length - 1 && styles.menuItemLast,
-                  pressed && {backgroundColor: colors.semantic.bg.subtle},
-                ]}>
-                <View style={styles.menuIcon}>
-                  <Icon
-                    name={item.icon}
-                    size={22}
-                    color={item.destructive ? colors.func.danger : colors.semantic.icon.primary}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.menuLabel,
-                    item.destructive && styles.menuLabelDestructive,
-                  ]}>
-                  {item.label}
-                </Text>
-                {!!item.hint && <Text style={styles.menuHint}>{item.hint}</Text>}
-                {item.showArrow !== false && (
-                  <View style={styles.menuArrow}>
-                    <Icon
-                      name="chevronRight"
-                      size={16}
-                      color={colors.semantic.icon.tertiary}
-                    />
-                  </View>
-                )}
-              </Pressable>
+              />
             ))}
-          </View>
+          </SettingsGroup>
         ))}
+
+        <Text
+          style={{
+            ...typography.caption,
+            color: colors.semantic.text.tertiary,
+            textAlign: 'center',
+            marginTop: spacing.lg,
+          }}>
+          拾光日记 · v0.1.0
+        </Text>
       </ScrollView>
 
       <BottomTabBar currentTab="Profile" onTabPress={handleTabPress} />

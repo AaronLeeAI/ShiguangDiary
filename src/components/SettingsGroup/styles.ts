@@ -1,18 +1,29 @@
 /**
  * SettingsGroup 样式
- *
- * 当前 Task1 阶段留空。后续 Task 补充具体样式。
- *
- * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
  */
 import {StyleSheet} from 'react-native';
-import {radius, spacing, typography, colors} from '@theme';
+import {colors, radius, spacing, typography} from '@theme';
 
 export const styles = StyleSheet.create({
   container: {
-    padding: spacing.base,
+    marginBottom: spacing.md,
+  },
+  title: {
+    ...typography.bodyS,
+    color: colors.semantic.text.secondary,
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  card: {
     backgroundColor: colors.semantic.bg.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.semantic.divider.subtle,
+    marginLeft: spacing.base + 22 + spacing.md, // icon 宽度 + 左右 padding
   },
 });
 
