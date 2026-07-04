@@ -9,7 +9,7 @@
  * - BottomTabBar
  */
 
-import React, {useCallback, useMemo} from 'react';
+import React, {useCallback, useEffect, useMemo} from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
@@ -19,6 +19,7 @@ import {Icon} from '@/components/Icon';
 import {TopBar} from '@/components/TopBar';
 import {ROUTES} from '@constants/routes';
 import {colors, spacing} from '@theme';
+import {useDiaryStore} from '@store/diaryStore';
 
 import {styles} from './styles';
 import type {ProfileMenuItem, ProfileScreenProps} from './types';
@@ -47,13 +48,24 @@ const MENU_GROUPS: ProfileMenuItem[][] = [
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({navigation}) => {
   const insets = useSafeAreaInsets();
 
+  // 从 store 读取真实数据
+  const diaries = useDiaryStore(s => s.diaries);
+  const notebooks = useDiaryStore(s => s.notebooks);
+  const albums = useDiaryStore(s => s.albums);
+  const initialized = useDiaryStore(s => s.initialized);
+  const init = useDiaryStore(s => s.init);
+
+  useEffect(() => {
+    if (!initialized) init();
+  }, [initialized, init]);
+
   const stats = useMemo(
     () => [
-      {label: '日记', value: 49},
-      {label: '日记本', value: 3},
-      {label: '相册', value: 4},
+      {label: '日记', value: diaries.length},
+      {label: '日记本', value: notebooks.length},
+      {label: '相册', value: albums.length},
     ],
-    [],
+    [diaries.length, notebooks.length, albums.length],
   );
 
   const handleItemPress = useCallback(
