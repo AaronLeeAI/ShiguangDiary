@@ -2,13 +2,13 @@
  * AlbumCard 类型定义
  */
 
+import type {ViewStyle} from 'react-native';
+import type {Album} from '@types';
+
 export interface AlbumCardProps {
+  item: Album;
+  onPress?: () => void;
+  onLongPress?: () => void;
+  style?: ViewStyle;
   testID?: string;
-  // TODO: 补充 Props
 }
-
-export interface AlbumCardState {
-  // TODO: 补充内部状态
-}
-
-export type AlbumCardRef = unknown;

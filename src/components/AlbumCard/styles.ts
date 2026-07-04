@@ -1,18 +1,42 @@
 /**
  * AlbumCard 样式
- *
- * 当前 Task1 阶段留空。后续 Task 补充具体样式。
- *
- * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
  */
 import {StyleSheet} from 'react-native';
-import {radius, spacing, typography, colors} from '@theme';
+import {colors, radius, spacing, typography} from '@theme';
+
+export const ALBUM_COVER_SIZE = 144;
 
 export const styles = StyleSheet.create({
   container: {
-    padding: spacing.base,
-    backgroundColor: colors.semantic.bg.card,
-    borderRadius: radius.md,
+    width: '48%',
+    marginBottom: spacing.base,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+  cover: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: radius.lg,
+    backgroundColor: colors.semantic.bg.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+  },
+  coverIconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  name: {
+    ...typography.bodyL,
+    color: colors.semantic.text.primary,
+    fontWeight: '500',
+    marginBottom: spacing.xxs,
+  },
+  count: {
+    ...typography.caption,
+    color: colors.semantic.text.tertiary,
   },
 });
 
