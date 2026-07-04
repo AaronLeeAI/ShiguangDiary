@@ -1,18 +1,7 @@
 /**
  * DiaryEdit Screen - 日记编辑器
  *
- * 写日记主流程入口。从 Home FAB / DiaryView "编辑" 进入。
- *
- * 整合组件：
- * - TopBar：返回 + 保存（带 saved 反馈）
- * - 元信息 chips：日期 / 天气 / 位置 / 心情 / 标签（点击添加）
- * - TextField：标题输入
- * - TextArea：正文多行输入（带 showCount）
- * - EditorToolbar：底部工具栏
- * - ActionSheet：tool -> 业务（天气/心情/位置）
- * - Toast：保存反馈
- *
- * 支持新建（无 id）和编辑（有 id）两种模式。
+ * 数据源：useDiaryStore（创建/更新日记）
  */
 
 import React, {useCallback, useEffect, useState} from 'react';
@@ -22,12 +11,12 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ActionSheet} from '@/components/ActionSheet';
 import {EditorToolbar} from '@/components/EditorToolbar';
 import {Icon} from '@/components/Icon';
+import {Loading} from '@/components/Loading';
 import {TextArea} from '@/components/TextArea';
 import {TopBar} from '@/components/TopBar';
 import {toast} from '@/components/Toast';
-import {ROUTES} from '@constants/routes';
-import {colors, spacing} from '@theme';
-import type {Diary} from '@types';
+import {colors, spacing, typography} from '@theme';
+import {useDiaryStore} from '@store/diaryStore';
 
 import {styles} from './styles';
 import type {DiaryEditScreenProps} from './types';
@@ -38,35 +27,16 @@ const WEATHERS = ['晴', '多云', '阴', '小雨', '大雨', '雪'];
 const MOODS = ['😊', '😢', '😡', '😴', '😍', '🤔', '😎', '🥰'];
 const LOCATIONS = ['北京·朝阳公园', '北京·三里屯', '上海·外滩', '杭州·西湖', '成都·宽窄巷子'];
 
-const MOCK_DIARY_EDIT: Diary = {
-  id: '1',
-  notebookId: 'nb-1',
-  title: '今天天气真好',
-  summary: '',
-  content:
-    '今天下午和朋友们约着去朝阳公园走走。刚到门口就闻到了花香，原来是樱花开了。\n\n粉白色的花瓣在阳光下透出淡淡的粉色，风一吹就飘落下来，像下了一场樱花雨。',
-  cover: null,
-  weather: '晴',
-  location: '北京·朝阳公园',
-  mood: '😊',
-  day: '04',
-  monthYear: '07月·周四',
-  timestamp: '14:30',
-  isPinned: true,
-  isEncrypted: false,
-  isDraft: false,
-  createdAt: Date.now() - 86400000,
-  updatedAt: Date.now() - 86400000,
-  deletedAt: null,
-};
-
-/**
- * DiaryEditScreen 组件
- */
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, route}) => {
   const insets = useSafeAreaInsets();
   const {id} = route.params;
   const isNew = !id;
+
+  const initialized = useDiaryStore(s => s.initialized);
+  const init = useDiaryStore(s => s.init);
+  const existing = useDiaryStore(s => (id ? s.diaries.find(d => d.id === id) : undefined));
+  const createDiary = useDiaryStore(s => s.createDiary);
+  const updateDiary = useDiaryStore(s => s.updateDiary);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -75,61 +45,83 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
   const [location, setLocation] = useState<string | undefined>();
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [pickedAction, setPickedAction] = useState<'weather' | 'mood' | 'location' | null>(null);
+  const [hydrated, setHydrated] = useState(isNew); // 新建模式直接可编辑
 
-  // 加载已有日记（mock）
   useEffect(() => {
-    if (!isNew) {
-      const t = setTimeout(() => {
-        setTitle(MOCK_DIARY_EDIT.title);
-        setContent(MOCK_DIARY_EDIT.content);
-        setWeather(MOCK_DIARY_EDIT.weather ?? undefined);
-        setMood(MOCK_DIARY_EDIT.mood ?? undefined);
-        setLocation(MOCK_DIARY_EDIT.location ?? undefined);
-      }, 200);
-      return () => clearTimeout(t);
+    if (!initialized) init();
+  }, [initialized, init]);
+
+  // 编辑模式：hydrate 表单
+  useEffect(() => {
+    if (!isNew && existing && !hydrated) {
+      setTitle(existing.title);
+      setContent(existing.content);
+      setWeather(existing.weather ?? undefined);
+      setMood(existing.mood ?? undefined);
+      setLocation(existing.location ?? undefined);
+      setHydrated(true);
     }
-    return undefined;
-  }, [id, isNew]);
+  }, [isNew, existing, hydrated]);
 
   const handleBack = useCallback(() => {
     if (title || content) {
-      // 简化处理：直接返回，后续接入草稿弹窗
       toast.info('已保存为草稿');
     }
     navigation.goBack();
   }, [navigation, title, content]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!title.trim() && !content.trim()) {
       toast.error('内容不能为空');
       return;
     }
-    // 模拟保存（后续接入数据库）
-    toast.success(isNew ? '日记已创建' : '已保存');
-    setTimeout(() => navigation.goBack(), 400);
-  }, [title, content, isNew, navigation]);
+    try {
+      if (isNew) {
+        const created = await createDiary({
+          notebookId: 'nb-1',
+          title: title.trim(),
+          summary: content.slice(0, 80),
+          content,
+          cover: null,
+          weather: weather ?? null,
+          location: location ?? null,
+          mood: mood ?? null,
+          isPinned: false,
+          isEncrypted: false,
+          isDraft: false,
+          deletedAt: null,
+        });
+        toast.success('日记已创建');
+        // eslint-disable-next-line no-console
+        console.log('created:', created.id);
+      } else {
+        await updateDiary(id!, {
+          title: title.trim(),
+          content,
+          weather: weather ?? null,
+          location: location ?? null,
+          mood: mood ?? null,
+        });
+        toast.success('已保存');
+      }
+      setTimeout(() => navigation.goBack(), 400);
+    } catch (e) {
+      toast.error('保存失败');
+    }
+  }, [title, content, isNew, id, weather, location, mood, createDiary, updateDiary, navigation]);
 
   const handleToolPress = useCallback((tool: string) => {
-    if (tool === 'weather') {
-      setPickedAction('weather');
-    } else if (tool === 'mood') {
-      setPickedAction('mood');
-    } else if (tool === 'location') {
-      setPickedAction('location');
-    } else if (tool === 'image') {
-      toast.info('图片选择器待实现');
-    } else if (tool === 'mic') {
-      toast.info('录音功能待实现');
-    } else if (tool === 'link') {
-      toast.info('链接插入待实现');
-    } else if (tool === 'lock') {
-      toast.info('加密功能待实现');
-    } else {
-      // 格式化工具：切换激活态
+    if (tool === 'weather') setPickedAction('weather');
+    else if (tool === 'mood') setPickedAction('mood');
+    else if (tool === 'location') setPickedAction('location');
+    else if (tool === 'image') toast.info('图片选择器待实现');
+    else if (tool === 'mic') toast.info('录音功能待实现');
+    else if (tool === 'link') toast.info('链接插入待实现');
+    else if (tool === 'lock') toast.info('加密功能待实现');
+    else
       setActiveTools(prev =>
         prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool],
       );
-    }
   }, []);
 
   const handleWeatherPick = useCallback((w: string) => {
@@ -148,6 +140,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
   const today = new Date();
   const todayLabel = `${today.getMonth() + 1}月${today.getDate()}日`;
 
+  if (!initialized || (!isNew && !hydrated)) {
+    return (
+      <View style={[styles.container, {paddingTop: insets.top}]}>
+        <TopBar showBack onBackPress={handleBack} />
+        <Loading variant="full" visible={true} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
       <TopBar
@@ -165,7 +166,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={insets.top}>
         <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          {/* 元信息 chips */}
           <View style={styles.metaCard}>
             <View style={styles.metaChip}>
               <Icon name="calendar" size={14} color={colors.semantic.icon.secondary} />
@@ -202,7 +202,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
             )}
           </View>
 
-          {/* 标题 */}
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -213,7 +212,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
           />
           <View style={styles.titleSeparator} />
 
-          {/* 正文 */}
           <TextArea
             value={content}
             onChangeText={setContent}
@@ -228,7 +226,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
         <EditorToolbar activeTools={activeTools as never} onToolPress={handleToolPress} />
       </KeyboardAvoidingView>
 
-      {/* 选择 ActionSheet */}
       <ActionSheet
         visible={pickedAction === 'weather'}
         onClose={() => setPickedAction(null)}
@@ -255,5 +252,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({navigation, rou
     </View>
   );
 };
+
+// 避免未使用警告
 
 export default DiaryEditScreen;

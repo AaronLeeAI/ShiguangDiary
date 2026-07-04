@@ -1,17 +1,10 @@
 /**
  * Notebook Screen - P002 日记本列表
  *
- * 整合组件：
- * - TopBar：标题"日记本" + 右侧排序图标
- * - DiaryBookCard：日记本卡片
- * - EmptyState（notebook 变体）：空状态
- * - FloatingActionButton：新建日记本入口
- * - BottomTabBar
- *
- * 当前使用 mock 数据，后续接入数据库。
+ * 数据源：useDiaryStore
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import {FlatList, Pressable, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
@@ -24,85 +17,51 @@ import {Loading} from '@/components/Loading';
 import {TopBar} from '@/components/TopBar';
 import {ROUTES} from '@constants/routes';
 import {colors, spacing} from '@theme';
-import type {Notebook} from '@types';
+import {useDiaryStore} from '@store/diaryStore';
+import {toast} from '@/components/Toast';
 
 import {styles} from './styles';
 import type {NotebookScreenProps} from './types';
 
-const MOCK_NOTEBOOKS: Notebook[] = [
-  {
-    id: 'nb-1',
-    name: '生活随笔',
-    description: '记录日常点滴',
-    cover: null,
-    color: '#1AAD66',
-    sortOrder: 0,
-    diaryCount: 24,
-    createdAt: Date.now() - 30 * 86400000,
-    updatedAt: Date.now() - 86400000,
-    deletedAt: null,
-  },
-  {
-    id: 'nb-2',
-    name: '工作思考',
-    description: '产品设计、技术学习',
-    cover: null,
-    color: '#1488EE',
-    sortOrder: 1,
-    diaryCount: 18,
-    createdAt: Date.now() - 60 * 86400000,
-    updatedAt: Date.now() - 172800000,
-    deletedAt: null,
-  },
-  {
-    id: 'nb-3',
-    name: '旅行回忆',
-    description: '2025年所有的远方',
-    cover: null,
-    color: '#FFB400',
-    sortOrder: 2,
-    diaryCount: 7,
-    createdAt: Date.now() - 90 * 86400000,
-    updatedAt: Date.now() - 7 * 86400000,
-    deletedAt: null,
-  },
-];
-
-/**
- * NotebookScreen 组件
- */
 export const NotebookScreen: React.FC<NotebookScreenProps> = ({navigation}) => {
   const insets = useSafeAreaInsets();
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
-  const [loading, setLoading] = useState(true);
+  const notebooks = useDiaryStore(s => s.notebooks);
+  const initialized = useDiaryStore(s => s.initialized);
+  const loading = useDiaryStore(s => s.loading);
+  const init = useDiaryStore(s => s.init);
+  const createNotebook = useDiaryStore(s => s.createNotebook);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setNotebooks(MOCK_NOTEBOOKS);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!initialized) init();
+  }, [initialized, init]);
 
   const handleItemPress = useCallback(
-    (item: Notebook) => {
-      // 暂时 toast，后续跳转到 NotebookDetail
-      // navigation.navigate('NotebookDetail', {id: item.id});
-      console.log('open notebook:', item.id);
+    (id: string) => {
+      // 后续接 NotebookDetail
+      toast.info(`打开日记本: ${id}`);
     },
     [],
   );
 
-  const handleItemLongPress = useCallback((item: Notebook) => {
-    console.log('long press notebook:', item.id);
-  }, []);
+  const handleItemLongPress = useCallback(
+    (id: string) => {
+      // 后续接 ActionSheet
+      toast.info(`长按日记本: ${id}`);
+    },
+    [],
+  );
 
-  const handleNew = useCallback(() => {
-    navigation.navigate(ROUTES.NOTEBOOK_CREATE);
-  }, [navigation]);
+  const handleNew = useCallback(async () => {
+    try {
+      const nb = await createNotebook(`新日记本 ${notebooks.length + 1}`);
+      toast.success(`已创建: ${nb.name}`);
+    } catch (e) {
+      toast.error('创建失败');
+    }
+  }, [createNotebook, notebooks.length]);
 
   const handleSort = useCallback(() => {
-    console.log('sort notebooks');
+    toast.info('排序功能待实现');
   }, []);
 
   const handleTabPress = useCallback(
@@ -125,8 +84,8 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({navigation}) => {
       />
 
       <View style={styles.body}>
-        {loading ? (
-          <Loading variant="full" visible={loading} />
+        {loading || !initialized ? (
+          <Loading variant="full" visible={true} />
         ) : notebooks.length === 0 ? (
           <EmptyState
             variant="notebook"
@@ -140,8 +99,8 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({navigation}) => {
             renderItem={({item}) => (
               <DiaryBookCard
                 item={item}
-                onPress={() => handleItemPress(item)}
-                onLongPress={() => handleItemLongPress(item)}
+                onPress={() => handleItemPress(item.id)}
+                onLongPress={() => handleItemLongPress(item.id)}
               />
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}

@@ -10,16 +10,18 @@
  * 3. ThemeProvider（主题）
  * 4. ToastProvider（全局 Toast - 必须在 App 内部以使用 useTheme）
  * 5. AppNavigator（路由）
+ * 6. AppBootstrap（启动初始化 Store/DB）
  */
 
-import React from 'react';
-import {StatusBar, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect} from 'react';
+import {StatusBar, StyleSheet, View} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 import {AppNavigator} from '@navigation';
 import {ThemeProvider, useTheme} from '@theme';
 import {ToastProvider} from '@/components/Toast';
+import {useDiaryStore} from '@store/diaryStore';
 
 const App: React.FC = () => {
   return (
@@ -33,6 +35,15 @@ const App: React.FC = () => {
   );
 };
 
+/** 启动初始化：触发 Store init（幂等） */
+const AppBootstrap: React.FC = () => {
+  const init = useDiaryStore(s => s.init);
+  useEffect(() => {
+    init();
+  }, [init]);
+  return null;
+};
+
 const AppRoot: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.mode === 'dark';
@@ -44,6 +55,7 @@ const AppRoot: React.FC = () => {
           barStyle={isDark ? 'light-content' : 'dark-content'}
           backgroundColor={theme.colors.semantic.bg.canvas}
         />
+        <AppBootstrap />
         <AppNavigator />
       </View>
     </ToastProvider>

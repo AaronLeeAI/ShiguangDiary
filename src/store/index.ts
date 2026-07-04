@@ -128,9 +128,5 @@ export const useEditorDraftStore = create<EditorDraftState>()(
 /**
  * 全局 Store
  */
-export const useStore = {
-  user: useUserStore,
-  navigation: useNavigationStore,
-  theme: useThemeStore,
-  editorDraft: useEditorDraftStore,
-};
+export {useUserStore, useNavigationStore, useThemeStore, useEditorDraftStore, useDiaryStore} from './diaryStore';
+export * as diaryStore from './diaryStore';
