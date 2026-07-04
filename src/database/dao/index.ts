@@ -6,7 +6,15 @@
  */
 
 import { getDatabase } from '../connection'
-import type { DiaryModel, NotebookModel, AlbumModel } from '../models'
+import type {
+  DiaryModel,
+  NotebookModel,
+  AlbumModel,
+  TagModel,
+  AttachmentModel,
+  DraftModel,
+  PreferenceModel,
+} from '../models'
 
 /**
  * 日记 DAO
@@ -160,5 +168,151 @@ export const albumDao = {
         album.deletedAt,
       ],
     )
+  },
+}
+
+/**
+ * 标签 DAO
+ */
+export const tagDao = {
+  async findAll(): Promise<TagModel[]> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT * FROM tag ORDER BY createdAt DESC')
+    return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i))
+  },
+
+  async findById(id: string): Promise<TagModel | null> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT * FROM tag WHERE id = ?', [id])
+    return results.rows.length > 0 ? results.rows.item(0) : null
+  },
+
+  async findByName(name: string): Promise<TagModel | null> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT * FROM tag WHERE name = ?', [name])
+    return results.rows.length > 0 ? results.rows.item(0) : null
+  },
+
+  async insert(tag: TagModel): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql(
+      'INSERT INTO tag (id, name, color, diaryCount, createdAt) VALUES (?, ?, ?, ?, ?)',
+      [tag.id, tag.name, tag.color, tag.diaryCount, tag.createdAt],
+    )
+  },
+
+  async update(id: string, tag: Partial<TagModel>): Promise<void> {
+    const db = await getDatabase()
+    const fields = Object.keys(tag)
+      .filter(k => k !== 'id')
+      .map(k => `${k} = ?`)
+      .join(', ')
+    const values = Object.entries(tag)
+      .filter(([k]) => k !== 'id')
+      .map(([, v]) => v)
+    await db.executeSql(`UPDATE tag SET ${fields} WHERE id = ?`, [...values, id])
+  },
+
+  async delete(id: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM tag WHERE id = ?', [id])
+  },
+}
+
+/**
+ * 附件 DAO
+ */
+export const attachmentDao = {
+  async findByDiaryId(diaryId: string): Promise<AttachmentModel[]> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql(
+      'SELECT * FROM attachment WHERE diaryId = ? ORDER BY createdAt ASC',
+      [diaryId],
+    )
+    return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i))
+  },
+
+  async insert(attachment: AttachmentModel): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql(
+      'INSERT INTO attachment (id, diaryId, type, url, thumbnail, size, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        attachment.id,
+        attachment.diaryId,
+        attachment.type,
+        attachment.url,
+        attachment.thumbnail,
+        attachment.size,
+        attachment.createdAt,
+      ],
+    )
+  },
+
+  async delete(id: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM attachment WHERE id = ?', [id])
+  },
+
+  async deleteByDiaryId(diaryId: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM attachment WHERE diaryId = ?', [diaryId])
+  },
+}
+
+/**
+ * 草稿 DAO
+ */
+export const draftDao = {
+  async findAll(): Promise<DraftModel[]> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT * FROM draft ORDER BY updatedAt DESC')
+    return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i))
+  },
+
+  async findById(id: string): Promise<DraftModel | null> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT * FROM draft WHERE id = ?', [id])
+    return results.rows.length > 0 ? results.rows.item(0) : null
+  },
+
+  async upsert(draft: DraftModel): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql(
+      `INSERT INTO draft (id, content, title, updatedAt)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET content = excluded.content, title = excluded.title, updatedAt = excluded.updatedAt`,
+      [draft.id, draft.content, draft.title, draft.updatedAt],
+    )
+  },
+
+  async delete(id: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM draft WHERE id = ?', [id])
+  },
+}
+
+/**
+ * 用户偏好 DAO（持久化在 SQLite 的 key-value 表）
+ */
+export const preferenceDao = {
+  async get(key: string): Promise<string | null> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql('SELECT value FROM preference WHERE key = ?', [key])
+    return results.rows.length > 0 ? results.rows.item(0).value : null
+  },
+
+  async set(preference: PreferenceModel): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql(
+      `INSERT INTO preference (key, value, updatedAt)
+       VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updatedAt = excluded.updatedAt`,
+      [preference.key, preference.value, preference.updatedAt],
+    )
+  },
+
+  async delete(key: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM preference WHERE key = ?', [key])
   },
 }

@@ -13,7 +13,9 @@ let dbInstance: SQLiteDatabase | null = null
  * 打开数据库连接
  */
 export async function openDatabase(): Promise<SQLiteDatabase> {
-  if (dbInstance) return dbInstance
+  if (dbInstance) {
+    return dbInstance
+  }
 
   dbInstance = await SQLite.openDatabase({
     name: DATABASE_CONFIG.name,

@@ -2,37 +2,154 @@
  * Repository - 数据库仓储层
  *
  * Repository 在 DAO 之上提供业务层友好的数据访问 API。
+ * 业务层（Store / 页面）只依赖 Repository，禁止直接访问 DAO / SQLite。
+ *
+ * 所有方法返回 Promise，异常统一归一化为 DatabaseError。
  */
 
-import { diaryDao, notebookDao, albumDao } from '../dao'
-import type { DiaryModel, NotebookModel, AlbumModel } from '../models'
+import {
+  diaryDao,
+  notebookDao,
+  albumDao,
+  tagDao,
+  attachmentDao,
+  draftDao,
+  preferenceDao,
+} from '../dao'
+import { withTransaction } from '../core/transaction'
+import { toDatabaseError } from '../core/errors'
+import type {
+  DiaryModel,
+  NotebookModel,
+  AlbumModel,
+  TagModel,
+  AttachmentModel,
+  DraftModel,
+  PreferenceModel,
+} from '../models'
+
+/** 包装 Repository 方法，归一化底层异常为 DatabaseError。 */
+async function wrap<T>(
+  code: Parameters<typeof toDatabaseError>[1],
+  fn: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await fn()
+  } catch (error) {
+    throw toDatabaseError(error, code)
+  }
+}
 
 /**
  * 日记仓储
  */
 export const diaryRepository = {
-  list: () => diaryDao.findAll(),
-  findById: (id: string) => diaryDao.findById(id),
-  create: (diary: DiaryModel) => diaryDao.insert(diary),
-  update: (id: string, data: Partial<DiaryModel>) => diaryDao.update(id, data),
-  remove: (id: string) => diaryDao.delete(id),
+  list: () => wrap('QUERY_FAILED', () => diaryDao.findAll()),
+  findById: (id: string) => wrap('QUERY_FAILED', () => diaryDao.findById(id)),
+  update: (id: string, data: Partial<DiaryModel>) =>
+    wrap('UPDATE_FAILED', () => diaryDao.update(id, data)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => diaryDao.delete(id)),
+
+  /**
+   * 创建日记 + 附件，在单一事务中执行，保证一致性。
+   */
+  async create(diary: DiaryModel, attachments: AttachmentModel[] = []): Promise<void> {
+    try {
+      await withTransaction(async tx => {
+        await tx.executeSql(
+          `INSERT INTO diary (id, notebookId, title, content, cover, weather, location, mood, isPinned, isEncrypted, isDraft, createdAt, updatedAt, deletedAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            diary.id,
+            diary.notebookId,
+            diary.title,
+            diary.content,
+            diary.cover,
+            diary.weather,
+            diary.location,
+            diary.mood,
+            diary.isPinned,
+            diary.isEncrypted,
+            diary.isDraft,
+            diary.createdAt,
+            diary.updatedAt,
+            diary.deletedAt,
+          ],
+        )
+        for (const a of attachments) {
+          await tx.executeSql(
+            'INSERT INTO attachment (id, diaryId, type, url, thumbnail, size, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [a.id, a.diaryId, a.type, a.url, a.thumbnail, a.size, a.createdAt],
+          )
+        }
+      })
+    } catch (error) {
+      throw toDatabaseError(error, 'TRANSACTION_FAILED')
+    }
+  },
 }
 
 /**
  * 日记本仓储
  */
 export const notebookRepository = {
-  list: () => notebookDao.findAll(),
-  findById: (id: string) => notebookDao.findById(id),
-  create: (notebook: NotebookModel) => notebookDao.insert(notebook),
-  update: (id: string, data: Partial<NotebookModel>) => notebookDao.update(id, data),
-  remove: (id: string) => notebookDao.delete(id),
+  list: () => wrap('QUERY_FAILED', () => notebookDao.findAll()),
+  findById: (id: string) => wrap('QUERY_FAILED', () => notebookDao.findById(id)),
+  create: (notebook: NotebookModel) => wrap('INSERT_FAILED', () => notebookDao.insert(notebook)),
+  update: (id: string, data: Partial<NotebookModel>) =>
+    wrap('UPDATE_FAILED', () => notebookDao.update(id, data)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => notebookDao.delete(id)),
 }
 
 /**
  * 相册仓储
  */
 export const albumRepository = {
-  list: () => albumDao.findAll(),
-  create: (album: AlbumModel) => albumDao.insert(album),
+  list: () => wrap('QUERY_FAILED', () => albumDao.findAll()),
+  create: (album: AlbumModel) => wrap('INSERT_FAILED', () => albumDao.insert(album)),
+}
+
+/**
+ * 标签仓储
+ */
+export const tagRepository = {
+  list: () => wrap('QUERY_FAILED', () => tagDao.findAll()),
+  findById: (id: string) => wrap('QUERY_FAILED', () => tagDao.findById(id)),
+  findByName: (name: string) => wrap('QUERY_FAILED', () => tagDao.findByName(name)),
+  create: (tag: TagModel) => wrap('INSERT_FAILED', () => tagDao.insert(tag)),
+  update: (id: string, data: Partial<TagModel>) =>
+    wrap('UPDATE_FAILED', () => tagDao.update(id, data)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => tagDao.delete(id)),
+}
+
+/**
+ * 附件仓储
+ */
+export const attachmentRepository = {
+  findByDiaryId: (diaryId: string) =>
+    wrap('QUERY_FAILED', () => attachmentDao.findByDiaryId(diaryId)),
+  create: (attachment: AttachmentModel) =>
+    wrap('INSERT_FAILED', () => attachmentDao.insert(attachment)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => attachmentDao.delete(id)),
+  removeByDiaryId: (diaryId: string) =>
+    wrap('DELETE_FAILED', () => attachmentDao.deleteByDiaryId(diaryId)),
+}
+
+/**
+ * 草稿仓储
+ */
+export const draftRepository = {
+  list: () => wrap('QUERY_FAILED', () => draftDao.findAll()),
+  findById: (id: string) => wrap('QUERY_FAILED', () => draftDao.findById(id)),
+  upsert: (draft: DraftModel) => wrap('INSERT_FAILED', () => draftDao.upsert(draft)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => draftDao.delete(id)),
+}
+
+/**
+ * 用户偏好仓储（SQLite key-value）
+ */
+export const preferenceRepository = {
+  get: (key: string) => wrap('QUERY_FAILED', () => preferenceDao.get(key)),
+  set: (preference: PreferenceModel) => wrap('INSERT_FAILED', () => preferenceDao.set(preference)),
+  remove: (key: string) => wrap('DELETE_FAILED', () => preferenceDao.delete(key)),
 }

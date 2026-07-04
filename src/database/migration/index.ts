@@ -5,8 +5,9 @@
  */
 
 import { getDatabase } from '../connection'
+import { applyMigrations } from '../core/versioning'
 
-interface Migration {
+export interface Migration {
   version: number
   description: string
   up: () => Promise<void>
@@ -126,10 +127,13 @@ const migrations: Migration[] = [
 ]
 
 /**
- * 应用所有迁移
+ * 应用所有未执行的迁移（按 version 升序）。
+ *
+ * 委托给版本注册表，只应用比当前 schema 版本更新的迁移，
+ * 并将已应用版本持久化到 schema_version 表。
+ *
+ * 返回本次升级的 from/to/applied 统计。
  */
 export async function runMigrations() {
-  for (const migration of migrations) {
-    await migration.up()
-  }
+  return applyMigrations(migrations)
 }

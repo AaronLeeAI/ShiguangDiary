@@ -51,6 +51,10 @@ module.exports = {
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
     'no-empty': ['error', { allowEmptyCatch: true }],
+
+    // Prettier owns formatting; disable conflicting core/TS semi rules.
+    semi: 'off',
+    '@typescript-eslint/semi': 'off',
   },
   overrides: [
     {
