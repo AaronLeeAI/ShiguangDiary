@@ -19,6 +19,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {ROUTES} from '@constants/routes';
 import {RootStackParamList, TabParamList} from '@navigation/types';
 import {AlbumScreen} from '@/screens/Album';
+import {DiaryEditScreen} from '@/screens/DiaryEdit';
 import {DiaryViewScreen} from '@/screens/DiaryView';
 import {HomeScreen} from '@/screens/Home';
 import {NotebookScreen} from '@/screens/Notebook';
@@ -35,13 +36,13 @@ const Splash = ({navigation}: {navigation: any}) => {
   return null;
 };
 
-// 4 Tab + DiaryView 已实现；其余 Modal 后续实现
+// 4 Tab + DiaryView + DiaryEdit 已实现
 const Home = HomeScreen;
 const Notebook = NotebookScreen;
 const Album = AlbumScreen;
 const Profile = ProfileScreen;
 const DiaryView = DiaryViewScreen;
-const DiaryEdit = () => null;
+const DiaryEdit = DiaryEditScreen;
 const NotebookCreate = () => null;
 const NotebookSort = () => null;
 const AlbumCreate = () => null;

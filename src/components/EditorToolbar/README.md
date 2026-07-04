@@ -1,35 +1,67 @@
-# EditorToolbar
+# EditorToolbar - 编辑器工具栏
 
-> 编辑器工具栏
+> 日记编辑器底部工具栏：格式化 / 媒体 / 元信息 / 其他。
 
-## 规范来源
+## 状态：✅ 已实现
 
-- 详细规范：[docs/project-设计-docs/components/EditorToolbar.md](../../../../../docs/project-设计-docs/components/EditorToolbar.md)
-- 设计 Token：[docs/project-设计-docs/docs/04_Design_System.md](../../../../../docs/project-设计-docs/docs/04_Design_System.md)
+## 实现要点
+
+- 横向 ScrollView 滚动容器
+- 13 个默认工具按钮（按视觉顺序）：
+  - **格式化**：bold / italic / underline / strikethrough / quote
+  - **媒体**：image / mic / link
+  - **元信息**：location / weather / mood
+  - **其他**：tag / lock
+- 激活态视觉：`activeTools` 数组中的工具显示品牌色图标 + primaryGhost 背景
+- 按下态：subtle 灰背景
+- 无障碍：`accessibilityRole="button"` + `accessibilityState.selected`
 
 ## Props
 
-参见 `types.ts`。
+| Prop | 类型 | 默认值 | 说明 |
+|------|------|-------|------|
+| onToolPress | `(tool) => void` | - | 工具点击回调 |
+| activeTools | `EditorTool[]` | `[]` | 当前激活的工具 |
+| tools | `EditorToolItem[]` | `DEFAULT_EDITOR_TOOLS` | 自定义工具列表 |
+
+## 类型
+
+```typescript
+type EditorTool =
+  | 'bold' | 'italic' | 'underline' | 'strikethrough' | 'quote'
+  | 'image' | 'mic' | 'link'
+  | 'location' | 'weather' | 'mood'
+  | 'tag' | 'lock';
+```
 
 ## 使用示例
 
 ```tsx
-import { EditorToolbar } from '@components/EditorToolbar';
+import {EditorToolbar} from '@/components/EditorToolbar';
 
-<EditorToolbar ...props />
+const [active, setActive] = useState<EditorTool[]>(['bold']);
+
+<EditorToolbar
+  activeTools={active}
+  onToolPress={(tool) => {
+    // 切换激活态
+    setActive(prev =>
+      prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]
+    );
+    // 或执行业务：插入图片、选择位置等
+    if (tool === 'image') openImagePicker();
+    if (tool === 'location') openLocationPicker();
+  }}
+/>
 ```
-
-## 状态
-
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
 
 ## 目录结构
 
 ```
 EditorToolbar/
-├── EditorToolbar.tsx        # 组件实现
-├── types.ts          # 类型定义
-├── styles.ts         # 样式
-├── index.ts          # 入口
-└── README.md         # 本文件
+├── EditorToolbar.tsx
+├── types.ts
+├── styles.ts
+├── index.ts
+└── README.md
 ```
