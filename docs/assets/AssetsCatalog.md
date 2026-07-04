@@ -54,24 +54,21 @@ import logo from '../assets/images/logo.png';
 
 ### Icons (SVG Components)
 
-所有图标以 React Native 组件形式提供，支持 size / color / adaptive 三种参数。
+UI 图标通过 `@components/Icon` 提供（`src/components/Icon/paths.ts`），支持：
 
-| 名称 | 组件 | 类别 | 来源 |
-|------|------|------|------|
-| 关闭 | `CloseIcon` | Navigation | Material Close (Vector) |
-| 返回 | `BackIcon` | Navigation | Material Arrow Back |
-| 更多 | `MoreIcon` | Navigation | Material More Vert |
-| 添加 | `AddIcon` | Actions | Material Add |
-| 编辑 | `EditIcon` | Actions | Material Edit |
-| 删除 | `DeleteIcon` | Actions | Material Delete |
-| 保存 | `SaveIcon` | Actions | Material Check |
-| 分享 | `ShareIcon` | Actions | Material Share |
-| 搜索 | `SearchIcon` | Actions | Material Search |
-| 相机 | `CameraIcon` | Media | Material Photo Camera |
-| 书 | `BookIcon` | Business | Material Book |
-| 日历 | `CalendarIcon` | Time | Material Calendar Today |
-| 时钟 | `ClockIcon` | Time | Material Access Time |
-| 设置 | `SettingsIcon` | Settings | Material Settings |
+- 40+ 主题感知的 SVG 图标（Material Design 路径）
+- `size` / `color` / `variant` 三种参数
+- 与 Theme 自动集成（默认颜色来自 `theme.colors.semantic.icon.primary`）
+
+```ts
+import {Icon} from '@components';
+
+<Icon name="add" />
+<Icon name="check" size="lg" color={theme.colors.brand.primary} />
+<Icon name="hourglass" variant="filled" />
+```
+
+详见 `src/components/Icon/README.md`。
 
 ### Placeholder Images
 
@@ -131,7 +128,7 @@ import logo from '../assets/images/logo.png';
 | APK `res/*.png` (777 files) | `src/assets/images/` | Pending (deferred) |
 | APK `res/*.jpg` (43 files) | `src/assets/images/` | Pending (deferred) |
 | APK `res/*.xml` (740 files, 含 vector) | `src/assets/svg/` 或 React 组件 | Pending (deferred) |
-| Custom SVG icons | `src/assets/icons/*.tsx` | Done (14 icons shipped) |
+| Custom SVG icons | `@components/Icon/paths.ts` | Done (40+ icons shipped, theme-aware) |
 
 > APK 中所有图片资源使用混淆短名（如 `_U.9.png`），需要按 Rename_Suggestion.md 映射为语义命名。完整迁移为多 Task 工作，本 Task 仅建立 Pipeline 与种子图标。
 
