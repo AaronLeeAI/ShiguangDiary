@@ -7,7 +7,7 @@ import type {StatusBarStyle, ViewStyle} from 'react-native';
 
 export interface ScreenProps {
   /** 页面内容 */
-  children: ReactNode;
+  children?: ReactNode;
   /** 容器自定义样式 */
   style?: ViewStyle;
   /** 启用 ScrollView 包裹 */

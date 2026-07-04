@@ -13,9 +13,11 @@
 
 import React, {useEffect} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createNativeStackNavigator, type NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
+import {useTheme} from '@theme';
+import {Screen} from '@components';
 import {ROUTES} from '@constants/routes';
 import {RootStackParamList, TabParamList} from '@navigation/types';
 import {AlbumScreen} from '@/screens/Album';
@@ -25,16 +27,38 @@ import {HomeScreen} from '@/screens/Home';
 import {NotebookScreen} from '@/screens/Notebook';
 import {ProfileScreen} from '@/screens/Profile';
 import {SearchScreen} from '@/screens/Search';
+import {
+  NotebookCreate,
+  NotebookSort,
+  AlbumCreate,
+  Account,
+  About,
+  Recycle,
+  DarkMode,
+  Export,
+  VIP,
+  Statistics,
+  Drafts,
+  Preferences,
+  ListStyle,
+  ThemeBackground,
+  EditorToolbarPicker,
+  FontManagement,
+  AppLock,
+  AppLockGesture,
+  StickyNote,
+} from './stubs';
 
 // Splash：自动跳转到 MainTabs（1.5s 后）
-const Splash = ({navigation}: {navigation: any}) => {
+const Splash = ({navigation}: {navigation: NativeStackNavigationProp<RootStackParamList, 'Splash'>}) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace(ROUTES.MAIN_TABS);
     }, 1500);
     return () => clearTimeout(timer);
   }, [navigation]);
-  return null;
+
+  return <Screen style={{justifyContent: 'center', alignItems: 'center'}} />;
 };
 
 // 4 Tab + DiaryView + DiaryEdit + Search 已实现
@@ -45,25 +69,6 @@ const Profile = ProfileScreen;
 const Search = SearchScreen;
 const DiaryView = DiaryViewScreen;
 const DiaryEdit = DiaryEditScreen;
-const NotebookCreate = () => null;
-const NotebookSort = () => null;
-const AlbumCreate = () => null;
-const Account = () => null;
-const About = () => null;
-const Recycle = () => null;
-const DarkMode = () => null;
-const Export = () => null;
-const VIP = () => null;
-const Statistics = () => null;
-const Drafts = () => null;
-const Preferences = () => null;
-const ListStyle = () => null;
-const ThemeBackground = () => null;
-const EditorToolbarPicker = () => null;
-const FontManagement = () => null;
-const AppLock = () => null;
-const AppLockGesture = () => null;
-const StickyNote = () => null;
 
 // Stack Navigator
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,20 +76,21 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 // Tab Navigator
 function MainTabs() {
+  const {colors} = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#1AAD66',
-        tabBarInactiveTintColor: '#999999',
+        tabBarActiveTintColor: colors.brand.primary,
+        tabBarInactiveTintColor: colors.semantic.icon.tertiary,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E5E5',
-          borderTopWidth: 1,
+          backgroundColor: colors.semantic.bg.bottomTab,
+          borderTopColor: colors.semantic.border.default,
+          borderTopWidth: 0.5,
         },
       }}>
-      {/* TODO: TabBarIcon 组件后续实现 */}
       <Tab.Screen name={ROUTES.HOME} component={Home} />
       <Tab.Screen name={ROUTES.NOTEBOOK} component={Notebook} />
       <Tab.Screen name={ROUTES.ALBUM} component={Album} />
