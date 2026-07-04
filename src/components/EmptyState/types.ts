@@ -6,7 +6,7 @@
  * 5 种预设变体 + 1 种自定义：
  * - notebook | album | noDiaryToday | noDraft | search | custom
  */
-import type {ReactNode} from 'react';
+import type { ReactNode } from 'react'
 
 export type EmptyStateVariant =
   | 'notebook'
@@ -14,11 +14,11 @@ export type EmptyStateVariant =
   | 'noDiaryToday'
   | 'noDraft'
   | 'search'
-  | 'custom';
+  | 'custom'
 
 export interface EmptyStateConfig {
-  title: string;
-  subtitle?: string;
+  title: string
+  subtitle?: string
 }
 
 export const EMPTY_STATE_PRESETS: Record<Exclude<EmptyStateVariant, 'custom'>, EmptyStateConfig> = {
@@ -41,21 +41,21 @@ export const EMPTY_STATE_PRESETS: Record<Exclude<EmptyStateVariant, 'custom'>, E
     title: '没有找到相关日记',
     subtitle: '试试别的关键词',
   },
-};
+}
 
 export interface EmptyStateProps {
   /** 变体预设 */
-  variant: EmptyStateVariant;
+  variant: EmptyStateVariant
   /** 自定义标题（custom 必填，其余覆盖预设） */
-  title?: string;
+  title?: string
   /** 自定义副标题 */
-  subtitle?: string;
+  subtitle?: string
   /** 自定义图标（custom 时显示） */
-  customIcon?: ReactNode;
+  customIcon?: ReactNode
   /** 行动按钮文案 */
-  actionLabel?: string;
+  actionLabel?: string
   /** 行动按钮点击回调 */
-  onAction?: () => void;
+  onAction?: () => void
   /** 测试 ID */
-  testID?: string;
+  testID?: string
 }

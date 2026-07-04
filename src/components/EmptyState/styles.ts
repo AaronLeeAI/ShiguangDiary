@@ -10,10 +10,10 @@
  * - 副标题：bodyM (15sp)
  * - 居中展示，距顶约 35% 屏幕高度
  */
-import {StyleSheet} from 'react-native';
-import {radius, colors, shadow} from '@theme';
+import { StyleSheet } from 'react-native'
+import { radius, colors, shadow } from '@theme'
 
-import type {EmptyStateVariant} from './types';
+import type { EmptyStateVariant } from './types'
 
 export const styles = StyleSheet.create({
   container: {
@@ -31,7 +31,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-    ...shadow.lg,
+    ...shadow('lg'),
   },
   title: {
     fontSize: 18,
@@ -50,7 +50,7 @@ export const styles = StyleSheet.create({
   actionButton: {
     marginTop: 8,
   },
-});
+})
 
 export const VARIANT_ICON_SIZE: Record<EmptyStateVariant, number> = {
   notebook: 56,
@@ -59,6 +59,6 @@ export const VARIANT_ICON_SIZE: Record<EmptyStateVariant, number> = {
   noDraft: 48,
   search: 48,
   custom: 56,
-};
+}
 
-export default styles;
+export default styles

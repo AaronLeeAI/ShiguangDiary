@@ -4,55 +4,57 @@
  * Type definitions for all navigation stacks and tabs.
  */
 
+import type { NavigatorScreenParams } from '@react-navigation/native'
+
 // Root Stack 参数列表
 export type RootStackParamList = {
   // 启动
-  Splash: undefined;
-  MainTabs: undefined;
+  Splash: undefined
+  MainTabs: NavigatorScreenParams<TabParamList> | undefined
 
   // 主 Tab 页
-  Home: undefined;
-  Notebook: undefined;
-  Album: undefined;
-  Profile: undefined;
+  Home: undefined
+  Notebook: undefined
+  Album: undefined
+  Profile: undefined
 
   // 搜索
-  Search: undefined;
+  Search: undefined
 
   // 二级页面（Modal Stack）
-  DiaryView: {id: string};
-  DiaryEdit: {id?: string; notebookId?: string};
-  NotebookCreate: undefined;
-  NotebookSort: undefined;
-  AlbumCreate: undefined;
-  Account: undefined;
-  About: undefined;
-  Recycle: undefined;
-  DarkMode: undefined;
-  Export: undefined;
-  VIP: undefined;
-  Statistics: undefined;
-  Drafts: undefined;
-  Preferences: undefined;
-  ListStyle: undefined;
-  ThemeBackground: undefined;
-  EditorToolbarPicker: undefined;
-  FontManagement: undefined;
-  AppLock: undefined;
-  AppLockGesture: undefined;
-  StickyNote: undefined;
+  DiaryView: { id: string }
+  DiaryEdit: { id?: string; notebookId?: string }
+  NotebookCreate: undefined
+  NotebookSort: undefined
+  AlbumCreate: undefined
+  Account: undefined
+  About: undefined
+  Recycle: undefined
+  DarkMode: undefined
+  Export: undefined
+  VIP: undefined
+  Statistics: undefined
+  Drafts: undefined
+  Preferences: undefined
+  ListStyle: undefined
+  ThemeBackground: undefined
+  EditorToolbarPicker: undefined
+  FontManagement: undefined
+  AppLock: undefined
+  AppLockGesture: undefined
+  StickyNote: undefined
 
   // 对话框/弹层
-  Modal: {type: string; props?: any};
-};
+  Modal: { type: string; props?: unknown }
+}
 
 // Tab 参数列表
 export type TabParamList = {
-  Home: undefined;
-  Notebook: undefined;
-  Album: undefined;
-  Profile: undefined;
-};
+  Home: undefined
+  Notebook: undefined
+  Album: undefined
+  Profile: undefined
+}
 
 // Modal 类型枚举
 export type ModalType =
@@ -113,4 +115,4 @@ export type ModalType =
   | 'ActionSheet'
   | 'AlertDialog'
   | 'BottomSheet'
-  | 'ModalHost';
+  | 'ModalHost'

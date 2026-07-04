@@ -4,16 +4,20 @@
  * P001 首页（日记列表）的 Props。
  */
 
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
-import type {RootStackParamList} from '@navigation/types';
-import type {Diary} from '@types';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList, TabParamList } from '@navigation/types'
+import type { Diary } from '@types'
 
-export type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+export type HomeNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>
 
 export interface HomeScreenProps {
-  navigation: HomeNavigationProp;
-  route?: RouteProp<RootStackParamList, 'Home'>;
+  navigation: HomeNavigationProp
+  route: RouteProp<TabParamList, 'Home'>
 }
 
-export type {Diary};
+export type { Diary }

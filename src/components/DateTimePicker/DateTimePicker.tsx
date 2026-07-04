@@ -6,12 +6,12 @@
  * - Android：modal dialog 弹出
  */
 
-import React, {useState} from 'react';
-import {Platform, View} from 'react-native';
-import RNDateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState } from 'react'
+import { Platform, View } from 'react-native'
+import RNDateTimePicker from '@react-native-community/datetimepicker'
 
-import {colors} from '@theme';
-import type {DateTimePickerProps} from './types';
+import { colors } from '@theme'
+import type { DateTimePickerProps } from './types'
 
 /**
  * DateTimePicker 组件
@@ -25,25 +25,25 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   style,
   testID,
 }) => {
-  const [internalValue, setInternalValue] = useState(value);
-  const current = value ?? internalValue;
+  const [internalValue, setInternalValue] = useState(value)
+  const current = value ?? internalValue
 
-  const handleChange = (event: {type: string}, selected?: Date) => {
+  const handleChange = (event: { type: string }, selected?: Date) => {
     if (Platform.OS === 'android') {
       if (event.type === 'set' && selected) {
-        const ts = selected.getTime();
-        setInternalValue(ts);
-        onChange(ts);
+        const ts = selected.getTime()
+        setInternalValue(ts)
+        onChange(ts)
       }
     } else {
       // iOS: 实时回调
       if (selected) {
-        const ts = selected.getTime();
-        setInternalValue(ts);
-        onChange(ts);
+        const ts = selected.getTime()
+        setInternalValue(ts)
+        onChange(ts)
       }
     }
-  };
+  }
 
   return (
     <View style={style} testID={testID}>
@@ -59,7 +59,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
         themeVariant="light"
       />
     </View>
-  );
-};
+  )
+}
 
-export default DateTimePicker;
+export default DateTimePicker

@@ -3,7 +3,7 @@
  */
 
 export interface BottomSheetProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface BottomSheetState {
   // TODO: 补充内部状态
 }
 
-export type BottomSheetRef = unknown;
+export type BottomSheetRef = unknown

@@ -11,12 +11,12 @@
  * - 线性 outline（默认），filled/round 形态可选
  */
 
-import React from 'react';
-import {Svg, Path} from 'react-native-svg';
-import {useTheme} from '@theme';
+import React from 'react'
+import { Svg, Path } from 'react-native-svg'
+import { useTheme } from '@theme'
 
-import {ICON_PATHS, type IconName} from './paths';
-import {ICON_SIZES, type IconProps} from './types';
+import { ICON_PATHS, type IconName } from './paths'
+import { ICON_SIZES, type IconProps } from './types'
 
 /**
  * Icon - 图标组件
@@ -34,15 +34,15 @@ export const Icon: React.FC<IconProps> = ({
   hitSlop,
   testID,
 }) => {
-  const theme = useTheme();
-  const px = typeof size === 'number' ? size : ICON_SIZES[size];
-  const strokeColor = color ?? theme.colors.semantic.icon.primary;
-  const fillColor = variant === 'filled' ? (color ?? theme.colors.semantic.icon.primary) : 'none';
-  const strokeWidth = variant === 'filled' ? 0 : 2;
-  const path = ICON_PATHS[name];
+  const theme = useTheme()
+  const px = typeof size === 'number' ? size : ICON_SIZES[size]
+  const strokeColor = color ?? theme.colors.semantic.icon.primary
+  const fillColor = variant === 'filled' ? color ?? theme.colors.semantic.icon.primary : 'none'
+  const strokeWidth = variant === 'filled' ? 0 : 2
+  const path = ICON_PATHS[name]
 
   if (!path) {
-    return null;
+    return null
   }
 
   return (
@@ -52,7 +52,8 @@ export const Icon: React.FC<IconProps> = ({
       viewBox="0 0 24 24"
       fill={fillColor}
       testID={testID}
-      hitSlop={hitSlop}>
+      hitSlop={hitSlop}
+    >
       <Path
         d={path}
         stroke={strokeColor}
@@ -61,9 +62,9 @@ export const Icon: React.FC<IconProps> = ({
         strokeLinejoin="round"
       />
     </Svg>
-  );
-};
+  )
+}
 
-export type {IconName};
-export {ICON_PATHS};
-export default Icon;
+export type { IconName }
+export { ICON_PATHS }
+export default Icon

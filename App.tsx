@@ -13,15 +13,15 @@
  * 6. AppBootstrap（启动初始化 Store/DB）
  */
 
-import React, {useEffect} from 'react';
-import {StatusBar, StyleSheet, View} from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import React, { useEffect } from 'react'
+import { StatusBar, StyleSheet, View } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
-import {AppNavigator} from '@navigation';
-import {ThemeProvider, useTheme} from '@theme';
-import {ToastProvider} from '@/components/Toast';
-import {useDiaryStore} from '@store/diaryStore';
+import { AppNavigator } from '@navigation'
+import { ThemeProvider, useTheme } from '@theme'
+import { ToastProvider } from '@/components/Toast'
+import { useDiaryStore } from '@store/diaryStore'
 
 const App: React.FC = () => {
   return (
@@ -32,25 +32,25 @@ const App: React.FC = () => {
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
-  );
-};
+  )
+}
 
 /** 启动初始化：触发 Store init（幂等） */
 const AppBootstrap: React.FC = () => {
-  const init = useDiaryStore(s => s.init);
+  const init = useDiaryStore(s => s.init)
   useEffect(() => {
-    init();
-  }, [init]);
-  return null;
-};
+    init()
+  }, [init])
+  return null
+}
 
 const AppRoot: React.FC = () => {
-  const theme = useTheme();
-  const isDark = theme.mode === 'dark';
+  const theme = useTheme()
+  const isDark = theme.mode === 'dark'
 
   return (
     <ToastProvider defaultDuration={2000} defaultPosition="top">
-      <View style={[styles.root, {backgroundColor: theme.colors.semantic.bg.canvas}]}>
+      <View style={[styles.root, { backgroundColor: theme.colors.semantic.bg.canvas }]}>
         <StatusBar
           barStyle={isDark ? 'light-content' : 'dark-content'}
           backgroundColor={theme.colors.semantic.bg.canvas}
@@ -59,15 +59,15 @@ const AppRoot: React.FC = () => {
         <AppNavigator />
       </View>
     </ToastProvider>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-});
+})
 
 // 保留导出便于外部 Storybook / 测试使用
-export {AppRoot};
-export default App;
+export { AppRoot }
+export default App

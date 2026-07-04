@@ -7,16 +7,19 @@
  * 支持 loading 状态、icon、按下反馈（按下时变深 + scale 0.98）。
  */
 
-import React from 'react';
-import {Pressable, Text, ActivityIndicator, View, type StyleProp, type ViewStyle} from 'react-native';
-
-import {useTheme} from '@theme';
+import React from 'react'
 import {
-  PRIMARY_BUTTON_HEIGHT,
-  PRIMARY_BUTTON_FONT,
-  type PrimaryButtonProps,
-} from './types';
-import {styles, PRIMARY_BUTTON_STYLES, variantStyles} from './styles';
+  Pressable,
+  Text,
+  ActivityIndicator,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native'
+
+import { useTheme } from '@theme'
+import { PRIMARY_BUTTON_HEIGHT, PRIMARY_BUTTON_FONT, type PrimaryButtonProps } from './types'
+import { styles, PRIMARY_BUTTON_STYLES, variantStyles } from './styles'
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   title,
@@ -31,9 +34,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   style,
   testID,
 }) => {
-  const theme = useTheme();
-  const vs = variantStyles[variant];
-  const isDisabled = disabled || loading || variant === 'disabled';
+  const theme = useTheme()
+  const vs = variantStyles[variant]
+  const isDisabled = disabled || loading || variant === 'disabled'
 
   const containerStyle: StyleProp<ViewStyle> = [
     styles.container,
@@ -44,23 +47,24 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       borderWidth: variant === 'outline' ? 1 : 0,
       alignSelf: fullWidth ? 'stretch' : 'flex-start',
     },
-    isDisabled && {opacity: 0.6},
+    isDisabled && { opacity: 0.6 },
     style,
-  ];
+  ]
 
   const textStyle = {
     ...styles.text,
     fontSize: PRIMARY_BUTTON_FONT[size],
     color: vs.text,
-  };
+  }
 
   return (
     <Pressable
       testID={testID}
       disabled={isDisabled}
       onPress={onPress}
-      android_ripple={{color: 'rgba(255,255,255,0.18)', borderless: false}}
-      style={({pressed}) => [containerStyle, pressed && styles.pressed]}>
+      android_ripple={{ color: 'rgba(255,255,255,0.18)', borderless: false }}
+      style={({ pressed }) => [containerStyle, pressed && styles.pressed]}
+    >
       {loading ? (
         <View style={PRIMARY_BUTTON_STYLES.spinnerWrap}>
           <ActivityIndicator size="small" color={vs.text} />
@@ -68,16 +72,16 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       ) : (
         <View style={PRIMARY_BUTTON_STYLES.contentRow}>
           {icon && iconPosition === 'left' && (
-            <View style={{marginRight: title ? theme.space[3] : 0}}>{icon}</View>
+            <View style={{ marginRight: title ? theme.space[3] : 0 }}>{icon}</View>
           )}
           <Text style={textStyle}>{title}</Text>
           {icon && iconPosition === 'right' && (
-            <View style={{marginLeft: title ? theme.space[3] : 0}}>{icon}</View>
+            <View style={{ marginLeft: title ? theme.space[3] : 0 }}>{icon}</View>
           )}
         </View>
       )}
     </Pressable>
-  );
-};
+  )
+}
 
-export default PrimaryButton;
+export default PrimaryButton

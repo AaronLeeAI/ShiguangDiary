@@ -8,25 +8,25 @@
  * - dialog：弹窗（会员中心加载等）
  * - inline：内联（按钮内或固定区域）
  */
-import type {StyleProp, ViewStyle} from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native'
 
-export type LoadingVariant = 'full' | 'dialog' | 'inline';
+export type LoadingVariant = 'full' | 'dialog' | 'inline'
 
 export interface LoadingProps {
   /** 加载变体 */
-  variant: LoadingVariant;
+  variant: LoadingVariant
   /** 是否显示 */
-  visible: boolean;
+  visible: boolean
   /** 提示文案（dialog/full 可选） */
-  text?: string;
+  text?: string
   /** 弧形旋转图标尺寸 */
-  iconSize?: number;
+  iconSize?: number
   /** 弹窗点击背景是否关闭 */
-  backdropDismiss?: boolean;
+  backdropDismiss?: boolean
   /** 关闭回调（仅 dialog + backdropDismiss） */
-  onDismiss?: () => void;
+  onDismiss?: () => void
   /** 外部容器样式 */
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>
   /** 测试 ID */
-  testID?: string;
+  testID?: string
 }

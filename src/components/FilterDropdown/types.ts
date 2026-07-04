@@ -3,7 +3,7 @@
  */
 
 export interface FilterDropdownProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface FilterDropdownState {
   // TODO: 补充内部状态
 }
 
-export type FilterDropdownRef = unknown;
+export type FilterDropdownRef = unknown

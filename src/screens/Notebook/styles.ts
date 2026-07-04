@@ -1,8 +1,8 @@
 /**
  * Notebook Screen 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, spacing} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, spacing } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,6 +19,6 @@ export const styles = StyleSheet.create({
   separator: {
     height: spacing.md,
   },
-});
+})
 
-export default styles;
+export default styles

@@ -4,12 +4,12 @@
  * 升级数据库结构时，在此添加迁移脚本。
  */
 
-import {getDatabase} from '../connection';
+import { getDatabase } from '../connection'
 
 interface Migration {
-  version: number;
-  description: string;
-  up: () => Promise<void>;
+  version: number
+  description: string
+  up: () => Promise<void>
 }
 
 const migrations: Migration[] = [
@@ -17,7 +17,7 @@ const migrations: Migration[] = [
     version: 1,
     description: 'Initial schema',
     up: async () => {
-      const db = await getDatabase();
+      const db = await getDatabase()
       // 日记表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS diary (
@@ -36,7 +36,7 @@ const migrations: Migration[] = [
           updatedAt INTEGER NOT NULL,
           deletedAt INTEGER
         )
-      `);
+      `)
       // 日记本表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS notebook (
@@ -51,7 +51,7 @@ const migrations: Migration[] = [
           updatedAt INTEGER NOT NULL,
           deletedAt INTEGER
         )
-      `);
+      `)
       // 相册表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS album (
@@ -64,7 +64,7 @@ const migrations: Migration[] = [
           updatedAt INTEGER NOT NULL,
           deletedAt INTEGER
         )
-      `);
+      `)
       // 标签表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS tag (
@@ -74,7 +74,7 @@ const migrations: Migration[] = [
           diaryCount INTEGER NOT NULL DEFAULT 0,
           createdAt INTEGER NOT NULL
         )
-      `);
+      `)
       // 日记-标签关联表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS diary_tag (
@@ -82,7 +82,7 @@ const migrations: Migration[] = [
           tagId TEXT NOT NULL,
           PRIMARY KEY (diaryId, tagId)
         )
-      `);
+      `)
       // 附件表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS attachment (
@@ -94,7 +94,7 @@ const migrations: Migration[] = [
           size INTEGER NOT NULL DEFAULT 0,
           createdAt INTEGER NOT NULL
         )
-      `);
+      `)
       // 草稿表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS draft (
@@ -103,7 +103,7 @@ const migrations: Migration[] = [
           title TEXT,
           updatedAt INTEGER NOT NULL
         )
-      `);
+      `)
       // 回收站表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS recycle (
@@ -112,7 +112,7 @@ const migrations: Migration[] = [
           data TEXT NOT NULL,
           deletedAt INTEGER NOT NULL
         )
-      `);
+      `)
       // 用户偏好表
       await db.executeSql(`
         CREATE TABLE IF NOT EXISTS preference (
@@ -120,16 +120,16 @@ const migrations: Migration[] = [
           value TEXT NOT NULL,
           updatedAt INTEGER NOT NULL
         )
-      `);
+      `)
     },
   },
-];
+]
 
 /**
  * 应用所有迁移
  */
 export async function runMigrations() {
   for (const migration of migrations) {
-    await migration.up();
+    await migration.up()
   }
 }

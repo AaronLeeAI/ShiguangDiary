@@ -3,20 +3,20 @@
  *
  * 颜色/间距/字号严格遵循 @theme。
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const TEXT_FIELD_HEIGHT = {
   large: 52,
   medium: 44,
   small: 36,
-} as const;
+} as const
 
 export const TEXT_FIELD_FONT_SIZE = {
   large: typography.bodyL,
   medium: typography.bodyM,
   small: typography.bodyS,
-} as const;
+} as const
 
 export const styles = StyleSheet.create({
   container: {
@@ -65,6 +65,6 @@ export const styles = StyleSheet.create({
     color: colors.func.danger,
     marginTop: spacing.xs,
   },
-});
+})
 
-export default styles;
+export default styles

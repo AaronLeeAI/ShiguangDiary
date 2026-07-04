@@ -3,46 +3,46 @@
  *
  * 基于设计规范 docs/project-设计-docs/components/PrimaryButton.md
  */
-import type {ReactNode} from 'react';
-import type {StyleProp, ViewStyle} from 'react-native';
+import type { ReactNode } from 'react'
+import type { StyleProp, ViewStyle } from 'react-native'
 
-export type PrimaryButtonVariant = 'primary' | 'danger' | 'ghost' | 'outline' | 'disabled';
-export type PrimaryButtonSize = 'large' | 'medium' | 'small';
-export type PrimaryButtonIconPosition = 'left' | 'right';
+export type PrimaryButtonVariant = 'primary' | 'danger' | 'ghost' | 'outline' | 'disabled'
+export type PrimaryButtonSize = 'large' | 'medium' | 'small'
+export type PrimaryButtonIconPosition = 'left' | 'right'
 
 export const PRIMARY_BUTTON_HEIGHT: Record<PrimaryButtonSize, number> = {
   large: 56,
   medium: 48,
   small: 36,
-};
+}
 
 export const PRIMARY_BUTTON_FONT: Record<PrimaryButtonSize, number> = {
   large: 18,
   medium: 16,
   small: 14,
-};
+}
 
 export interface PrimaryButtonProps {
   /** 按钮文案 */
-  title: string;
+  title: string
   /** 点击回调 */
-  onPress: () => void;
+  onPress: () => void
   /** 视觉变体 */
-  variant?: PrimaryButtonVariant;
+  variant?: PrimaryButtonVariant
   /** 按钮尺寸 */
-  size?: PrimaryButtonSize;
+  size?: PrimaryButtonSize
   /** 是否显示加载状态 */
-  loading?: boolean;
+  loading?: boolean
   /** 是否禁用 */
-  disabled?: boolean;
+  disabled?: boolean
   /** 宽度是否填满父容器 */
-  fullWidth?: boolean;
+  fullWidth?: boolean
   /** 左侧/右侧图标（IconName） */
-  icon?: ReactNode;
+  icon?: ReactNode
   /** 图标位置 */
-  iconPosition?: PrimaryButtonIconPosition;
+  iconPosition?: PrimaryButtonIconPosition
   /** 自定义样式 */
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>
   /** 测试 ID */
-  testID?: string;
+  testID?: string
 }

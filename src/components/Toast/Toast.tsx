@@ -9,40 +9,40 @@
  * 但需要先在 App 根调用 setToastHandler（注册全局 Provider）。
  */
 
-import React, {createContext, useCallback, useContext, useMemo, useState} from 'react';
-import {View} from 'react-native';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { View } from 'react-native'
 
-import {styles} from './styles';
-import {ToastView} from './ToastView';
+import { styles } from './styles'
+import { ToastView } from './ToastView'
 import type {
   ToastItem,
   ToastOptions,
   ToastPosition,
   ToastProviderProps,
   ToastVariant,
-} from './types';
+} from './types'
 
-let toastIdCounter = 0;
-const nextId = () => `toast-${Date.now()}-${++toastIdCounter}`;
+let toastIdCounter = 0
+const nextId = () => `toast-${Date.now()}-${++toastIdCounter}`
 
 /** Toast API（hook 与静态都暴露） */
 export interface ToastApi {
-  show: (options: ToastOptions) => string;
-  success: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string;
-  error: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string;
-  info: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string;
-  warning: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string;
-  dismiss: (id: string) => void;
-  clear: () => void;
+  show: (options: ToastOptions) => string
+  success: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string
+  error: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string
+  info: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string
+  warning: (message: string, options?: Omit<ToastOptions, 'message' | 'variant'>) => string
+  dismiss: (id: string) => void
+  clear: () => void
 }
 
-const ToastContext = createContext<ToastApi | null>(null);
+const ToastContext = createContext<ToastApi | null>(null)
 
 /** 全局 handler（用于静态 API） */
-let globalHandler: ToastApi | null = null;
+let globalHandler: ToastApi | null = null
 export const setToastHandler = (api: ToastApi | null) => {
-  globalHandler = api;
-};
+  globalHandler = api
+}
 
 /**
  * ToastProvider
@@ -52,22 +52,22 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
   defaultDuration = 2000,
   defaultPosition = 'top',
 }) => {
-  const [items, setItems] = useState<ToastItem[]>([]);
+  const [items, setItems] = useState<ToastItem[]>([])
 
   const dismiss = useCallback((id: string) => {
-    setItems(prev => prev.filter(t => t.id !== id));
-  }, []);
+    setItems(prev => prev.filter(t => t.id !== id))
+  }, [])
 
   const clear = useCallback(() => {
-    setItems([]);
-  }, []);
+    setItems([])
+  }, [])
 
   const show = useCallback(
     (options: ToastOptions): string => {
-      const id = nextId();
-      const variant: ToastVariant = options.variant ?? 'info';
-      const position: ToastPosition = options.position ?? defaultPosition;
-      const duration = options.duration ?? defaultDuration;
+      const id = nextId()
+      const variant: ToastVariant = options.variant ?? 'info'
+      const position: ToastPosition = options.position ?? defaultPosition
+      const duration = options.duration ?? defaultDuration
       const item: ToastItem = {
         id,
         message: options.message,
@@ -76,40 +76,40 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
         duration,
         icon: options.icon,
         action: options.action,
-      };
-      setItems(prev => [...prev, item]);
-      return id;
+      }
+      setItems(prev => [...prev, item])
+      return id
     },
     [defaultDuration, defaultPosition],
-  );
+  )
 
   const api = useMemo<ToastApi>(
     () => ({
       show,
-      success: (message, opts) => show({...opts, message, variant: 'success'}),
-      error: (message, opts) => show({...opts, message, variant: 'error'}),
-      info: (message, opts) => show({...opts, message, variant: 'info'}),
-      warning: (message, opts) => show({...opts, message, variant: 'warning'}),
+      success: (message, opts) => show({ ...opts, message, variant: 'success' }),
+      error: (message, opts) => show({ ...opts, message, variant: 'error' }),
+      info: (message, opts) => show({ ...opts, message, variant: 'info' }),
+      warning: (message, opts) => show({ ...opts, message, variant: 'warning' }),
       dismiss,
       clear,
     }),
     [show, dismiss, clear],
-  );
+  )
 
   // 注册全局 handler
   React.useEffect(() => {
-    setToastHandler(api);
-    return () => setToastHandler(null);
-  }, [api]);
+    setToastHandler(api)
+    return () => setToastHandler(null)
+  }, [api])
 
   // 按 position 分组
   const groupedItems = useMemo(() => {
-    const groups: Record<ToastPosition, ToastItem[]> = {top: [], center: [], bottom: []};
+    const groups: Record<ToastPosition, ToastItem[]> = { top: [], center: [], bottom: [] }
     items.forEach(item => {
-      groups[item.position].push(item);
-    });
-    return groups;
-  }, [items]);
+      groups[item.position].push(item)
+    })
+    return groups
+  }, [items])
 
   return (
     <ToastContext.Provider value={api}>
@@ -139,53 +139,55 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
         </View>
       )}
     </ToastContext.Provider>
-  );
-};
+  )
+}
 
 /**
  * useToast - 在组件中获取 Toast API
  */
 export const useToast = (): ToastApi => {
-  const ctx = useContext(ToastContext);
+  const ctx = useContext(ToastContext)
   if (!ctx) {
-    throw new Error('useToast must be used within ToastProvider. Wrap your app with <ToastProvider>.');
+    throw new Error(
+      'useToast must be used within ToastProvider. Wrap your app with <ToastProvider>.',
+    )
   }
-  return ctx;
-};
+  return ctx
+}
 
 /**
  * 静态 toast（在 Provider 外也可使用，会调用全局 handler）
  */
 export const toast: ToastApi = {
-  show: (options) => {
-    if (globalHandler) return globalHandler.show(options);
+  show: options => {
+    if (globalHandler) return globalHandler.show(options)
     if (__DEV__) {
-      console.warn('[toast] ToastProvider not mounted. Fallback to console:', options.message);
+      console.warn('[toast] ToastProvider not mounted. Fallback to console:', options.message)
     }
-    return '';
+    return ''
   },
   success: (message, opts) => {
-    if (globalHandler) return globalHandler.success(message, opts);
-    if (__DEV__) console.warn('[toast]', message);
-    return '';
+    if (globalHandler) return globalHandler.success(message, opts)
+    if (__DEV__) console.warn('[toast]', message)
+    return ''
   },
   error: (message, opts) => {
-    if (globalHandler) return globalHandler.error(message, opts);
-    if (__DEV__) console.warn('[toast]', message);
-    return '';
+    if (globalHandler) return globalHandler.error(message, opts)
+    if (__DEV__) console.warn('[toast]', message)
+    return ''
   },
   info: (message, opts) => {
-    if (globalHandler) return globalHandler.info(message, opts);
-    if (__DEV__) console.warn('[toast]', message);
-    return '';
+    if (globalHandler) return globalHandler.info(message, opts)
+    if (__DEV__) console.warn('[toast]', message)
+    return ''
   },
   warning: (message, opts) => {
-    if (globalHandler) return globalHandler.warning(message, opts);
-    if (__DEV__) console.warn('[toast]', message);
-    return '';
+    if (globalHandler) return globalHandler.warning(message, opts)
+    if (__DEV__) console.warn('[toast]', message)
+    return ''
   },
-  dismiss: (id) => globalHandler?.dismiss(id),
+  dismiss: id => globalHandler?.dismiss(id),
   clear: () => globalHandler?.clear(),
-};
+}
 
-export default ToastProvider;
+export default ToastProvider

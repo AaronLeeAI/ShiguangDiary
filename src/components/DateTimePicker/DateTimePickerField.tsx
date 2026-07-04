@@ -4,25 +4,25 @@
  * 点击输入框弹出选择器。自动展示当前值。
  */
 
-import React, {useCallback, useState} from 'react';
-import {Modal, Platform, Pressable, Text, View} from 'react-native';
+import React, { useCallback, useState } from 'react'
+import { Modal, Platform, Pressable, Text, View } from 'react-native'
 
-import {Icon} from '@/components/Icon';
-import {colors, radius, spacing, typography} from '@theme';
-import {DateTimePicker} from './DateTimePicker';
-import type {DateTimePickerFieldProps} from './types';
+import { Icon } from '@/components/Icon'
+import { colors, radius, spacing, typography } from '@theme'
+import { DateTimePicker } from './DateTimePicker'
+import type { DateTimePickerFieldProps } from './types'
 
 const defaultFormat = (ts: number, mode: 'date' | 'time' | 'datetime') => {
-  const d = new Date(ts);
-  const Y = d.getFullYear();
-  const M = String(d.getMonth() + 1).padStart(2, '0');
-  const D = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  if (mode === 'date') return `${Y}-${M}-${D}`;
-  if (mode === 'time') return `${h}:${m}`;
-  return `${Y}-${M}-${D} ${h}:${m}`;
-};
+  const d = new Date(ts)
+  const Y = d.getFullYear()
+  const M = String(d.getMonth() + 1).padStart(2, '0')
+  const D = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  if (mode === 'date') return `${Y}-${M}-${D}`
+  if (mode === 'time') return `${h}:${m}`
+  return `${Y}-${M}-${D} ${h}:${m}`
+}
 
 export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
   value,
@@ -37,27 +37,25 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
   testID,
   rightIconName = 'calendar',
 }) => {
-  const [visible, setVisible] = useState(false);
-  const hasValue = value > 0;
+  const [visible, setVisible] = useState(false)
+  const hasValue = value > 0
 
-  const handleOpen = useCallback(() => setVisible(true), []);
-  const handleClose = useCallback(() => setVisible(false), []);
+  const handleOpen = useCallback(() => setVisible(true), [])
+  const handleClose = useCallback(() => setVisible(false), [])
   const handleChange = useCallback(
     (ts: number) => {
-      onChange(ts);
+      onChange(ts)
       if (Platform.OS === 'android') {
-        setVisible(false);
+        setVisible(false)
       }
     },
     [onChange],
-  );
+  )
   const handleConfirm = useCallback(() => {
-    setVisible(false);
-  }, []);
+    setVisible(false)
+  }, [])
 
-  const displayValue = hasValue
-    ? (formatValue ?? defaultFormat)(value, mode)
-    : placeholder;
+  const displayValue = hasValue ? (formatValue ?? defaultFormat)(value, mode) : placeholder
 
   return (
     <View style={style}>
@@ -67,14 +65,15 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
             ...typography.bodyS,
             color: colors.semantic.text.secondary,
             marginBottom: spacing.xs,
-          }}>
+          }}
+        >
           {label}
         </Text>
       )}
       <Pressable
         testID={testID}
         onPress={handleOpen}
-        style={({pressed}) => ({
+        style={({ pressed }) => ({
           flexDirection: 'row',
           alignItems: 'center',
           height: 44,
@@ -84,32 +83,31 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
           borderWidth: 1,
           borderColor: colors.semantic.border.default,
           opacity: pressed ? 0.6 : 1,
-        })}>
+        })}
+      >
         <Text
           style={{
             ...typography.bodyM,
             color: hasValue ? colors.semantic.text.primary : colors.semantic.text.tertiary,
             flex: 1,
           }}
-          numberOfLines={1}>
+          numberOfLines={1}
+        >
           {displayValue}
         </Text>
         <Icon name={rightIconName} size={18} color={colors.semantic.icon.tertiary} />
       </Pressable>
 
       {Platform.OS === 'ios' ? (
-        <Modal
-          visible={visible}
-          transparent
-          animationType="fade"
-          onRequestClose={handleClose}>
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
           <Pressable
             onPress={handleClose}
             style={{
               flex: 1,
               backgroundColor: colors.semantic.bg.overlay,
               justifyContent: 'flex-end',
-            }}>
+            }}
+          >
             <Pressable
               onPress={() => {}}
               style={{
@@ -118,7 +116,8 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
                 borderTopRightRadius: radius.xl,
                 paddingTop: spacing.md,
                 paddingBottom: spacing.xl,
-              }}>
+              }}
+            >
               <View
                 style={{
                   flexDirection: 'row',
@@ -126,13 +125,14 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
                   alignItems: 'center',
                   paddingHorizontal: spacing.base,
                   paddingBottom: spacing.md,
-                }}>
+                }}
+              >
                 <Pressable onPress={handleClose} hitSlop={8}>
-                  <Text style={{...typography.bodyL, color: colors.semantic.text.secondary}}>
+                  <Text style={{ ...typography.bodyL, color: colors.semantic.text.secondary }}>
                     取消
                   </Text>
                 </Pressable>
-                <Text style={{...typography.titleS, color: colors.semantic.text.primary}}>
+                <Text style={{ ...typography.titleS, color: colors.semantic.text.primary }}>
                   {label ?? '选择日期'}
                 </Text>
                 <Pressable onPress={handleConfirm} hitSlop={8}>
@@ -141,7 +141,8 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
                       ...typography.bodyL,
                       color: colors.brand.primary,
                       fontWeight: '600',
-                    }}>
+                    }}
+                  >
                     确定
                   </Text>
                 </Pressable>
@@ -169,7 +170,7 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = ({
         )
       )}
     </View>
-  );
-};
+  )
+}
 
-export default DateTimePickerField;
+export default DateTimePickerField

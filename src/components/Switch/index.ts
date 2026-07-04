@@ -2,5 +2,5 @@
  * Switch 入口
  */
 
-export {default as Switch} from './Switch';
-export type * from './types';
+export { default as Switch } from './Switch'
+export type * from './types'

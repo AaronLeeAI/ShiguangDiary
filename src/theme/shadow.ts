@@ -6,9 +6,9 @@
  * Android 使用 elevation；iOS 使用 shadowColor/shadowOffset/shadowOpacity/shadowRadius。
  */
 
-import {Platform, ViewStyle} from 'react-native';
+import { Platform, ViewStyle } from 'react-native'
 
-const SHADOW_COLOR = 'rgba(0,0,0,0.06)'; // 根据 Design System 文档统一阴影色
+const SHADOW_COLOR = 'rgba(0,0,0,0.06)' // 根据 Design System 文档统一阴影色
 
 /**
  * Android Elevation（dp）
@@ -22,7 +22,7 @@ export const elevation = {
   lg: 4,
   xl: 8,
   fab: 6,
-} as const;
+} as const
 
 /**
  * 阴影样式（Cross-platform）
@@ -35,28 +35,28 @@ export const getShadow = (level: keyof typeof elevation): ViewStyle => {
     return {
       elevation: 0,
       shadowColor: SHADOW_COLOR,
-      shadowOffset: {width: 0, height: 0},
+      shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0,
       shadowRadius: 0,
-    };
+    }
   }
 
   const map: Record<
     Exclude<keyof typeof elevation, 'none'>,
     {
-      offset: {width: number; height: number};
-      opacity: number;
-      radius: number;
+      offset: { width: number; height: number }
+      opacity: number
+      radius: number
     }
   > = {
-    sm: {offset: {width: 0, height: 1}, opacity: 0.05, radius: 2},
-    md: {offset: {width: 0, height: 2}, opacity: 0.08, radius: 6},
-    lg: {offset: {width: 0, height: 4}, opacity: 0.12, radius: 12},
-    xl: {offset: {width: 0, height: 8}, opacity: 0.16, radius: 24},
-    fab: {offset: {width: 0, height: 6}, opacity: 0.2, radius: 16},
-  };
+    sm: { offset: { width: 0, height: 1 }, opacity: 0.05, radius: 2 },
+    md: { offset: { width: 0, height: 2 }, opacity: 0.08, radius: 6 },
+    lg: { offset: { width: 0, height: 4 }, opacity: 0.12, radius: 12 },
+    xl: { offset: { width: 0, height: 8 }, opacity: 0.16, radius: 24 },
+    fab: { offset: { width: 0, height: 6 }, opacity: 0.2, radius: 16 },
+  }
 
-  const cfg = map[level];
+  const cfg = map[level]
 
   return Platform.select<ViewStyle>({
     android: {
@@ -71,8 +71,8 @@ export const getShadow = (level: keyof typeof elevation): ViewStyle => {
     default: {
       elevation: elevation[level],
     },
-  }) as ViewStyle;
-};
+  }) as ViewStyle
+}
 
-export const shadow = getShadow;
-export type ShadowLevel = keyof typeof elevation;
+export const shadow = getShadow
+export type ShadowLevel = keyof typeof elevation

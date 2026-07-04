@@ -1,2 +1,2 @@
-export {default as Divider} from './Divider';
-export type * from './types';
+export { default as Divider } from './Divider'
+export type * from './types'

@@ -1,8 +1,8 @@
 /**
  * Toast 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   // 容器位置（provider 渲染时根据 position 选择）
@@ -47,7 +47,7 @@ export const styles = StyleSheet.create({
     marginVertical: spacing.xxs,
     maxWidth: '100%',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 6,
@@ -86,6 +86,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
-});
+})
 
-export default styles;
+export default styles

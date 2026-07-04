@@ -1,2 +1,2 @@
-export {default as LoadingOverlay} from './LoadingOverlay';
-export type * from './types';
+export { default as LoadingOverlay } from './LoadingOverlay'
+export type * from './types'

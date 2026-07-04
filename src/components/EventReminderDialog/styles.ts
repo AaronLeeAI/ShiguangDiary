@@ -5,8 +5,8 @@
  *
  * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
  */
-import {StyleSheet} from 'react-native';
-import {radius, spacing, typography, colors} from '@theme';
+import { StyleSheet } from 'react-native'
+import { radius, spacing, typography, colors } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -14,6 +14,6 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.semantic.bg.card,
     borderRadius: radius.md,
   },
-});
+})
 
-export default styles;
+export default styles

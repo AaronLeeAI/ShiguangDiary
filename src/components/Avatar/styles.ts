@@ -3,11 +3,11 @@
  *
  * 颜色/间距/圆角必须通过 @theme 访问，禁止硬编码。
  */
-import {StyleSheet} from 'react-native';
-import {radius, colors} from '@theme';
+import { StyleSheet } from 'react-native'
+import { radius, colors } from '@theme'
 
-import {AVATAR_SIZE} from './types';
-import type {AvatarSize} from './types';
+import { AVATAR_SIZE } from './types'
+import type { AvatarSize } from './types'
 
 export const styles = StyleSheet.create({
   container: {
@@ -58,11 +58,11 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 12,
   },
-});
+})
 
 export const avatarSizeStyle = (size: AvatarSize | number) => ({
   width: typeof size === 'number' ? size : AVATAR_SIZE[size],
   height: typeof size === 'number' ? size : AVATAR_SIZE[size],
-});
+})
 
-export default styles;
+export default styles

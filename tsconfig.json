@@ -32,6 +32,7 @@
       "@components/*": ["src/components/*"],
       "@screens/*": ["src/screens/*"],
       "@navigation/*": ["src/navigation/*"],
+      "@navigation": ["src/navigation"],
       "@theme/*": ["src/theme/*"],
       "@hooks/*": ["src/hooks/*"],
       "@utils/*": ["src/utils/*"],
@@ -66,19 +67,6 @@
     "types": ["react-native", "jest"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": [
-    "src/**/*",
-    "App.tsx",
-    "index.js",
-    "__tests__/**/*",
-    "*.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "android",
-    "ios",
-    "build",
-    "dist",
-    "coverage"
-  ]
+  "include": ["src/**/*", "App.tsx", "index.js", "__tests__/**/*", "*.d.ts"],
+  "exclude": ["node_modules", "android", "ios", "build", "dist", "coverage"]
 }

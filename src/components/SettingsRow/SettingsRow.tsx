@@ -4,13 +4,13 @@
  * icon + label + (hint | right | chevron)
  */
 
-import React from 'react';
-import {Pressable, Text, View} from 'react-native';
+import React from 'react'
+import { Pressable, Text, View } from 'react-native'
 
-import {Icon} from '@/components/Icon';
-import {colors} from '@theme';
-import {styles} from './styles';
-import type {SettingsRowProps} from './types';
+import { Icon } from '@/components/Icon'
+import { colors } from '@theme'
+import { styles } from './styles'
+import type { SettingsRowProps } from './types'
 
 /**
  * SettingsRow 组件
@@ -32,16 +32,17 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{disabled}}
+      accessibilityState={{ disabled }}
       testID={testID}
       onPress={onPress}
       disabled={disabled}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.container,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
-      ]}>
+      ]}
+    >
       {icon && (
         <View style={styles.iconWrap}>
           <Icon
@@ -58,18 +59,20 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
             destructive && styles.labelDestructive,
             disabled && styles.labelDisabled,
           ]}
-          numberOfLines={1}>
+          numberOfLines={1}
+        >
           {label}
         </Text>
       </View>
       {!!hint && <Text style={styles.hint}>{hint}</Text>}
-      {right ?? (showArrow && (
-        <View style={styles.arrowWrap}>
-          <Icon name="chevronRight" size={16} color={colors.semantic.icon.tertiary} />
-        </View>
-      ))}
+      {right ??
+        (showArrow && (
+          <View style={styles.arrowWrap}>
+            <Icon name="chevronRight" size={16} color={colors.semantic.icon.tertiary} />
+          </View>
+        ))}
     </Pressable>
-  );
-};
+  )
+}
 
-export default SettingsRow;
+export default SettingsRow

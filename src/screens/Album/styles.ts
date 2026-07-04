@@ -1,8 +1,8 @@
 /**
  * Album Screen 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, spacing} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, spacing } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -19,6 +19,6 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-});
+})
 
-export default styles;
+export default styles

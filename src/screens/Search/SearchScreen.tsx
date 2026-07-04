@@ -13,19 +13,19 @@
  * 当前使用 mock 数据。
  */
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {FlatList, Pressable, Text, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FlatList, Pressable, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import {DiaryCard} from '@/components/DiaryCard';
-import {EmptyState} from '@/components/EmptyState';
-import {Loading} from '@/components/Loading';
-import {SearchBar} from '@/components/SearchBar';
-import {ROUTES} from '@constants/routes';
-import type {Diary} from '@types';
+import { DiaryCard } from '@/components/DiaryCard'
+import { EmptyState } from '@/components/EmptyState'
+import { Loading } from '@/components/Loading'
+import { SearchBar } from '@/components/SearchBar'
+import { ROUTES } from '@constants/routes'
+import type { Diary } from '@types'
 
-import {styles} from './styles';
-import type {SearchScreenProps} from './types';
+import { styles } from './styles'
+import type { SearchScreenProps } from './types'
 
 const MOCK_DATASET: Diary[] = [
   {
@@ -108,71 +108,71 @@ const MOCK_DATASET: Diary[] = [
     updatedAt: Date.now() - 20 * 86400000,
     deletedAt: null,
   },
-];
+]
 
-const INITIAL_HISTORY = ['樱花', '加班', '杭州', '深夜', '夏天'];
+const INITIAL_HISTORY = ['樱花', '加班', '杭州', '深夜', '夏天']
 
 /**
  * SearchScreen 组件
  */
-export const SearchScreen: React.FC<SearchScreenProps> = ({navigation}) => {
-  const insets = useSafeAreaInsets();
-  const [keyword, setKeyword] = useState('');
-  const [submitted, setSubmitted] = useState('');
-  const [results, setResults] = useState<Diary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<string[]>(INITIAL_HISTORY);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
+  const insets = useSafeAreaInsets()
+  const [keyword, setKeyword] = useState('')
+  const [submitted, setSubmitted] = useState('')
+  const [results, setResults] = useState<Diary[]>([])
+  const [loading, setLoading] = useState(false)
+  const [history, setHistory] = useState<string[]>(INITIAL_HISTORY)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // 防抖搜索：输入 300ms 后自动查询
   useEffect(() => {
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      clearTimeout(debounceRef.current)
     }
     if (!keyword.trim()) {
-      setResults([]);
-      setSubmitted('');
-      return;
+      setResults([])
+      setSubmitted('')
+      return
     }
-    setLoading(true);
+    setLoading(true)
     debounceRef.current = setTimeout(() => {
-      const k = keyword.trim().toLowerCase();
+      const k = keyword.trim().toLowerCase()
       const filtered = MOCK_DATASET.filter(d => {
         const hay = [d.title, d.summary, d.content, d.location ?? '', d.weather ?? '']
           .join(' ')
-          .toLowerCase();
-        return hay.includes(k);
-      });
-      setResults(filtered);
-      setSubmitted(keyword.trim());
-      setLoading(false);
-    }, 300);
+          .toLowerCase()
+        return hay.includes(k)
+      })
+      setResults(filtered)
+      setSubmitted(keyword.trim())
+      setLoading(false)
+    }, 300)
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [keyword]);
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [keyword])
 
   const handleItemPress = useCallback(
     (item: Diary) => {
-      navigation.navigate(ROUTES.DIARY_VIEW, {id: item.id});
+      navigation.navigate(ROUTES.DIARY_VIEW, { id: item.id })
     },
     [navigation],
-  );
+  )
 
   const handleHistoryTap = useCallback((tag: string) => {
-    setKeyword(tag);
-  }, []);
+    setKeyword(tag)
+  }, [])
 
   const handleClearHistory = useCallback(() => {
-    setHistory([]);
-  }, []);
+    setHistory([])
+  }, [])
 
   const handleCancel = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+    navigation.goBack()
+  }, [navigation])
 
   // 当前是否处于"未输入"状态（显示历史）
-  const isIdle = !keyword.trim();
+  const isIdle = !keyword.trim()
 
   // 搜索结果列表头
   const ListHeader = useMemo(() => {
@@ -193,37 +193,35 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({navigation}) => {
                 <Pressable
                   key={tag}
                   onPress={() => handleHistoryTap(tag)}
-                  style={({pressed}) => [
-                    styles.historyTag,
-                    pressed && {opacity: 0.6},
-                  ]}>
+                  style={({ pressed }) => [styles.historyTag, pressed && { opacity: 0.6 }]}
+                >
                   <Text style={styles.historyTagText}>{tag}</Text>
                 </Pressable>
               ))}
             </View>
           ) : (
-            <Text style={{...styles.clearButton, color: '#999'}}>暂无历史</Text>
+            <Text style={{ ...styles.clearButton, color: '#999' }}>暂无历史</Text>
           )}
         </View>
-      );
+      )
     }
     return (
-      <View style={{paddingHorizontal: 16, paddingTop: 16}}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Text style={styles.resultCount}>
           共 {results.length} 条与"{submitted}"相关的日记
         </Text>
       </View>
-    );
-  }, [isIdle, history, results, submitted, handleClearHistory, handleHistoryTap]);
+    )
+  }, [isIdle, history, results, submitted, handleClearHistory, handleHistoryTap])
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <SearchBar
         value={keyword}
         onChangeText={setKeyword}
         onSubmit={() => {
           if (keyword.trim() && !history.includes(keyword.trim())) {
-            setHistory(prev => [keyword.trim(), ...prev].slice(0, 8));
+            setHistory(prev => [keyword.trim(), ...prev].slice(0, 8))
           }
         }}
         showCancel
@@ -237,15 +235,12 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({navigation}) => {
         ) : isIdle ? (
           ListHeader
         ) : results.length === 0 ? (
-          <EmptyState
-            variant="search"
-            subtitle={`试试搜索"${submitted || keyword}"相关的关键词`}
-          />
+          <EmptyState variant="search" subtitle={`试试搜索"${submitted || keyword}"相关的关键词`} />
         ) : (
           <FlatList
             data={results}
             keyExtractor={item => item.id}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <DiaryCard item={item} onPress={() => handleItemPress(item)} />
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -257,7 +252,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({navigation}) => {
         )}
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default SearchScreen;
+export default SearchScreen

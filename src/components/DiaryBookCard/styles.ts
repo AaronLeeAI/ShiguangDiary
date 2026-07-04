@@ -1,8 +1,8 @@
 /**
  * DiaryBookCard 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const DIARY_BOOK_COVER_DEFAULT_COLORS = [
   '#1AAD66', // 品牌绿
@@ -11,9 +11,9 @@ export const DIARY_BOOK_COVER_DEFAULT_COLORS = [
   '#FF8800', // warning
   '#A259FF', // 紫
   '#FFB400', // 金
-] as const;
+] as const
 
-export const DIARY_BOOK_SIZE = 96; // 封面方形尺寸
+export const DIARY_BOOK_SIZE = 96 // 封面方形尺寸
 
 export const styles = StyleSheet.create({
   container: {
@@ -70,6 +70,6 @@ export const styles = StyleSheet.create({
     borderRadius: radius.full,
     backgroundColor: colors.semantic.text.tertiary,
   },
-});
+})
 
-export default styles;
+export default styles

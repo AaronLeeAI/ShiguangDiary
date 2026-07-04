@@ -4,7 +4,7 @@
  * 单一可信来源：docs/project-设计-docs/docs/08_Animation.md
  */
 
-import {Easing} from 'react-native-reanimated';
+import { Easing } from 'react-native-reanimated'
 
 /**
  * 时长（毫秒）
@@ -24,7 +24,7 @@ export const duration = {
   listMaxTotal: 500, // 列表项动画总时长上限
   breathLoop: 2000, // 沙漏呼吸动画周期
   arcRotate: 1000, // 加载弧形旋转
-} as const;
+} as const
 
 /**
  * 缓动函数（Easing）
@@ -34,24 +34,24 @@ export const easing = {
   easeIn: Easing.in(Easing.cubic),
   easeInOut: Easing.inOut(Easing.cubic),
   linear: Easing.linear,
-} as const;
+} as const
 
 /**
  * 弹簧参数
  */
 export const spring = {
-  default: {damping: 15, mass: 1, stiffness: 150},
-  gentle: {damping: 20, mass: 1, stiffness: 100},
-  bouncy: {damping: 10, mass: 1, stiffness: 200},
-  stiff: {damping: 25, mass: 1, stiffness: 300},
-} as const;
+  default: { damping: 15, mass: 1, stiffness: 150 },
+  gentle: { damping: 20, mass: 1, stiffness: 100 },
+  bouncy: { damping: 10, mass: 1, stiffness: 200 },
+  stiff: { damping: 25, mass: 1, stiffness: 300 },
+} as const
 
 export const motion = {
   duration,
   easing,
   spring,
-} as const;
+} as const
 
-export type DurationToken = keyof typeof duration;
-export type EasingToken = keyof typeof easing;
-export type SpringToken = keyof typeof spring;
+export type DurationToken = keyof typeof duration
+export type EasingToken = keyof typeof easing
+export type SpringToken = keyof typeof spring

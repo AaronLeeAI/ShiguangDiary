@@ -3,7 +3,7 @@
  */
 
 export interface ColorSwatchProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface ColorSwatchState {
   // TODO: 补充内部状态
 }
 
-export type ColorSwatchRef = unknown;
+export type ColorSwatchRef = unknown

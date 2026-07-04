@@ -3,8 +3,8 @@
  *
  * 颜色/间距/字号严格遵循 @theme。
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   backdrop: {
@@ -75,6 +75,6 @@ export const styles = StyleSheet.create({
     ...typography.titleS,
     color: colors.semantic.text.primary,
   },
-});
+})
 
-export default styles;
+export default styles

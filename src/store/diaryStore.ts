@@ -5,16 +5,16 @@
  * 失败时降级到内存 mock（数据库初始化失败、依赖未装等场景）。
  */
 
-import {create} from 'zustand';
+import { create } from 'zustand'
 
-import {diaryRepository, notebookRepository, albumRepository, runMigrations} from '@database';
-import type {DiaryModel, NotebookModel, AlbumModel} from '@database';
-import type {Diary, Notebook, Album} from '@types';
+import { diaryRepository, notebookRepository, albumRepository, runMigrations } from '@database'
+import type { DiaryModel, NotebookModel, AlbumModel } from '@database'
+import type { Diary, Notebook, Album } from '@types'
 
 // ========== Model <-> Domain 转换 ==========
 
 const toDiaryDomain = (m: DiaryModel): Diary => {
-  const d = new Date(m.createdAt);
+  const d = new Date(m.createdAt)
   return {
     id: m.id,
     notebookId: m.notebookId,
@@ -27,15 +27,18 @@ const toDiaryDomain = (m: DiaryModel): Diary => {
     mood: m.mood,
     day: String(d.getDate()).padStart(2, '0'),
     monthYear: `${d.getMonth() + 1}月·${['日', '一', '二', '三', '四', '五', '六'][d.getDay()]}`,
-    timestamp: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+    timestamp: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(
+      2,
+      '0',
+    )}`,
     isPinned: m.isPinned === 1,
     isEncrypted: m.isEncrypted === 1,
     isDraft: m.isDraft === 1,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
     deletedAt: m.deletedAt,
-  };
-};
+  }
+}
 
 const toNotebookDomain = (m: NotebookModel): Notebook => ({
   id: m.id,
@@ -48,7 +51,7 @@ const toNotebookDomain = (m: NotebookModel): Notebook => ({
   createdAt: m.createdAt,
   updatedAt: m.updatedAt,
   deletedAt: m.deletedAt,
-});
+})
 
 const toAlbumDomain = (m: AlbumModel): Album => ({
   id: m.id,
@@ -59,23 +62,23 @@ const toAlbumDomain = (m: AlbumModel): Album => ({
   createdAt: m.createdAt,
   updatedAt: m.updatedAt,
   deletedAt: m.deletedAt,
-});
+})
 
 const diaryModelFromDomain = (d: Partial<Diary>): Partial<DiaryModel> => {
-  const out: Partial<DiaryModel> = {};
-  if (d.id !== undefined) out.id = d.id;
-  if (d.notebookId !== undefined) out.notebookId = d.notebookId;
-  if (d.title !== undefined) out.title = d.title;
-  if (d.content !== undefined) out.content = d.content;
-  if (d.cover !== undefined) out.cover = d.cover;
-  if (d.weather !== undefined) out.weather = d.weather;
-  if (d.location !== undefined) out.location = d.location;
-  if (d.mood !== undefined) out.mood = d.mood;
-  if (d.isPinned !== undefined) out.isPinned = d.isPinned ? 1 : 0;
-  if (d.isEncrypted !== undefined) out.isEncrypted = d.isEncrypted ? 1 : 0;
-  if (d.isDraft !== undefined) out.isDraft = d.isDraft ? 1 : 0;
-  return out;
-};
+  const out: Partial<DiaryModel> = {}
+  if (d.id !== undefined) out.id = d.id
+  if (d.notebookId !== undefined) out.notebookId = d.notebookId
+  if (d.title !== undefined) out.title = d.title
+  if (d.content !== undefined) out.content = d.content
+  if (d.cover !== undefined) out.cover = d.cover
+  if (d.weather !== undefined) out.weather = d.weather
+  if (d.location !== undefined) out.location = d.location
+  if (d.mood !== undefined) out.mood = d.mood
+  if (d.isPinned !== undefined) out.isPinned = d.isPinned ? 1 : 0
+  if (d.isEncrypted !== undefined) out.isEncrypted = d.isEncrypted ? 1 : 0
+  if (d.isDraft !== undefined) out.isDraft = d.isDraft ? 1 : 0
+  return out
+}
 
 // ========== 种子数据（数据库为空时填充） ==========
 
@@ -85,7 +88,8 @@ const SEED_DIARIES: Diary[] = [
     notebookId: 'nb-1',
     title: '今天天气真好',
     summary: '下午和朋友们去公园散步，看到了盛开的樱花。',
-    content: '今天下午和朋友们约着去朝阳公园走走。刚到门口就闻到了花香，原来是樱花开了。\n\n粉白色的花瓣在阳光下透出淡淡的粉色。',
+    content:
+      '今天下午和朋友们约着去朝阳公园走走。刚到门口就闻到了花香，原来是樱花开了。\n\n粉白色的花瓣在阳光下透出淡淡的粉色。',
     cover: null,
     weather: '晴',
     location: '北京·朝阳公园',
@@ -140,7 +144,7 @@ const SEED_DIARIES: Diary[] = [
     updatedAt: Date.now() - 259200000,
     deletedAt: null,
   },
-];
+]
 
 const SEED_NOTEBOOKS: Notebook[] = [
   {
@@ -179,7 +183,7 @@ const SEED_NOTEBOOKS: Notebook[] = [
     updatedAt: Date.now() - 7 * 86400000,
     deletedAt: null,
   },
-];
+]
 
 const SEED_ALBUMS: Album[] = [
   {
@@ -202,67 +206,69 @@ const SEED_ALBUMS: Album[] = [
     updatedAt: Date.now() - 14 * 86400000,
     deletedAt: null,
   },
-];
+]
 
 // ========== Store 类型 ==========
 
 interface DiaryStoreState {
   // 数据
-  diaries: Diary[];
-  notebooks: Notebook[];
-  albums: Album[];
+  diaries: Diary[]
+  notebooks: Notebook[]
+  albums: Album[]
   // 状态
-  loading: boolean;
-  initialized: boolean;
+  loading: boolean
+  initialized: boolean
   /** 是否使用 mock 降级（数据库失败） */
-  useFallback: boolean;
+  useFallback: boolean
   // 错误
-  error: string | null;
+  error: string | null
 
   // Actions
-  init: () => Promise<void>;
-  reload: () => Promise<void>;
+  init: () => Promise<void>
+  reload: () => Promise<void>
 
   // Diary
-  getDiaryById: (id: string) => Diary | undefined;
-  createDiary: (data: Omit<Diary, 'id' | 'createdAt' | 'updatedAt' | 'day' | 'monthYear' | 'timestamp'>) => Promise<Diary>;
-  updateDiary: (id: string, data: Partial<Diary>) => Promise<void>;
-  removeDiary: (id: string) => Promise<void>;
-  togglePin: (id: string) => Promise<void>;
+  getDiaryById: (id: string) => Diary | undefined
+  createDiary: (
+    data: Omit<Diary, 'id' | 'createdAt' | 'updatedAt' | 'day' | 'monthYear' | 'timestamp'>,
+  ) => Promise<Diary>
+  updateDiary: (id: string, data: Partial<Diary>) => Promise<void>
+  removeDiary: (id: string) => Promise<void>
+  togglePin: (id: string) => Promise<void>
 
   // Notebook
-  createNotebook: (name: string, description?: string, color?: string) => Promise<Notebook>;
-  updateNotebook: (id: string, data: Partial<Notebook>) => Promise<void>;
-  removeNotebook: (id: string) => Promise<void>;
+  createNotebook: (name: string, description?: string, color?: string) => Promise<Notebook>
+  updateNotebook: (id: string, data: Partial<Notebook>) => Promise<void>
+  removeNotebook: (id: string) => Promise<void>
 
   // Album
-  createAlbum: (name: string, description?: string) => Promise<Album>;
+  createAlbum: (name: string, description?: string) => Promise<Album>
 }
 
 // ========== 工具：生成 ID ==========
 
 const genId = (prefix: string) =>
-  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 // ========== 种子写入（数据库版本） ==========
 
 const seedDatabase = async () => {
   for (const d of SEED_DIARIES) {
-    await diaryRepository.create(diaryModelFromDomain(d) as DiaryModel);
+    await diaryRepository.create(diaryModelFromDomain(d) as DiaryModel)
   }
   for (const n of SEED_NOTEBOOKS) {
     await notebookRepository.create({
       ...n,
       diaryIds: undefined,
-    } as unknown as NotebookModel);
+    } as unknown as NotebookModel)
   }
   for (const a of SEED_ALBUMS) {
     await albumRepository.create({
       ...a,
       diaryIds: JSON.stringify(a.diaryIds),
-    } as unknown as AlbumModel);
+    } as unknown as AlbumModel)
   }
-};
+}
 
 // ========== Store 实现 ==========
 
@@ -276,28 +282,28 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
   error: null,
 
   init: async () => {
-    if (get().initialized || get().loading) return;
-    set({loading: true, error: null});
+    if (get().initialized || get().loading) return
+    set({ loading: true, error: null })
 
     try {
       // 1. 跑迁移
-      await runMigrations();
+      await runMigrations()
 
       // 2. 加载数据
       const [diaries, notebooks, albums] = await Promise.all([
         diaryRepository.list(),
         notebookRepository.list(),
         albumRepository.list(),
-      ]);
+      ])
 
       // 3. 空库则填充种子
       if (diaries.length === 0 && notebooks.length === 0 && albums.length === 0) {
-        await seedDatabase();
+        await seedDatabase()
         const [d2, n2, a2] = await Promise.all([
           diaryRepository.list(),
           notebookRepository.list(),
           albumRepository.list(),
-        ]);
+        ])
         set({
           diaries: d2.map(toDiaryDomain),
           notebooks: n2.map(toNotebookDomain),
@@ -305,8 +311,8 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
           initialized: true,
           loading: false,
           useFallback: false,
-        });
-        return;
+        })
+        return
       }
 
       set({
@@ -316,11 +322,11 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         initialized: true,
         loading: false,
         useFallback: false,
-      });
+      })
     } catch (e: unknown) {
       // 数据库失败 → 降级到 mock
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] DB init failed, fallback to mock:', e);
+      console.warn('[DiaryStore] DB init failed, fallback to mock:', e)
       set({
         diaries: SEED_DIARIES,
         notebooks: SEED_NOTEBOOKS,
@@ -329,20 +335,20 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         loading: false,
         useFallback: true,
         error: e instanceof Error ? e.message : String(e),
-      });
+      })
     }
   },
 
   reload: async () => {
-    set({initialized: false, loading: true});
-    await get().init();
+    set({ initialized: false, loading: true })
+    await get().init()
   },
 
-  getDiaryById: (id) => get().diaries.find(d => d.id === id),
+  getDiaryById: id => get().diaries.find(d => d.id === id),
 
-  createDiary: async (data) => {
-    const now = Date.now();
-    const d = new Date(now);
+  createDiary: async data => {
+    const now = Date.now()
+    const d = new Date(now)
     const newDiary: Diary = {
       ...data,
       id: genId('diary'),
@@ -350,77 +356,74 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       updatedAt: now,
       day: String(d.getDate()).padStart(2, '0'),
       monthYear: `${d.getMonth() + 1}月·${['日', '一', '二', '三', '四', '五', '六'][d.getDay()]}`,
-      timestamp: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
-    };
+      timestamp: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(
+        2,
+        '0',
+      )}`,
+    }
 
     if (get().useFallback) {
-      set(state => ({diaries: [newDiary, ...state.diaries]}));
-      return newDiary;
+      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      return newDiary
     }
 
     try {
-      await diaryRepository.create(diaryModelFromDomain(newDiary) as DiaryModel);
-      set(state => ({diaries: [newDiary, ...state.diaries]}));
-      return newDiary;
+      await diaryRepository.create(diaryModelFromDomain(newDiary) as DiaryModel)
+      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      return newDiary
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] createDiary failed:', e);
-      set(state => ({diaries: [newDiary, ...state.diaries]}));
-      return newDiary;
+      console.warn('[DiaryStore] createDiary failed:', e)
+      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      return newDiary
     }
   },
 
   updateDiary: async (id, data) => {
-    const now = Date.now();
+    const now = Date.now()
     if (get().useFallback) {
       set(state => ({
-        diaries: state.diaries.map(d =>
-          d.id === id ? {...d, ...data, updatedAt: now} : d,
-        ),
-      }));
-      return;
+        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+      }))
+      return
     }
     try {
-      await diaryRepository.update(id, diaryModelFromDomain(data));
+      await diaryRepository.update(id, diaryModelFromDomain(data))
       set(state => ({
-        diaries: state.diaries.map(d =>
-          d.id === id ? {...d, ...data, updatedAt: now} : d,
-        ),
-      }));
+        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+      }))
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] updateDiary failed:', e);
+      console.warn('[DiaryStore] updateDiary failed:', e)
       set(state => ({
-        diaries: state.diaries.map(d =>
-          d.id === id ? {...d, ...data, updatedAt: now} : d,
-        ),
-      }));
+        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+      }))
     }
   },
 
-  removeDiary: async (id) => {
+  removeDiary: async id => {
     if (get().useFallback) {
-      set(state => ({diaries: state.diaries.filter(d => d.id !== id)}));
-      return;
+      set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
+      return
     }
     try {
-      await diaryRepository.remove(id);
-      set(state => ({diaries: state.diaries.filter(d => d.id !== id)}));
+      await diaryRepository.remove(id)
+      set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] removeDiary failed:', e);
-      set(state => ({diaries: state.diaries.filter(d => d.id !== id)}));
+      console.warn('[DiaryStore] removeDiary failed:', e)
+      set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     }
   },
 
-  togglePin: async (id) => {
-    const cur = get().diaries.find(d => d.id === id);
-    if (!cur) return;
-    await get().updateDiary(id, {isPinned: !cur.isPinned});
+  togglePin: async id => {
+    const cur = get().diaries.find(d => d.id === id)
+    if (!cur) return
+    await get().updateDiary(id, { isPinned: !cur.isPinned })
   },
 
   createNotebook: async (name, description, color) => {
-    const now = Date.now();
+    const now = Date.now()
     const nb: Notebook = {
       id: genId('nb'),
       name,
@@ -432,68 +435,62 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
-    };
+    }
     if (get().useFallback) {
-      set(state => ({notebooks: [nb, ...state.notebooks]}));
-      return nb;
+      set(state => ({ notebooks: [nb, ...state.notebooks] }))
+      return nb
     }
     try {
-      await notebookRepository.create(nb as unknown as NotebookModel);
-      set(state => ({notebooks: [nb, ...state.notebooks]}));
-      return nb;
+      await notebookRepository.create(nb as unknown as NotebookModel)
+      set(state => ({ notebooks: [nb, ...state.notebooks] }))
+      return nb
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] createNotebook failed:', e);
-      set(state => ({notebooks: [nb, ...state.notebooks]}));
-      return nb;
+      console.warn('[DiaryStore] createNotebook failed:', e)
+      set(state => ({ notebooks: [nb, ...state.notebooks] }))
+      return nb
     }
   },
 
   updateNotebook: async (id, data) => {
-    const now = Date.now();
+    const now = Date.now()
     if (get().useFallback) {
       set(state => ({
-        notebooks: state.notebooks.map(n =>
-          n.id === id ? {...n, ...data, updatedAt: now} : n,
-        ),
-      }));
-      return;
+        notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
+      }))
+      return
     }
     try {
-      await notebookRepository.update(id, data as Partial<NotebookModel>);
+      await notebookRepository.update(id, data as Partial<NotebookModel>)
       set(state => ({
-        notebooks: state.notebooks.map(n =>
-          n.id === id ? {...n, ...data, updatedAt: now} : n,
-        ),
-      }));
+        notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
+      }))
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] updateNotebook failed:', e);
+      console.warn('[DiaryStore] updateNotebook failed:', e)
       set(state => ({
-        notebooks: state.notebooks.map(n =>
-          n.id === id ? {...n, ...data, updatedAt: now} : n,
-        ),
-      }));
+        notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
+      }))
     }
   },
 
-  removeNotebook: async (id) => {
+  removeNotebook: async id => {
     if (get().useFallback) {
-      set(state => ({notebooks: state.notebooks.filter(n => n.id !== id)}));
-      return;
+      set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
+      return
     }
     try {
-      await notebookRepository.remove(id);
-      set(state => ({notebooks: state.notebooks.filter(n => n.id !== id)}));
+      await notebookRepository.remove(id)
+      set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] removeNotebook failed:', e);
-      set(state => ({notebooks: state.notebooks.filter(n => n.id !== id)}));
+      console.warn('[DiaryStore] removeNotebook failed:', e)
+      set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     }
   },
 
   createAlbum: async (name, description) => {
-    const now = Date.now();
+    const now = Date.now()
     const al: Album = {
       id: genId('al'),
       name,
@@ -503,22 +500,25 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
-    };
+    }
     if (get().useFallback) {
-      set(state => ({albums: [al, ...state.albums]}));
-      return al;
+      set(state => ({ albums: [al, ...state.albums] }))
+      return al
     }
     try {
-      await albumRepository.create({...al, diaryIds: JSON.stringify(al.diaryIds)} as unknown as AlbumModel);
-      set(state => ({albums: [al, ...state.albums]}));
-      return al;
+      await albumRepository.create({
+        ...al,
+        diaryIds: JSON.stringify(al.diaryIds),
+      } as unknown as AlbumModel)
+      set(state => ({ albums: [al, ...state.albums] }))
+      return al
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('[DiaryStore] createAlbum failed:', e);
-      set(state => ({albums: [al, ...state.albums]}));
-      return al;
+      console.warn('[DiaryStore] createAlbum failed:', e)
+      set(state => ({ albums: [al, ...state.albums] }))
+      return al
     }
   },
-}));
+}))
 
-export default useDiaryStore;
+export default useDiaryStore

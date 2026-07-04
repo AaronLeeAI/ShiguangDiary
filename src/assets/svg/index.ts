@@ -6,16 +6,16 @@
  * 后续 Task 通过 `import IconName from '@assets/svg/IconName'` 引用。
  */
 
-import React from 'react';
+import React from 'react'
 
 interface SvgPlaceholderProps {
-  size?: number;
-  color?: string;
+  size?: number
+  color?: string
 }
 
-const PlaceholderSvg: React.FC<SvgPlaceholderProps> = () => null;
+const PlaceholderSvg: React.FC<SvgPlaceholderProps> = () => null
 
-const emptyMap: Record<string, React.FC<SvgPlaceholderProps>> = {};
+const emptyMap: Record<string, React.FC<SvgPlaceholderProps>> = {}
 
-export default emptyMap;
-export {PlaceholderSvg};
+export default emptyMap
+export { PlaceholderSvg }

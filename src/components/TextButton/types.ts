@@ -2,30 +2,30 @@
  * TextButton - 类型定义
  */
 
-import type {ReactNode} from 'react';
-import type {ViewStyle} from 'react-native';
+import type { ReactNode } from 'react'
+import type { ViewStyle } from 'react-native'
 
-export type TextButtonSize = 'small' | 'medium' | 'large';
+export type TextButtonSize = 'small' | 'medium' | 'large'
 
 export interface TextButtonProps {
   /** 按钮文字 */
-  title: string;
+  title: string
   /** 点击回调 */
-  onPress: () => void;
+  onPress: () => void
   /** 文字颜色（默认 brand.primary） */
-  color?: string;
+  color?: string
   /** 按钮尺寸 */
-  size?: TextButtonSize;
+  size?: TextButtonSize
   /** 禁用状态 */
-  disabled?: boolean;
+  disabled?: boolean
   /** 下划线 */
-  underline?: boolean;
+  underline?: boolean
   /** 前置/后置图标 */
-  icon?: ReactNode;
+  icon?: ReactNode
   /** 图标位置 */
-  iconPosition?: 'left' | 'right';
+  iconPosition?: 'left' | 'right'
   /** 容器样式 */
-  style?: ViewStyle;
+  style?: ViewStyle
   /** 测试 ID */
-  testID?: string;
+  testID?: string
 }

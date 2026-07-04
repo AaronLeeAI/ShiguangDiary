@@ -13,131 +13,131 @@
  *   - 音频：audio_<purpose>.<ext>
  */
 
-import {Image} from 'react-native';
+import { Image } from 'react-native'
 
 // ============ Types ============
 
 export interface PlaceholderImages {
-  emptyDiary: number | null;
-  emptyNotebook: number | null;
-  emptyAlbum: number | null;
-  emptySearch: number | null;
-  emptyDraft: number | null;
-  emptyRecycle: number | null;
+  emptyDiary: number | null
+  emptyNotebook: number | null
+  emptyAlbum: number | null
+  emptySearch: number | null
+  emptyDraft: number | null
+  emptyRecycle: number | null
 }
 
 export interface SplashImages {
-  logo: number | null;
-  hourglass: number | null;
+  logo: number | null
+  hourglass: number | null
 }
 
 export interface ContentImages {
-  coverDefault: number | null;
-  avatarDefault: number | null;
+  coverDefault: number | null
+  avatarDefault: number | null
 }
 
 export interface AssetImages {
-  placeholder: PlaceholderImages;
-  splash: SplashImages;
-  content: ContentImages;
+  placeholder: PlaceholderImages
+  splash: SplashImages
+  content: ContentImages
 }
 
 export interface AssetIcons {
   // Navigation
-  back: number | null;
-  close: number | null;
-  more: number | null;
-  chevronLeft: number | null;
-  chevronRight: number | null;
-  chevronDown: number | null;
-  chevronUp: number | null;
+  back: number | null
+  close: number | null
+  more: number | null
+  chevronLeft: number | null
+  chevronRight: number | null
+  chevronDown: number | null
+  chevronUp: number | null
   // Actions
-  add: number | null;
-  edit: number | null;
-  delete: number | null;
-  check: number | null;
-  save: number | null;
-  share: number | null;
-  search: number | null;
-  filter: number | null;
-  sort: number | null;
-  drag: number | null;
+  add: number | null
+  edit: number | null
+  delete: number | null
+  check: number | null
+  save: number | null
+  share: number | null
+  search: number | null
+  filter: number | null
+  sort: number | null
+  drag: number | null
   // Toolbar
-  bold: number | null;
-  italic: number | null;
-  underline: number | null;
-  strikethrough: number | null;
-  listLeft: number | null;
-  listCenter: number | null;
-  quote: number | null;
-  indent: number | null;
-  alignCenter: number | null;
-  fontSizeDown: number | null;
-  fontSizeUp: number | null;
-  textUpper: number | null;
-  textStyle: number | null;
-  textColor: number | null;
+  bold: number | null
+  italic: number | null
+  underline: number | null
+  strikethrough: number | null
+  listLeft: number | null
+  listCenter: number | null
+  quote: number | null
+  indent: number | null
+  alignCenter: number | null
+  fontSizeDown: number | null
+  fontSizeUp: number | null
+  textUpper: number | null
+  textStyle: number | null
+  textColor: number | null
   // Media
-  camera: number | null;
-  image: number | null;
-  imageText: number | null;
-  mic: number | null;
-  link: number | null;
-  headphone: number | null;
+  camera: number | null
+  image: number | null
+  imageText: number | null
+  mic: number | null
+  link: number | null
+  headphone: number | null
   // Time / Alerts
-  bell: number | null;
-  clock: number | null;
-  calendar: number | null;
-  location: number | null;
-  weather: number | null;
+  bell: number | null
+  clock: number | null
+  calendar: number | null
+  location: number | null
+  weather: number | null
   // Settings / Tools
-  settings: number | null;
-  tune: number | null;
-  recycle: number | null;
-  doc: number | null;
-  export: number | null;
-  moon: number | null;
-  chart: number | null;
-  crown: number | null;
-  tag: number | null;
-  flag: number | null;
-  hourglass: number | null;
-  swap: number | null;
+  settings: number | null
+  tune: number | null
+  recycle: number | null
+  doc: number | null
+  export: number | null
+  moon: number | null
+  chart: number | null
+  crown: number | null
+  tag: number | null
+  flag: number | null
+  hourglass: number | null
+  swap: number | null
   // Business
-  list: number | null;
-  book: number | null;
-  bookshelf: number | null;
-  album: number | null;
-  profile: number | null;
-  addBook: number | null;
-  bookmark: number | null;
-  trash: number | null;
-  lock: number | null;
+  list: number | null
+  book: number | null
+  bookshelf: number | null
+  album: number | null
+  profile: number | null
+  addBook: number | null
+  bookmark: number | null
+  trash: number | null
+  lock: number | null
   // Tab active states
-  listActive: number | null;
-  bookActive: number | null;
-  albumActive: number | null;
-  profileActive: number | null;
+  listActive: number | null
+  bookActive: number | null
+  albumActive: number | null
+  profileActive: number | null
 }
 
 export interface AssetFonts {
-  [key: string]: number | null;
+  [key: string]: number | null
 }
 
 export interface AssetAnimations {
-  [key: string]: number | null;
+  [key: string]: number | null
 }
 
 export interface AssetAudio {
-  [key: string]: number | null;
+  [key: string]: number | null
 }
 
 export interface Assets {
-  images: AssetImages;
-  icons: AssetIcons;
-  fonts: AssetFonts;
-  animations: AssetAnimations;
-  audio: AssetAudio;
+  images: AssetImages
+  icons: AssetIcons
+  fonts: AssetFonts
+  animations: AssetAnimations
+  audio: AssetAudio
 }
 
 // ============ Helpers ============
@@ -149,20 +149,17 @@ export interface Assets {
  *
  * Usage: `resolveAsset('images', 'splash', 'logo')` → resolves `assets/images/splash/logo.png`
  */
-export function resolveAsset(
-  category: string,
-  ...keys: string[]
-): number | null {
+export function resolveAsset(category: string, ...keys: string[]): number | null {
   try {
-    const moduleName = keys.join('/');
-    return require(`@assets/${category}/${moduleName}.png`);
+    const moduleName = keys.join('/')
+    return require(`@assets/${category}/${moduleName}.png`)
   } catch {
     // Fallback: try .webp
     try {
-      const moduleName = keys.join('/');
-      return require(`@assets/${category}/${moduleName}.webp`);
+      const moduleName = keys.join('/')
+      return require(`@assets/${category}/${moduleName}.webp`)
     } catch {
-      return null;
+      return null
     }
   }
 }
@@ -176,23 +173,23 @@ export const placeholderImages: PlaceholderImages = {
   emptySearch: resolveAsset('placeholder', 'emptySearch'),
   emptyDraft: resolveAsset('placeholder', 'emptyDraft'),
   emptyRecycle: resolveAsset('placeholder', 'emptyRecycle'),
-};
+}
 
 export const splashImages: SplashImages = {
   logo: resolveAsset('images', 'splash', 'logo'),
   hourglass: resolveAsset('images', 'splash', 'hourglass'),
-};
+}
 
 export const contentImages: ContentImages = {
   coverDefault: resolveAsset('content', 'coverDefault'),
   avatarDefault: resolveAsset('content', 'avatarDefault'),
-};
+}
 
 export const images: AssetImages = {
   placeholder: placeholderImages,
   splash: splashImages,
   content: contentImages,
-};
+}
 
 // ============ Icons ============
 
@@ -272,14 +269,14 @@ export const icons: AssetIcons = {
   bookActive: resolveAsset('icons', 'tab', 'bookActive'),
   albumActive: resolveAsset('icons', 'tab', 'albumActive'),
   profileActive: resolveAsset('icons', 'tab', 'profileActive'),
-};
+}
 
 // ============ Fonts ============
 
 export const fonts: AssetFonts = {
   // 自定义字体在资源就绪后添加：
   // notoSansCJKRegular: resolveAsset('font', 'NotoSansCJK-Regular'),
-};
+}
 
 // ============ Animations ============
 
@@ -287,14 +284,14 @@ export const animations: AssetAnimations = {
   loadingArc: resolveAsset('animations', 'loadingArc'),
   splashHourglass: resolveAsset('animations', 'splashHourglass'),
   emptyHourglass: resolveAsset('animations', 'emptyHourglass'),
-};
+}
 
 // ============ Audio ============
 
 export const audio: AssetAudio = {
   // click: resolveAsset('audio', 'click'),
   // success: resolveAsset('audio', 'success'),
-};
+}
 
 // ============ Default Export ============
 
@@ -304,6 +301,6 @@ const assets: Assets = {
   fonts,
   animations,
   audio,
-};
+}
 
-export default assets;
+export default assets

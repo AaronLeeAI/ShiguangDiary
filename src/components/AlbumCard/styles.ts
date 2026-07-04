@@ -1,10 +1,10 @@
 /**
  * AlbumCard 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
-export const ALBUM_COVER_SIZE = 144;
+export const ALBUM_COVER_SIZE = 144
 
 export const styles = StyleSheet.create({
   container: {
@@ -38,6 +38,6 @@ export const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.semantic.text.tertiary,
   },
-});
+})
 
-export default styles;
+export default styles

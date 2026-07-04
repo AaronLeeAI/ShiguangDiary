@@ -3,8 +3,8 @@
  *
  * 颜色/间距/圆角必须通过 @theme 访问，禁止硬编码。
  */
-import {StyleSheet} from 'react-native';
-import {radius, colors} from '@theme';
+import { StyleSheet } from 'react-native'
+import { radius, colors } from '@theme'
 
 export const styles = StyleSheet.create({
   // 全屏容器
@@ -66,6 +66,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+})
 
-export default styles;
+export default styles

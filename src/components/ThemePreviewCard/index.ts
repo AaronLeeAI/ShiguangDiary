@@ -2,5 +2,5 @@
  * ThemePreviewCard 入口
  */
 
-export {default as ThemePreviewCard} from './ThemePreviewCard';
-export type * from './types';
+export { default as ThemePreviewCard } from './ThemePreviewCard'
+export type * from './types'

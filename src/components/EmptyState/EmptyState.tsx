@@ -5,20 +5,16 @@
  * 基于设计规范 docs/project-设计-docs/components/EmptyState.md
  */
 
-import React from 'react';
-import {View, Text} from 'react-native';
+import React from 'react'
+import { View, Text } from 'react-native'
 
-import {Icon} from '@components/Icon';
-import {PrimaryButton} from '@components/PrimaryButton';
-import {useTheme} from '@theme';
-import type {IconName} from '@components/Icon/paths';
+import { Icon } from '@components/Icon'
+import { PrimaryButton } from '@components/PrimaryButton'
+import { useTheme } from '@theme'
+import type { IconName } from '@components/Icon/paths'
 
-import {
-  EMPTY_STATE_PRESETS,
-  type EmptyStateProps,
-  type EmptyStateVariant,
-} from './types';
-import {styles, VARIANT_ICON_SIZE} from './styles';
+import { EMPTY_STATE_PRESETS, type EmptyStateProps, type EmptyStateVariant } from './types'
+import { styles, VARIANT_ICON_SIZE } from './styles'
 
 const VARIANT_ICON_NAME: Record<Exclude<EmptyStateVariant, 'custom'>, IconName> = {
   notebook: 'book',
@@ -26,7 +22,7 @@ const VARIANT_ICON_NAME: Record<Exclude<EmptyStateVariant, 'custom'>, IconName> 
   noDiaryToday: 'hourglass',
   noDraft: 'edit',
   search: 'search',
-};
+}
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   variant,
@@ -37,14 +33,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
   testID,
 }) => {
-  const theme = useTheme();
-  const preset = variant !== 'custom' ? EMPTY_STATE_PRESETS[variant] : undefined;
-  const finalTitle = title ?? preset?.title ?? '';
-  const finalSubtitle = subtitle ?? preset?.subtitle;
+  const theme = useTheme()
+  const preset = variant !== 'custom' ? EMPTY_STATE_PRESETS[variant] : undefined
+  const finalTitle = title ?? preset?.title ?? ''
+  const finalSubtitle = subtitle ?? preset?.subtitle
 
   const renderIcon = () => {
     if (customIcon) {
-      return customIcon;
+      return customIcon
     }
     if (variant !== 'custom') {
       return (
@@ -54,10 +50,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           color={theme.colors.brand.primary}
           variant="filled"
         />
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   return (
     <View testID={testID} style={styles.container}>
@@ -76,7 +72,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         </View>
       )}
     </View>
-  );
-};
+  )
+}
 
-export default EmptyState;
+export default EmptyState

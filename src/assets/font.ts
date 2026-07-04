@@ -24,10 +24,10 @@
  * 添加新字体时在此注册，保持单一可信来源。
  */
 const FONT_LIST: Array<{
-  fontName: string;
-  assetPath: unknown;
-  weight: number;
-  style: string;
+  fontName: string
+  assetPath: unknown
+  weight: number
+  style: string
 }> = [
   // {
   //   fontName: 'NotoSansCJK-Regular',
@@ -41,21 +41,21 @@ const FONT_LIST: Array<{
   //   weight: 700,
   //   style: 'normal',
   // },
-];
+]
 
 // ============ Export ============
 
-export {FONT_LIST};
+export { FONT_LIST }
 
 /**
  * 获取所有已注册字体。
  * 返回数组供 useFonts / Font.loadAsync 使用。
  */
 export function getRegisteredFonts(): Array<{
-  fontName: string;
-  assetPath: unknown;
-  weight: number;
-  style: string;
+  fontName: string
+  assetPath: unknown
+  weight: number
+  style: string
 }> {
-  return FONT_LIST;
+  return FONT_LIST
 }

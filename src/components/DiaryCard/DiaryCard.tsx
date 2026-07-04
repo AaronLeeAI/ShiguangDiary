@@ -9,18 +9,18 @@
  * - docs/project-设计-docs/docs/04_Design_System.md
  */
 
-import React from 'react';
-import {View, Text, TouchableOpacity, ViewStyle} from 'react-native';
-import {styles} from './styles';
-import type {Diary} from '@types';
+import React from 'react'
+import { View, Text, TouchableOpacity, ViewStyle } from 'react-native'
+import { styles } from './styles'
+import type { Diary } from '@types'
 
 export interface DiaryCardProps {
   /** 日记数据 */
-  item: Diary;
+  item: Diary
   /** 点击回调 */
-  onPress?: () => void;
+  onPress?: () => void
   /** 外部样式扩展 */
-  style?: ViewStyle;
+  style?: ViewStyle
 }
 
 /**
@@ -28,12 +28,9 @@ export interface DiaryCardProps {
  *
  * 展示单条日记的核心信息，支持点击交互。
  */
-export const DiaryCard: React.FC<DiaryCardProps> = ({item, onPress, style}) => {
+export const DiaryCard: React.FC<DiaryCardProps> = ({ item, onPress, style }) => {
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={[styles.container, style]}>
+    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={[styles.container, style]}>
       {/* 头部：日期 + 置顶/加密标记 */}
       <View style={styles.header}>
         <View style={styles.dateBlock}>
@@ -57,7 +54,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({item, onPress, style}) => {
         <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
     </TouchableOpacity>
-  );
-};
+  )
+}
 
-export default DiaryCard;
+export default DiaryCard

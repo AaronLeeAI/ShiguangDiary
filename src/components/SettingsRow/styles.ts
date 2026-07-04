@@ -1,10 +1,10 @@
 /**
  * SettingsRow 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, spacing, typography } from '@theme'
 
-export const SETTINGS_ROW_HEIGHT = 52;
+export const SETTINGS_ROW_HEIGHT = 52
 
 export const styles = StyleSheet.create({
   container: {
@@ -44,6 +44,6 @@ export const styles = StyleSheet.create({
   arrowWrap: {
     marginLeft: spacing.xs,
   },
-});
+})
 
-export default styles;
+export default styles

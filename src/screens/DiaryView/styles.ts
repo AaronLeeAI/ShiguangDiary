@@ -1,8 +1,8 @@
 /**
  * DiaryView Screen 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -100,6 +100,6 @@ export const styles = StyleSheet.create({
     ...typography.bodyS,
     color: colors.semantic.text.secondary,
   },
-});
+})
 
-export default styles;
+export default styles

@@ -3,8 +3,8 @@
  *
  * 颜色/间距/字号严格遵循 @theme，禁止硬编码。
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -35,6 +35,6 @@ export const styles = StyleSheet.create({
   labelActive: {
     color: colors.brand.primary,
   },
-});
+})
 
-export default styles;
+export default styles

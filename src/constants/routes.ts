@@ -42,6 +42,6 @@ export const ROUTES = {
   APP_LOCK: 'AppLock',
   APP_LOCK_GESTURE: 'AppLockGesture',
   STICKY_NOTE: 'StickyNote',
-} as const;
+} as const
 
-export type RouteName = (typeof ROUTES)[keyof typeof ROUTES];
+export type RouteName = (typeof ROUTES)[keyof typeof ROUTES]

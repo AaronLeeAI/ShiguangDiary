@@ -19,7 +19,7 @@ export const space = {
   '9': 40,
   '10': 48,
   '11': 64,
-} as const;
+} as const
 
 /**
  * 常用间距别名（语义化）
@@ -48,7 +48,7 @@ export const spacing = {
   modalPaddingV: space['5'], // 16 - 弹窗垂直
   buttonPaddingV: space['4'], // 12 - 按钮垂直
   buttonPaddingH: space['7'], // 24 - 按钮水平
-} as const;
+} as const
 
-export type SpaceToken = keyof typeof space;
-export type SpacingAlias = keyof typeof spacing;
+export type SpaceToken = keyof typeof space
+export type SpacingAlias = keyof typeof spacing

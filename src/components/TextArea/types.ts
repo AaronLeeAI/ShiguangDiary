@@ -2,27 +2,27 @@
  * TextArea 类型定义
  */
 
-import type {TextInputProps, ViewStyle} from 'react-native';
+import type { TextInputProps, ViewStyle } from 'react-native'
 
 export interface TextAreaProps
   extends Omit<TextInputProps, 'style' | 'multiline' | 'placeholderTextColor'> {
-  value: string;
-  onChangeText: (text: string) => void;
-  placeholder?: string;
+  value: string
+  onChangeText: (text: string) => void
+  placeholder?: string
   /** 最小高度（dp） */
-  minHeight?: number;
+  minHeight?: number
   /** 最大高度（dp），超过则内部滚动 */
-  maxHeight?: number;
+  maxHeight?: number
   /** 是否显示字符计数 */
-  showCount?: boolean;
+  showCount?: boolean
   /** 最大字符数（与 showCount 配合显示 X/Y） */
-  maxLength?: number;
+  maxLength?: number
   /** 错误信息 */
-  error?: string;
+  error?: string
   /** 容器样式 */
-  style?: ViewStyle;
+  style?: ViewStyle
   /** 输入框样式 */
-  inputStyle?: ViewStyle;
+  inputStyle?: ViewStyle
   /** 测试 ID */
-  testID?: string;
+  testID?: string
 }

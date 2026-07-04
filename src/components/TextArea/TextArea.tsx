@@ -7,12 +7,18 @@
  * - error 错误态
  */
 
-import React, {useState} from 'react';
-import {Text, TextInput, View, type NativeSyntheticEvent, type TextInputFocusEventData} from 'react-native';
+import React, { useState } from 'react'
+import {
+  Text,
+  TextInput,
+  View,
+  type NativeSyntheticEvent,
+  type TextInputFocusEventData,
+} from 'react-native'
 
-import {colors} from '@theme';
-import {styles} from './styles';
-import type {TextAreaProps} from './types';
+import { colors } from '@theme'
+import { styles } from './styles'
+import type { TextAreaProps } from './types'
 
 /**
  * TextArea 组件
@@ -34,32 +40,32 @@ export const TextArea: React.FC<TextAreaProps> = ({
   onBlur,
   ...rest
 }) => {
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(false)
 
   const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
-    setFocused(true);
-    onFocus?.(e);
-  };
+    setFocused(true)
+    onFocus?.(e)
+  }
   const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
-    setFocused(false);
-    onBlur?.(e);
-  };
+    setFocused(false)
+    onBlur?.(e)
+  }
 
   const containerStyle = [
     styles.container,
     focused && !error && styles.containerFocused,
     error && styles.containerError,
     style,
-  ];
+  ]
 
-  const len = value.length;
+  const len = value.length
   const countStyle = (() => {
-    if (!maxLength) return styles.countText;
-    const ratio = len / maxLength;
-    if (ratio >= 1) return [styles.countText, styles.countTextDanger];
-    if (ratio >= 0.9) return [styles.countText, styles.countTextWarn];
-    return styles.countText;
-  })();
+    if (!maxLength) return styles.countText
+    const ratio = len / maxLength
+    if (ratio >= 1) return [styles.countText, styles.countTextDanger]
+    if (ratio >= 0.9) return [styles.countText, styles.countTextWarn]
+    return styles.countText
+  })()
 
   return (
     <View>
@@ -75,11 +81,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
           textAlignVertical="top"
           onFocus={handleFocus}
           onBlur={handleBlur}
-          style={[
-            styles.input,
-            {minHeight, maxHeight},
-            inputStyle,
-          ]}
+          style={[styles.input, { minHeight, maxHeight }, inputStyle]}
           maxLength={maxLength}
           {...rest}
         />
@@ -95,7 +97,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
         </View>
       ) : null}
     </View>
-  );
-};
+  )
+}
 
-export default TextArea;
+export default TextArea

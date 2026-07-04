@@ -6,10 +6,10 @@
  * 当前 Task1 阶段仅骨架。后续 Task 在此基础上实现 UI 与交互。
  */
 
-import React from 'react';
-import {View, Text, TouchableOpacity, ViewStyle} from 'react-native';
-import {styles} from './styles';
-import type {TopBarProps} from './types';
+import React from 'react'
+import { View, Text, TouchableOpacity, ViewStyle } from 'react-native'
+import { styles } from './styles'
+import type { TopBarProps } from './types'
 
 /**
  * TopBar - 顶部导航栏骨架
@@ -27,11 +27,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   style,
 }) => {
   return (
-    <View style={[styles.container, {backgroundColor} as ViewStyle, style]}>
+    <View style={[styles.container, { backgroundColor } as ViewStyle, style]}>
       <View style={styles.left}>
         {showBack && (
           <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
-            <Text>{"←"}</Text>
+            <Text>{'←'}</Text>
           </TouchableOpacity>
         )}
         {left}
@@ -41,7 +41,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </View>
       <View style={styles.right}>{right}</View>
     </View>
-  );
-};
+  )
+}
 
-export default TopBar;
+export default TopBar

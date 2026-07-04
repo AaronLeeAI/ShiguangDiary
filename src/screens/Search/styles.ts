@@ -1,8 +1,8 @@
 /**
  * Search Screen 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, radius, spacing, typography} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, radius, spacing, typography } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -61,6 +61,6 @@ export const styles = StyleSheet.create({
     color: colors.semantic.text.tertiary,
     marginBottom: spacing.md,
   },
-});
+})
 
-export default styles;
+export default styles

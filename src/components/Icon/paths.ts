@@ -43,9 +43,11 @@ export const ICON_PATHS: Record<string, string> = {
 
   // 功能
   trash: 'M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2',
-  settings: 'M12 15a3 3 0 100-6 3 3 0 000 6zm9-3a8.9 8.9 0 00-.2-2l2-1.6-2-3.4-2.4 1a9 9 0 00-3.4-2L14 2h-4l-.4 2a9 9 0 00-3.4 2l-2.4-1-2 3.4 2 1.6a9 9 0 000 4l-2 1.6 2 3.4 2.4-1a9 9 0 003.4 2L10 22h4l.4-2a9 9 0 003.4-2l2.4 1 2-3.4-2-1.6a8.9 8.9 0 00.2-2z',
+  settings:
+    'M12 15a3 3 0 100-6 3 3 0 000 6zm9-3a8.9 8.9 0 00-.2-2l2-1.6-2-3.4-2.4 1a9 9 0 00-3.4-2L14 2h-4l-.4 2a9 9 0 00-3.4 2l-2.4-1-2 3.4 2 1.6a9 9 0 000 4l-2 1.6 2 3.4 2.4-1a9 9 0 003.4 2L10 22h4l.4-2a9 9 0 003.4-2l2.4 1 2-3.4-2-1.6a8.9 8.9 0 00.2-2z',
   tune: 'M3 12h4M3 6h12M3 18h8M21 6h-4M21 12h-8M21 18h-6',
-  recycle: 'M7 19H5a2 2 0 01-2-2V7a2 2 0 012-2h2M11 19l-3-3 3-3M17 17l3 3-3 3M19 12h-2a2 2 0 00-2 2v4a2 2 0 002 2h2',
+  recycle:
+    'M7 19H5a2 2 0 01-2-2V7a2 2 0 012-2h2M11 19l-3-3 3-3M17 17l3 3-3 3M19 12h-2a2 2 0 00-2 2v4a2 2 0 002 2h2',
   export: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5-5 5 5M12 5v12',
   share: 'M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13',
   moon: 'M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z',
@@ -57,13 +59,15 @@ export const ICON_PATHS: Record<string, string> = {
   image: 'M3 5h18v14H3zM3 14l4-4 4 4 4-4 4 4M9 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z',
   link: 'M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1',
   mic: 'M12 18a3 3 0 003-3V6a3 3 0 10-6 0v9a3 3 0 003 3zM19 12a7 7 0 01-14 0M12 19v3M8 22h8',
-  camera: 'M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11zM12 17a4 4 0 100-8 4 4 0 000 8z',
+  camera:
+    'M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v11zM12 17a4 4 0 100-8 4 4 0 000 8z',
 
   // 编辑器
   bold: 'M6 4h7a4 4 0 014 4 4 4 0 01-4 4H6zM6 12h8a4 4 0 014 4 4 4 0 01-4 4H6z',
   italic: 'M19 4h-9M14 20H5M15 4L9 20',
   underline: 'M6 4v6a6 6 0 0012 0V4M4 20h16',
-  strikethrough: 'M4 12h16M15 4l-3 4M9 20l-3-4M11 4h2a4 4 0 014 4c0 2-2 3-3 3M13 20h-2a4 4 0 01-4-4',
+  strikethrough:
+    'M4 12h16M15 4l-3 4M9 20l-3-4M11 4h2a4 4 0 014 4c0 2-2 3-3 3M13 20h-2a4 4 0 01-4-4',
   quote: 'M3 21c3 0 7-1 7-8V5H3v8h4c0 5-4 5-4 5zM14 21c3 0 7-1 7-8V5h-7v8h4c0 5-4 5-4 5z',
 
   // 其他
@@ -79,6 +83,6 @@ export const ICON_PATHS: Record<string, string> = {
   albumActive: 'M4 4h16v16H4zM4 14l4-4 4 4 4-4 4 4',
   profileActive: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a8 8 0 0116 0v1',
   flag: 'M4 22V3l8 4 8-4v13l-8 4-8-4z',
-};
+}
 
-export type IconName = keyof typeof ICON_PATHS;
+export type IconName = keyof typeof ICON_PATHS

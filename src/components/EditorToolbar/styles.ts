@@ -1,10 +1,10 @@
 /**
  * EditorToolbar 样式
  */
-import {StyleSheet} from 'react-native';
-import {colors, spacing} from '@theme';
+import { StyleSheet } from 'react-native'
+import { colors, spacing } from '@theme'
 
-export const EDITOR_TOOL_BUTTON_SIZE = 40;
+export const EDITOR_TOOL_BUTTON_SIZE = 40
 
 export const styles = StyleSheet.create({
   container: {
@@ -30,6 +30,6 @@ export const styles = StyleSheet.create({
   toolButtonPressed: {
     backgroundColor: colors.semantic.bg.subtle,
   },
-});
+})
 
-export default styles;
+export default styles

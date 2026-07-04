@@ -3,7 +3,7 @@
  */
 
 export interface TagProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface TagState {
   // TODO: 补充内部状态
 }
 
-export type TagRef = unknown;
+export type TagRef = unknown

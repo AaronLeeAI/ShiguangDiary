@@ -3,7 +3,7 @@
  */
 
 export interface LockPatternProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface LockPatternState {
   // TODO: 补充内部状态
 }
 
-export type LockPatternRef = unknown;
+export type LockPatternRef = unknown

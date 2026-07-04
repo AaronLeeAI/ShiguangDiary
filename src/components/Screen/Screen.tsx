@@ -27,7 +27,7 @@
  * ```
  */
 
-import React from 'react';
+import React from 'react'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -35,11 +35,11 @@ import {
   StatusBar,
   View,
   type ViewStyle,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-import {useTheme} from '@theme';
-import type {ScreenProps} from './types';
+import { useTheme } from '@theme'
+import type { ScreenProps } from './types'
 
 export const Screen: React.FC<ScreenProps> = ({
   children,
@@ -52,51 +52,41 @@ export const Screen: React.FC<ScreenProps> = ({
   backgroundColor,
   testID,
 }) => {
-  const {colors, spacing} = useTheme();
-  const bgColor = backgroundColor ?? colors.semantic.bg.canvas;
+  const { colors, spacing } = useTheme()
+  const bgColor = backgroundColor ?? colors.semantic.bg.canvas
 
-  const paddedContent: ViewStyle = padded
-    ? {paddingHorizontal: spacing.base}
-    : {};
+  const paddedContent: ViewStyle = padded ? { paddingHorizontal: spacing.base } : {}
 
   const innerContent = (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      enabled={keyboardAvoiding}>
+      enabled={keyboardAvoiding}
+    >
       {scroll ? (
         <ScrollView
           testID={testID}
-          style={{flex: 1, backgroundColor: bgColor}}
+          style={{ flex: 1, backgroundColor: bgColor }}
           contentContainerStyle={[paddedContent, style]}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+        >
           {children}
         </ScrollView>
       ) : (
-        <View
-          testID={testID}
-          style={[
-            {flex: 1, backgroundColor: bgColor},
-            paddedContent,
-            style,
-          ]}>
+        <View testID={testID} style={[{ flex: 1, backgroundColor: bgColor }, paddedContent, style]}>
           {children}
         </View>
       )}
     </KeyboardAvoidingView>
-  );
+  )
 
   return (
-    <SafeAreaView edges={edges} style={{flex: 1, backgroundColor: bgColor}}>
-      <StatusBar
-        barStyle={statusBarStyle}
-        backgroundColor={bgColor}
-        translucent={false}
-      />
+    <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: bgColor }}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor={bgColor} translucent={false} />
       {innerContent}
     </SafeAreaView>
-  );
-};
+  )
+}
 
-export default Screen;
+export default Screen

@@ -3,7 +3,7 @@
  */
 
 export interface CheckboxProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface CheckboxState {
   // TODO: 补充内部状态
 }
 
-export type CheckboxRef = unknown;
+export type CheckboxRef = unknown

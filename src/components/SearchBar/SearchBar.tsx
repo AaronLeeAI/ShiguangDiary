@@ -5,13 +5,13 @@
  * 支持右侧"取消"按钮（受控）。
  */
 
-import React from 'react';
-import {Pressable, Text, View} from 'react-native';
+import React from 'react'
+import { Pressable, Text, View } from 'react-native'
 
-import {Icon} from '@/components/Icon';
-import {TextField} from '@/components/TextField';
-import {useTheme} from '@theme';
-import type {SearchBarProps} from './types';
+import { Icon } from '@/components/Icon'
+import { TextField } from '@/components/TextField'
+import { useTheme } from '@theme'
+import type { SearchBarProps } from './types'
 
 /**
  * SearchBar 组件
@@ -28,7 +28,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   showCancel = false,
   onCancel,
 }) => {
-  const {colors, spacing, typography} = useTheme();
+  const { colors, spacing, typography } = useTheme()
 
   return (
     <View
@@ -39,8 +39,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         paddingHorizontal: spacing.base,
         paddingVertical: spacing.sm,
         backgroundColor: colors.semantic.bg.canvas,
-      }}>
-      <View style={{flex: 1, ...style}}>
+      }}
+    >
+      <View style={{ flex: 1, ...style }}>
         <TextField
           testID={testID}
           value={value}
@@ -55,17 +56,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         />
       </View>
       {(showCancel || rightAction) && (
-        <Pressable
-          onPress={onCancel}
-          hitSlop={8}
-          style={{paddingHorizontal: spacing.xs}}>
+        <Pressable onPress={onCancel} hitSlop={8} style={{ paddingHorizontal: spacing.xs }}>
           {rightAction ?? (
-            <Text style={{...typography.bodyL, color: colors.brand.primary}}>取消</Text>
+            <Text style={{ ...typography.bodyL, color: colors.brand.primary }}>取消</Text>
           )}
         </Pressable>
       )}
     </View>
-  );
-};
+  )
+}
 
-export default SearchBar;
+export default SearchBar

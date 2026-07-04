@@ -15,12 +15,7 @@ module.exports = {
       jsx: true,
     },
   },
-  plugins: [
-    '@typescript-eslint',
-    'react',
-    'react-hooks',
-    'prettier',
-  ],
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'prettier'],
   settings: {
     react: {
       version: 'detect',
@@ -65,4 +60,4 @@ module.exports = {
       },
     },
   ],
-};
+}

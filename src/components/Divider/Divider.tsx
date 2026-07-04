@@ -18,11 +18,11 @@
  * ```
  */
 
-import React from 'react';
-import {View, type ViewStyle} from 'react-native';
+import React from 'react'
+import { View, type ViewStyle } from 'react-native'
 
-import {useTheme} from '@theme';
-import type {DividerProps} from './types';
+import { useTheme } from '@theme'
+import type { DividerProps } from './types'
 
 export const Divider: React.FC<DividerProps> = ({
   vertical = false,
@@ -31,8 +31,8 @@ export const Divider: React.FC<DividerProps> = ({
   style,
   testID,
 }) => {
-  const {colors} = useTheme();
-  const dividerColor = customColor ?? colors.semantic.divider.default;
+  const { colors } = useTheme()
+  const dividerColor = customColor ?? colors.semantic.divider.default
 
   const dividerStyle: ViewStyle = vertical
     ? {
@@ -44,9 +44,9 @@ export const Divider: React.FC<DividerProps> = ({
         height: thickness,
         width: '100%',
         backgroundColor: dividerColor,
-      };
+      }
 
-  return <View testID={testID} style={[dividerStyle, style]} />;
-};
+  return <View testID={testID} style={[dividerStyle, style]} />
+}
 
-export default Divider;
+export default Divider

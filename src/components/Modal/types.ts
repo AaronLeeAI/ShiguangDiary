@@ -3,7 +3,7 @@
  */
 
 export interface ModalProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface ModalState {
   // TODO: 补充内部状态
 }
 
-export type ModalRef = unknown;
+export type ModalRef = unknown

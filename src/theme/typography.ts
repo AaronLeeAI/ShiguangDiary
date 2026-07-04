@@ -6,7 +6,7 @@
  * 设计稿基准：360×800dp。所有 size 在 React Native 中直接对应 dp。
  */
 
-import {Platform} from 'react-native';
+import { Platform } from 'react-native'
 
 /**
  * 字体族（Font Family）
@@ -59,7 +59,7 @@ export const fontFamily = {
     ios: 'Roboto Mono',
     default: 'monospace',
   }),
-} as const;
+} as const
 
 /**
  * 字号阶梯（Type Scale）
@@ -75,7 +75,7 @@ export const fontSize = {
   bodyS: 13,
   caption: 12,
   micro: 10,
-} as const;
+} as const
 
 /**
  * 行高（Line Height）
@@ -91,7 +91,7 @@ export const lineHeight = {
   bodyS: 20,
   caption: 18,
   micro: 14,
-} as const;
+} as const
 
 /**
  * 字重（Font Weight）
@@ -101,7 +101,7 @@ export const fontWeight = {
   medium: '500',
   semibold: '600',
   bold: '700',
-} as const;
+} as const
 
 /**
  * 排版预设（Text Styles）
@@ -195,6 +195,6 @@ export const typography = {
     fontWeight: fontWeight.regular,
     letterSpacing: 0,
   },
-} as const;
+} as const
 
-export type TypographyToken = keyof typeof typography;
+export type TypographyToken = keyof typeof typography

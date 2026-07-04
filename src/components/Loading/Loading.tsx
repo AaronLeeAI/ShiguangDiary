@@ -9,12 +9,12 @@
  * - inline：内联（按钮内或固定区域，使用父组件处理 visibility）
  */
 
-import React from 'react';
-import {View, Text, Modal, TouchableWithoutFeedback, Pressable} from 'react-native';
+import React from 'react'
+import { View, Text, Modal, TouchableWithoutFeedback, Pressable } from 'react-native'
 
-import {Spinner} from './Spinner';
-import {styles} from './styles';
-import type {LoadingProps} from './types';
+import { Spinner } from './Spinner'
+import { styles } from './styles'
+import type { LoadingProps } from './types'
 
 export const Loading: React.FC<LoadingProps> = ({
   variant,
@@ -29,14 +29,14 @@ export const Loading: React.FC<LoadingProps> = ({
   // full：全屏展示
   if (variant === 'full') {
     if (!visible) {
-      return null;
+      return null
     }
     return (
       <View testID={testID} style={[styles.fullContainer, style]}>
         <Spinner size={iconSize ?? 64} />
         {!!text && <Text style={styles.text}>{text}</Text>}
       </View>
-    );
+    )
   }
 
   // dialog：弹窗
@@ -47,14 +47,16 @@ export const Loading: React.FC<LoadingProps> = ({
         transparent
         animationType="fade"
         onRequestClose={onDismiss}
-        statusBarTranslucent>
+        statusBarTranslucent
+      >
         <Pressable
           style={styles.dialogBackdrop}
           onPress={() => {
             if (backdropDismiss && onDismiss) {
-              onDismiss();
+              onDismiss()
             }
-          }}>
+          }}
+        >
           <TouchableWithoutFeedback>
             <View testID={testID} style={styles.dialogBox}>
               <Spinner size={iconSize ?? 24} />
@@ -63,19 +65,19 @@ export const Loading: React.FC<LoadingProps> = ({
           </TouchableWithoutFeedback>
         </Pressable>
       </Modal>
-    );
+    )
   }
 
   // inline：内联（自行控制 visibility）
   if (!visible) {
-    return null;
+    return null
   }
   return (
-    <View testID={testID} style={[{alignItems: 'center', justifyContent: 'center'}, style]}>
+    <View testID={testID} style={[{ alignItems: 'center', justifyContent: 'center' }, style]}>
       <Spinner size={iconSize ?? 24} />
       {!!text && <Text style={styles.text}>{text}</Text>}
     </View>
-  );
-};
+  )
+}
 
-export default Loading;
+export default Loading

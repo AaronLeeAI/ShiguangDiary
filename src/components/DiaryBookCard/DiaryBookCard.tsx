@@ -4,26 +4,26 @@
  * 在 Notebook 页面展示一个日记本：左侧封面（颜色+首字）+ 右侧名称/描述/统计。
  */
 
-import React from 'react';
-import {Pressable, Text, View} from 'react-native';
+import React from 'react'
+import { Pressable, Text, View } from 'react-native'
 
-import {DIARY_BOOK_COVER_DEFAULT_COLORS, DIARY_BOOK_SIZE, styles} from './styles';
-import type {DiaryBookCardProps} from './types';
+import { DIARY_BOOK_COVER_DEFAULT_COLORS, DIARY_BOOK_SIZE, styles } from './styles'
+import type { DiaryBookCardProps } from './types'
 
 /** 简单 hash：从 string 派生稳定的索引 */
 const hashString = (str: string): number => {
-  let h = 0;
+  let h = 0
   for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) | 0;
+    h = (h * 31 + str.charCodeAt(i)) | 0
   }
-  return Math.abs(h);
-};
+  return Math.abs(h)
+}
 
 const pickCoverColor = (id: string, override?: string): string => {
-  if (override) return override;
-  const idx = hashString(id) % DIARY_BOOK_COVER_DEFAULT_COLORS.length;
-  return DIARY_BOOK_COVER_DEFAULT_COLORS[idx];
-};
+  if (override) return override
+  const idx = hashString(id) % DIARY_BOOK_COVER_DEFAULT_COLORS.length
+  return DIARY_BOOK_COVER_DEFAULT_COLORS[idx]
+}
 
 /**
  * DiaryBookCard 组件
@@ -36,8 +36,8 @@ export const DiaryBookCard: React.FC<DiaryBookCardProps> = ({
   style,
   testID,
 }) => {
-  const cover = pickCoverColor(item.id, coverColor ?? item.color ?? undefined);
-  const initial = item.name.trim().charAt(0).toUpperCase() || '?';
+  const cover = pickCoverColor(item.id, coverColor ?? item.color ?? undefined)
+  const initial = item.name.trim().charAt(0).toUpperCase() || '?'
 
   return (
     <Pressable
@@ -47,8 +47,14 @@ export const DiaryBookCard: React.FC<DiaryBookCardProps> = ({
       onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={400}
-      style={({pressed}) => [styles.container, pressed && styles.pressed, style]}>
-      <View style={[styles.cover, {backgroundColor: cover, width: DIARY_BOOK_SIZE, height: DIARY_BOOK_SIZE}]}>
+      style={({ pressed }) => [styles.container, pressed && styles.pressed, style]}
+    >
+      <View
+        style={[
+          styles.cover,
+          { backgroundColor: cover, width: DIARY_BOOK_SIZE, height: DIARY_BOOK_SIZE },
+        ]}
+      >
         <Text style={styles.coverInitial} numberOfLines={1}>
           {initial}
         </Text>
@@ -72,7 +78,7 @@ export const DiaryBookCard: React.FC<DiaryBookCardProps> = ({
         </View>
       </View>
     </Pressable>
-  );
-};
+  )
+}
 
-export default DiaryBookCard;
+export default DiaryBookCard

@@ -3,7 +3,7 @@
  */
 
 export interface DateBlockProps {
-  testID?: string;
+  testID?: string
   // TODO: 补充 Props
 }
 
@@ -11,4 +11,4 @@ export interface DateBlockState {
   // TODO: 补充内部状态
 }
 
-export type DateBlockRef = unknown;
+export type DateBlockRef = unknown

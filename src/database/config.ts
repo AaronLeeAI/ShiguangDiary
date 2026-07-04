@@ -11,7 +11,7 @@ export const DATABASE_CONFIG = {
   displayName: 'ShiguangDiary',
   size: 20 * 1024 * 1024, // 20MB
   location: 'default',
-} as const;
+} as const
 
 /**
  * 表名常量
@@ -27,6 +27,6 @@ export const TABLES = {
   RECYCLE: 'recycle',
   USER: 'user',
   PREFERENCE: 'preference',
-} as const;
+} as const
 
-export type TableName = (typeof TABLES)[keyof typeof TABLES];
+export type TableName = (typeof TABLES)[keyof typeof TABLES]

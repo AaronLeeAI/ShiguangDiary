@@ -3,25 +3,25 @@
  *
  * 所有 Props 来自业务侧，类型从设计文档提取。
  */
-import {type ReactNode} from 'react';
+import { type ReactNode } from 'react'
 
 export interface TopBarProps {
   /** 左侧内容 */
-  left?: ReactNode;
+  left?: ReactNode
   /** 标题 */
-  title?: string;
+  title?: string
   /** 标题组件 */
-  titleComponent?: ReactNode;
+  titleComponent?: ReactNode
   /** 右侧内容 */
-  right?: ReactNode;
+  right?: ReactNode
   /** 返回按钮点击回调 */
-  onBackPress?: () => void;
+  onBackPress?: () => void
   /** 是否显示返回按钮 */
-  showBack?: boolean;
+  showBack?: boolean
   /** 背景色（默认跟随主题） */
-  backgroundColor?: string;
+  backgroundColor?: string
   /** 外部样式 */
-  style?: object;
+  style?: object
 }
 
 export interface TopBarState {
@@ -30,5 +30,5 @@ export interface TopBarState {
 
 export type TopBarRef = {
   /** 获取实例 */
-  focus: () => void;
-};
+  focus: () => void
+}

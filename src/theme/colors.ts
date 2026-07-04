@@ -15,7 +15,7 @@ export const brand = {
   primaryPressed: '#179A58',
   primaryLight: '#E8F8EF',
   primaryGhost: 'rgba(26,173,102,0.08)',
-} as const;
+} as const
 
 /**
  * 中性色（Neutral）
@@ -33,7 +33,7 @@ export const neutral = {
   gray10: '#F2F2F2',
   gray05: '#F8F8F8',
   white: '#FFFFFF',
-} as const;
+} as const
 
 /**
  * 功能色（Functional）
@@ -43,7 +43,7 @@ export const func = {
   warning: '#FF8800',
   success: '#1AAD66',
   info: '#1488EE',
-} as const;
+} as const
 
 /**
  * 日历色（Calendar）
@@ -58,7 +58,7 @@ export const cal = {
   markerText: '#FFFFFF',
   solarYear: '#1AAD66',
   solarYearHasNote: '#FFB400',
-} as const;
+} as const
 
 /**
  * 语义化颜色（Semantic）
@@ -106,7 +106,7 @@ export const semantic = {
     default: neutral.gray20,
     strong: neutral.gray40,
   },
-} as const;
+} as const
 
 /**
  * 暗色模式覆盖（Dark Mode Overrides）
@@ -152,14 +152,14 @@ export const darkSemantic = {
     default: '#3A3A3A',
     strong: '#4A4A4A',
   },
-} as const;
+} as const
 
 export const darkBrand = {
   primary: '#1FBA70',
   primaryPressed: '#17A05E',
   primaryLight: '#1A2F26',
   primaryGhost: 'rgba(31,186,112,0.10)',
-} as const;
+} as const
 
 export const colors = {
   brand,
@@ -170,6 +170,6 @@ export const colors = {
   // 暗色模式
   darkBrand,
   darkSemantic,
-} as const;
+} as const
 
-export type Colors = typeof colors;
+export type Colors = typeof colors

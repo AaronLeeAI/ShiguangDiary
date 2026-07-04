@@ -3,8 +3,8 @@
  *
  * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
  */
-import {StyleSheet} from 'react-native';
-import {radius, spacing, typography, colors} from '@theme';
+import { StyleSheet } from 'react-native'
+import { radius, spacing, typography, colors } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
@@ -70,6 +70,6 @@ export const styles = StyleSheet.create({
     color: colors.semantic.text.tertiary,
     marginTop: spacing.xs,
   },
-});
+})
 
-export default styles;
+export default styles

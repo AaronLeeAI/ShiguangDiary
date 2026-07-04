@@ -2,5 +2,5 @@
  * TextField 入口
  */
 
-export {default as TextField} from './TextField';
-export type * from './types';
+export { default as TextField } from './TextField'
+export type * from './types'

@@ -6,13 +6,13 @@
  * Theme 集成：颜色、间距来自 useTheme()。
  */
 
-import React, {useState} from 'react';
-import {Pressable} from 'react-native';
+import React, { useState } from 'react'
+import { Pressable } from 'react-native'
 
-import {Icon} from '@/components/Icon';
-import {TextField} from '@/components/TextField';
-import {useTheme} from '@theme';
-import type {PasswordInputProps} from './types';
+import { Icon } from '@/components/Icon'
+import { TextField } from '@/components/TextField'
+import { useTheme } from '@theme'
+import type { PasswordInputProps } from './types'
 
 export const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
@@ -25,10 +25,10 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
   style,
   testID,
 }) => {
-  const {colors} = useTheme();
-  const [secure, setSecure] = useState(true);
+  const { colors } = useTheme()
+  const [secure, setSecure] = useState(true)
 
-  const toggleSecure = () => setSecure(prev => !prev);
+  const toggleSecure = () => setSecure(prev => !prev)
 
   return (
     <TextField
@@ -53,7 +53,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
       }
       style={style}
     />
-  );
-};
+  )
+}
 
-export default PasswordInput;
+export default PasswordInput
