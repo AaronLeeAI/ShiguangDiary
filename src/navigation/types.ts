@@ -16,6 +16,9 @@ export type RootStackParamList = {
   Album: undefined;
   Profile: undefined;
 
+  // 搜索
+  Search: undefined;
+
   // 二级页面（Modal Stack）
   DiaryView: {id: string};
   DiaryEdit: {id?: string; notebookId?: string};

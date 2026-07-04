@@ -17,6 +17,9 @@ export const ROUTES = {
   ALBUM: 'Album',
   PROFILE: 'Profile',
 
+  // 搜索
+  SEARCH: 'Search',
+
   // 二级页
   DIARY_VIEW: 'DiaryView',
   DIARY_EDIT: 'DiaryEdit',

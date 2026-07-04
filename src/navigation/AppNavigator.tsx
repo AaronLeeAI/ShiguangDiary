@@ -24,6 +24,7 @@ import {DiaryViewScreen} from '@/screens/DiaryView';
 import {HomeScreen} from '@/screens/Home';
 import {NotebookScreen} from '@/screens/Notebook';
 import {ProfileScreen} from '@/screens/Profile';
+import {SearchScreen} from '@/screens/Search';
 
 // Splash：自动跳转到 MainTabs（1.5s 后）
 const Splash = ({navigation}: {navigation: any}) => {
@@ -36,11 +37,12 @@ const Splash = ({navigation}: {navigation: any}) => {
   return null;
 };
 
-// 4 Tab + DiaryView + DiaryEdit 已实现
+// 4 Tab + DiaryView + DiaryEdit + Search 已实现
 const Home = HomeScreen;
 const Notebook = NotebookScreen;
 const Album = AlbumScreen;
 const Profile = ProfileScreen;
+const Search = SearchScreen;
 const DiaryView = DiaryViewScreen;
 const DiaryEdit = DiaryEditScreen;
 const NotebookCreate = () => null;
@@ -104,6 +106,7 @@ export function AppNavigator() {
         <Stack.Screen name={ROUTES.MAIN_TABS} component={MainTabs} />
 
         {/* Full Screen Modals */}
+        <Stack.Screen name={ROUTES.SEARCH} component={Search} />
         <Stack.Screen name={ROUTES.DIARY_VIEW} component={DiaryView} />
         <Stack.Screen name={ROUTES.DIARY_EDIT} component={DiaryEdit} />
         <Stack.Screen name={ROUTES.NOTEBOOK_CREATE} component={NotebookCreate} />

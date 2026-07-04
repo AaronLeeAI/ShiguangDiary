@@ -122,6 +122,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     navigation.navigate(ROUTES.DIARY_EDIT, {});
   }, [navigation]);
 
+  const handleOpenSearch = useCallback(() => {
+    navigation.navigate(ROUTES.SEARCH);
+  }, [navigation]);
+
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {
       if (tab === 'Home') return; // 已在首页
@@ -140,7 +144,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
         title={monthDay}
         right={
           <View style={{flexDirection: 'row'}}>
-            <Pressable hitSlop={12} style={{padding: spacing.sm}}>
+            <Pressable hitSlop={12} onPress={handleOpenSearch} style={{padding: spacing.sm}}>
               <Icon name="search" size={22} color={colors.semantic.icon.primary} />
             </Pressable>
             <Pressable hitSlop={12} style={{padding: spacing.sm}}>
