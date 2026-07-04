@@ -2,6 +2,5 @@
  * BottomTabBar 入口
  */
 
-export * from './BottomTabBar';
-export {default} from './BottomTabBar';
+export {default as BottomTabBar} from './BottomTabBar';
 export type * from './types';

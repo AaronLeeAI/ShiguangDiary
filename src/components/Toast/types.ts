@@ -33,11 +33,22 @@ export interface ToastOptions {
 }
 
 /** Provider 内部维护的 Toast 队列条目 */
-export interface ToastItem extends Required<Pick<ToastOptions, 'id' | 'variant' | 'position' | 'duration'>> {
+export interface ToastItem {
+  /** 唯一标识 */
+  id: string;
+  /** 提示文案 */
   message: string;
+  /** 视觉变体 */
+  variant: ToastVariant;
+  /** 显示位置 */
+  position: ToastPosition;
+  /** 持续时间 */
+  duration: number;
+  /** 自定义图标 */
   icon?: IconName;
+  /** 自定义右侧操作 */
   action?: ToastOptions['action'];
-  /** 关闭回调（用于点击关闭或操作后关闭） */
+  /** 关闭回调 */
   onDismiss?: () => void;
 }
 

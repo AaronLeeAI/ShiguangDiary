@@ -2,6 +2,5 @@
  * StickyNoteEditor 入口
  */
 
-export * from './StickyNoteEditor';
-export {default} from './StickyNoteEditor';
+export {default as StickyNoteEditor} from './StickyNoteEditor';
 export type * from './types';

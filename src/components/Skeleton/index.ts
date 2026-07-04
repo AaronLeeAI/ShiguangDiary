@@ -2,6 +2,5 @@
  * Skeleton 入口
  */
 
-export * from './Skeleton';
-export {default} from './Skeleton';
+export {default as Skeleton} from './Skeleton';
 export type * from './types';

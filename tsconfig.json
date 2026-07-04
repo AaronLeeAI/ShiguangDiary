@@ -52,7 +52,16 @@
       "@database/dao/*": ["src/database/dao/*"],
       "@database/models/*": ["src/database/models/*"],
       "@database/repository/*": ["src/database/repository/*"],
-      "@database/migration/*": ["src/database/migration/*"]
+      "@database/migration/*": ["src/database/migration/*"],
+      "~@theme": ["src/theme"],
+      "@components": ["src/components"],
+      "@theme": ["src/theme"],
+      "@assets": ["assets"],
+      "@hooks": ["src/hooks"],
+      "@store": ["src/store"],
+      "@constants": ["src/constants"],
+      "@types": ["src/types"],
+      "@database": ["src/database"]
     },
     "types": ["react-native", "jest"],
     "typeRoots": ["./node_modules/@types", "./src/types"]

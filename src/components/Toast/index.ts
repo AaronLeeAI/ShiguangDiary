@@ -2,6 +2,5 @@
  * Toast 入口
  */
 
-export * from './Toast';
-export {default} from './Toast';
+export {default as Toast} from './Toast';
 export type * from './types';

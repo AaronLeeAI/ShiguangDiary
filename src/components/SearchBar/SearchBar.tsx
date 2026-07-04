@@ -10,7 +10,7 @@ import {Pressable, Text, View} from 'react-native';
 
 import {Icon} from '@/components/Icon';
 import {TextField} from '@/components/TextField';
-import {colors, spacing, typography} from '@theme';
+import {useTheme} from '@theme';
 import type {SearchBarProps} from './types';
 
 /**
@@ -28,6 +28,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   showCancel = false,
   onCancel,
 }) => {
+  const {colors, spacing, typography} = useTheme();
+
   return (
     <View
       style={{

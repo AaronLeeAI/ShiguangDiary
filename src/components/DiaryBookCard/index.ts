@@ -2,6 +2,5 @@
  * DiaryBookCard 入口
  */
 
-export * from './DiaryBookCard';
-export {default} from './DiaryBookCard';
+export {default as DiaryBookCard} from './DiaryBookCard';
 export type * from './types';

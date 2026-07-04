@@ -2,6 +2,5 @@
  * DiaryListItem 入口
  */
 
-export * from './DiaryListItem';
-export {default} from './DiaryListItem';
+export {default as DiaryListItem} from './DiaryListItem';
 export type * from './types';

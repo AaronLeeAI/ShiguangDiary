@@ -2,6 +2,5 @@
  * FloatingActionButton 入口
  */
 
-export * from './FloatingActionButton';
-export {default} from './FloatingActionButton';
+export {default as FloatingActionButton} from './FloatingActionButton';
 export type * from './types';

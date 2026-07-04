@@ -1,7 +1,7 @@
 /**
  * PrimaryButton 入口
  */
-export {default} from './PrimaryButton';
+export {default as PrimaryButton, default} from './PrimaryButton';
 export type {
   PrimaryButtonProps,
   PrimaryButtonVariant,

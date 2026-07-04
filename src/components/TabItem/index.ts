@@ -2,6 +2,5 @@
  * TabItem 入口
  */
 
-export * from './TabItem';
-export {default} from './TabItem';
+export {default as TabItem} from './TabItem';
 export type * from './types';

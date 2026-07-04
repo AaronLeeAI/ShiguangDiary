@@ -2,6 +2,5 @@
  * Tag 入口
  */
 
-export * from './Tag';
-export {default} from './Tag';
+export {default as Tag} from './Tag';
 export type * from './types';

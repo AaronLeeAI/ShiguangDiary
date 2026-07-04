@@ -2,6 +2,5 @@
  * ListStyleCard 入口
  */
 
-export * from './ListStyleCard';
-export {default} from './ListStyleCard';
+export {default as ListStyleCard} from './ListStyleCard';
 export type * from './types';

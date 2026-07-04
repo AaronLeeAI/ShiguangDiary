@@ -33,8 +33,8 @@ import {PrimaryButton} from '../../components/PrimaryButton';
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Screen | TODO | 全屏容器 + SafeArea |
-| Divider | TODO | 分割线 |
+| Screen | ✓ | 全屏容器 + SafeArea |
+| Divider | ✓ | 分割线 |
 
 ### Button
 
@@ -43,7 +43,7 @@ import {PrimaryButton} from '../../components/PrimaryButton';
 | PrimaryButton | ✓ | 主操作按钮 |
 | IconButton | ✓ | 图标按钮 |
 | FloatingActionButton | ✓ | 悬浮操作按钮 |
-| TextButton | TODO | 文字按钮 |
+| TextButton | ✓ | 文字按钮 |
 
 ### Input
 
@@ -51,6 +51,7 @@ import {PrimaryButton} from '../../components/PrimaryButton';
 |-----------|--------|-------|
 | TextField | ✓ | 单行输入 |
 | TextArea | ✓ | 多行输入 |
+| PasswordInput | ✓ | 密码输入 |
 | SearchBar | ✓ | 搜索栏 |
 | Checkbox | ✓ | 复选框 |
 | Switch | ✓ | 开关 |
@@ -82,7 +83,7 @@ import {PrimaryButton} from '../../components/PrimaryButton';
 | ActionSheet | ✓ | 操作列表 |
 | AlertDialog | ✓ | 警告弹窗 |
 | Modal | ✓ | 模态框 |
-| LoadingOverlay | TODO | 全局加载遮罩 |
+| LoadingOverlay | ✓ | 全局加载遮罩 |
 
 ---
 

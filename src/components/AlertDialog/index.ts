@@ -2,6 +2,5 @@
  * AlertDialog 入口
  */
 
-export * from './AlertDialog';
-export {default} from './AlertDialog';
+export {default as AlertDialog} from './AlertDialog';
 export type * from './types';
