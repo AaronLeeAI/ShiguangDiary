@@ -62,7 +62,8 @@
       "@store": ["src/store"],
       "@constants": ["src/constants"],
       "@types": ["src/types"],
-      "@database": ["src/database"]
+      "@database": ["src/database"],
+      "@services": ["src/services"]
     },
     "types": ["react-native", "jest"],
     "typeRoots": ["./node_modules/@types", "./src/types"]

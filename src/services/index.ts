@@ -11,6 +11,8 @@
 export * from './core'
 
 export * from './diary'
+export * from './notebook'
+export * from './album'
 export * from './tag'
 export * from './attachment'
 export * from './settings'
@@ -22,6 +24,8 @@ export type { RequestConfig, ApiResponse } from './api/client'
 
 import { registerService, SERVICE_KEYS } from './core'
 import { diaryService } from './diary'
+import { notebookService } from './notebook'
+import { albumService } from './album'
 import { tagService } from './tag'
 import { attachmentService } from './attachment'
 import { settingsService } from './settings'
@@ -38,6 +42,8 @@ export function registerServices(): void {
     return
   }
   registerService(SERVICE_KEYS.diary, diaryService)
+  registerService(SERVICE_KEYS.notebook, notebookService)
+  registerService(SERVICE_KEYS.album, albumService)
   registerService(SERVICE_KEYS.tag, tagService)
   registerService(SERVICE_KEYS.attachment, attachmentService)
   registerService(SERVICE_KEYS.settings, settingsService)

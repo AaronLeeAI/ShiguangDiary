@@ -1,7 +1,8 @@
 /**
  * Home Screen - P001 首页（日记列表）
  *
- * 数据源：useDiaryStore（Zustand）
+ * 数据流：HomeScreen → useHome → diaryStore → diaryService → diaryRepository → SQLite
+ * 页面经 useHome hook 访问视图状态，不直接读取 Store 内部实现。
  */
 
 import React, { useCallback, useEffect, useMemo } from 'react'
@@ -15,19 +16,16 @@ import { FloatingActionButton } from '@/components/FloatingActionButton'
 import { Icon } from '@/components/Icon'
 import { Loading } from '@/components/Loading'
 import { TopBar } from '@/components/TopBar'
+import { useHome } from '@features/home'
 import { ROUTES } from '@constants/routes'
 import { colors, spacing } from '@theme'
-import { useDiaryStore } from '@store/diaryStore'
 
 import { styles } from './styles'
 import type { HomeScreenProps } from './types'
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets()
-  const diaries = useDiaryStore(s => s.diaries)
-  const initialized = useDiaryStore(s => s.initialized)
-  const loading = useDiaryStore(s => s.loading)
-  const init = useDiaryStore(s => s.init)
+  const { diaries, initialized, loading, isEmpty, init } = useHome()
 
   useEffect(() => {
     if (!initialized) init()
@@ -82,7 +80,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       <View style={styles.body}>
         {loading || !initialized ? (
           <Loading variant="full" visible={true} />
-        ) : diaries.length === 0 ? (
+        ) : isEmpty ? (
           <EmptyState variant="noDiaryToday" />
         ) : (
           <FlatList

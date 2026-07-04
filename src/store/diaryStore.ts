@@ -1,14 +1,18 @@
 /**
  * DiaryStore - 日记/日记本/相册状态
  *
- * 包装 database/repository，提供 reactive 数据访问。
+ * 经 Service Layer 访问数据，提供 reactive 数据访问。
  * 失败时降级到内存 mock（数据库初始化失败、依赖未装等场景）。
+ *
+ * 数据流：HomeScreen → DiaryStore → DiaryService → DiaryRepository → SQLite
+ * 禁止直接 import @database Repository。
  */
 
 import { create } from 'zustand'
 
-import { diaryRepository, notebookRepository, albumRepository, runMigrations } from '@database'
+import { diaryService, notebookService, albumService } from '@services'
 import type { DiaryModel, NotebookModel, AlbumModel } from '@database'
+import { initDatabase } from '@database'
 import type { Diary, Notebook, Album } from '@types'
 
 // ========== Model <-> Domain 转换 ==========
@@ -254,16 +258,16 @@ const genId = (prefix: string) =>
 
 const seedDatabase = async () => {
   for (const d of SEED_DIARIES) {
-    await diaryRepository.create(diaryModelFromDomain(d) as DiaryModel)
+    await diaryService.create({ diary: diaryModelFromDomain(d) as DiaryModel })
   }
   for (const n of SEED_NOTEBOOKS) {
-    await notebookRepository.create({
+    await notebookService.create({
       ...n,
       diaryIds: undefined,
     } as unknown as NotebookModel)
   }
   for (const a of SEED_ALBUMS) {
-    await albumRepository.create({
+    await albumService.create({
       ...a,
       diaryIds: JSON.stringify(a.diaryIds),
     } as unknown as AlbumModel)
@@ -286,23 +290,23 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      // 1. 跑迁移
-      await runMigrations()
+      // 1. 初始化数据层（openDB → migrations → fileStorage）
+      await initDatabase()
 
-      // 2. 加载数据
+      // 2. 加载数据（经 Service Layer）
       const [diaries, notebooks, albums] = await Promise.all([
-        diaryRepository.list(),
-        notebookRepository.list(),
-        albumRepository.list(),
+        diaryService.list(),
+        notebookService.list(),
+        albumService.list(),
       ])
 
       // 3. 空库则填充种子
       if (diaries.length === 0 && notebooks.length === 0 && albums.length === 0) {
         await seedDatabase()
         const [d2, n2, a2] = await Promise.all([
-          diaryRepository.list(),
-          notebookRepository.list(),
-          albumRepository.list(),
+          diaryService.list(),
+          notebookService.list(),
+          albumService.list(),
         ])
         set({
           diaries: d2.map(toDiaryDomain),
@@ -368,7 +372,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
     }
 
     try {
-      await diaryRepository.create(diaryModelFromDomain(newDiary) as DiaryModel)
+      await diaryService.create({ diary: diaryModelFromDomain(newDiary) as DiaryModel })
       set(state => ({ diaries: [newDiary, ...state.diaries] }))
       return newDiary
     } catch (e) {
@@ -388,7 +392,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return
     }
     try {
-      await diaryRepository.update(id, diaryModelFromDomain(data))
+      await diaryService.update(id, diaryModelFromDomain(data))
       set(state => ({
         diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
       }))
@@ -407,7 +411,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return
     }
     try {
-      await diaryRepository.remove(id)
+      await diaryService.remove(id)
       set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -441,7 +445,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return nb
     }
     try {
-      await notebookRepository.create(nb as unknown as NotebookModel)
+      await notebookService.create(nb as unknown as NotebookModel)
       set(state => ({ notebooks: [nb, ...state.notebooks] }))
       return nb
     } catch (e) {
@@ -461,7 +465,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return
     }
     try {
-      await notebookRepository.update(id, data as Partial<NotebookModel>)
+      await notebookService.update(id, data as Partial<NotebookModel>)
       set(state => ({
         notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
       }))
@@ -480,7 +484,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return
     }
     try {
-      await notebookRepository.remove(id)
+      await notebookService.remove(id)
       set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -506,7 +510,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       return al
     }
     try {
-      await albumRepository.create({
+      await albumService.create({
         ...al,
         diaryIds: JSON.stringify(al.diaryIds),
       } as unknown as AlbumModel)

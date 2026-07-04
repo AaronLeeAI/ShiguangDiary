@@ -21,7 +21,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { AppNavigator } from '@navigation'
 import { ThemeProvider, useTheme } from '@theme'
 import { ToastProvider } from '@/components/Toast'
+import { registerServices } from '@services'
 import { useDiaryStore } from '@store/diaryStore'
+
+// 注册全部业务 Service 到 ServiceRegistry（幂等，进程级单例）
+registerServices()
 
 const App: React.FC = () => {
   return (

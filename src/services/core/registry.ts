@@ -69,6 +69,8 @@ export function resetRegistry(): void {
  */
 export const SERVICE_KEYS = {
   diary: 'diaryService',
+  notebook: 'notebookService',
+  album: 'albumService',
   tag: 'tagService',
   attachment: 'attachmentService',
   settings: 'settingsService',
