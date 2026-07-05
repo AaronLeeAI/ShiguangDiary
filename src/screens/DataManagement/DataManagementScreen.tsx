@@ -19,6 +19,7 @@ import { SettingsRow } from '@/components/SettingsRow'
 import { TopBar } from '@/components/TopBar'
 import { BackupCard, SyncStatusCard, useDataManagement } from '@features/data-management'
 import type { BackupMetadata } from '@features/data-management'
+import { haptic } from '@animations/haptics'
 import { syncService, localSyncProvider } from '@services'
 import type { RootStackParamList } from '@navigation/types'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -38,6 +39,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
   const isBusy = dm.busy !== 'idle'
 
   const confirmDanger = useCallback((message: string, onConfirm: () => void) => {
+    haptic('warning')
     Alert.alert('确认操作', message, [
       { text: '取消', style: 'cancel' },
       { text: '确认', style: 'destructive', onPress: onConfirm },
@@ -47,13 +49,17 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
   const handleCreateBackup = useCallback(async () => {
     const meta = await dm.createBackup()
     if (meta) {
+      haptic('saveSuccess')
       Alert.alert('备份完成', `已创建备份(${meta.stats.diaries} 日记)`)
+    } else {
+      haptic('error')
     }
   }, [dm])
 
   const handleDeleteBackup = useCallback(
     (filename: string) => {
       confirmDanger(`确定删除备份 ${filename}?此操作不可撤销。`, () => {
+        haptic('delete')
         dm.deleteBackup(filename)
       })
     },
@@ -69,11 +75,13 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
         async () => {
           const stats = await dm.restore(meta)
           if (stats) {
+            haptic('complete')
             Alert.alert(
               '恢复完成',
               `已恢复 ${stats.diaries} 日记 · ${stats.notebooks} 日记本 · ${stats.albums} 相册\n应用缓存已刷新。`,
             )
           } else {
+            haptic('error')
             Alert.alert('恢复失败', dm.lastError ?? '未知错误')
           }
         },
@@ -85,6 +93,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
   const handleExport = useCallback(async () => {
     const file = await dm.exportJSON()
     if (file) {
+      haptic('saveSuccess')
       Alert.alert(
         '导出完成',
         `JSON 已生成(${file.content.length} 字符)\n文件名:${file.filename}\n(分享面板为后续 TODO)`,
@@ -95,6 +104,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
   const handleIntegrity = useCallback(async () => {
     const report = await dm.runIntegrityCheck()
     if (report) {
+      haptic(report.ok ? 'complete' : 'warning')
       const msg = report.ok
         ? `完整性检查通过\n${report.stats.diaries} 日记 · ${report.stats.attachments} 附件`
         : `发现 ${report.issues.length} 个问题\n${report.issues
@@ -108,11 +118,13 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
   const handleSync = useCallback(async () => {
     try {
       const result = await syncService.sync()
+      haptic('complete')
       Alert.alert(
         '同步完成',
         `提供者:${result.providerId}\npush ${result.pushed} · pull ${result.pulled} · 冲突 ${result.conflicts}`,
       )
     } catch (e) {
+      haptic('error')
       Alert.alert('同步失败', e instanceof Error ? e.message : String(e))
     }
     dm.refreshSyncStatus()

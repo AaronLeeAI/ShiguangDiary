@@ -7,9 +7,10 @@
  * Theme 集成：颜色、字号来自 useTheme()。
  */
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Pressable, Text, type StyleProp, type ViewStyle } from 'react-native'
 
+import { haptic } from '@animations/haptics'
 import { useTheme } from '@theme'
 import type { TextButtonProps } from './types'
 
@@ -25,7 +26,7 @@ export const TextButton: React.FC<TextButtonProps> = ({
   style,
   testID,
 }) => {
-  const { typography } = useTheme()
+  const { colors, typography } = useTheme()
 
   const fontSizeMap = {
     small: typography.bodyS.fontSize,
@@ -39,9 +40,14 @@ export const TextButton: React.FC<TextButtonProps> = ({
     style,
   ]
 
+  const handlePress = useCallback(() => {
+    haptic('tap')
+    onPress?.()
+  }, [onPress])
+
   const textStyle = {
     fontSize: fontSizeMap[size],
-    color: customColor ?? '#1AAD66',
+    color: customColor ?? colors.brand.primary,
     textDecorationLine: underline ? ('underline' as const) : ('none' as const),
   }
 
@@ -49,7 +55,7 @@ export const TextButton: React.FC<TextButtonProps> = ({
     <Pressable
       testID={testID}
       disabled={disabled}
-      onPress={onPress}
+      onPress={handlePress}
       hitSlop={8}
       style={({ pressed }) => [containerStyle, pressed && { opacity: 0.7 }]}
     >

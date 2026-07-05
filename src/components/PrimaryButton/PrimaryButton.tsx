@@ -7,7 +7,7 @@
  * 支持 loading 状态、icon、按下反馈（按下时变深 + scale 0.98）。
  */
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   Pressable,
   Text,
@@ -17,6 +17,7 @@ import {
   type ViewStyle,
 } from 'react-native'
 
+import { haptic } from '@animations/haptics'
 import { useTheme } from '@theme'
 import { PRIMARY_BUTTON_HEIGHT, PRIMARY_BUTTON_FONT, type PrimaryButtonProps } from './types'
 import { styles, PRIMARY_BUTTON_STYLES, variantStyles } from './styles'
@@ -37,6 +38,11 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   const theme = useTheme()
   const vs = variantStyles[variant]
   const isDisabled = disabled || loading || variant === 'disabled'
+
+  const handlePress = useCallback(() => {
+    haptic(variant === 'danger' ? 'delete' : 'tap')
+    onPress?.()
+  }, [onPress, variant])
 
   const containerStyle: StyleProp<ViewStyle> = [
     styles.container,
@@ -61,7 +67,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     <Pressable
       testID={testID}
       disabled={isDisabled}
-      onPress={onPress}
+      onPress={handlePress}
       android_ripple={{ color: 'rgba(255,255,255,0.18)', borderless: false }}
       style={({ pressed }) => [containerStyle, pressed && styles.pressed]}
     >

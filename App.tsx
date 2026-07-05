@@ -23,9 +23,12 @@ import { ThemeProvider, useTheme } from '@theme'
 import { ToastProvider } from '@/components/Toast'
 import { registerServices } from '@services'
 import { useDiaryStore } from '@store/diaryStore'
+import { warmupHaptics } from '@animations/haptics'
 
 // 注册全部业务 Service 到 ServiceRegistry（幂等，进程级单例）
 registerServices()
+// Task17:预热触觉反馈原生模块(避免首次 haptic 调用延迟),无原生模块时静默跳过
+warmupHaptics()
 
 const App: React.FC = () => {
   return (

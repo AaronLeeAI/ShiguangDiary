@@ -14,6 +14,7 @@ import React, { useState } from 'react'
 import { Pressable, View, Text } from 'react-native'
 
 import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
 import { colors } from '@theme'
 import { styles } from './styles'
 import type { BottomTabBarProps, BottomTabName } from './types'
@@ -36,6 +37,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   const activeTab = isControlled ? currentTab : internalTab
 
   const handlePress = (tab: BottomTabName) => {
+    haptic('tap')
     if (isControlled) {
       onTabPress!(tab)
     } else {

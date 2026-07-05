@@ -11,24 +11,25 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  Easing,
 } from 'react-native-reanimated'
 import Svg, { Circle } from 'react-native-svg'
-import { useTheme } from '@theme'
+import { useReduceMotion } from '@hooks/useReduceMotion'
+import { motion, useTheme } from '@theme'
 
 const ARC_TIMING = {
-  duration: 1000,
-  easing: Easing.linear,
+  duration: motion.duration.arcRotate,
+  easing: motion.easing.linear,
 }
 
 export const Spinner: React.FC<{ size?: number; color?: string }> = ({ size = 28, color }) => {
   const theme = useTheme()
+  const reduceMotion = useReduceMotion()
   const strokeColor = color ?? theme.colors.brand.primary
   const rotation = useSharedValue(0)
 
   useEffect(() => {
-    rotation.value = withRepeat(withTiming(360, ARC_TIMING), -1)
-  }, [rotation])
+    rotation.value = reduceMotion ? 0 : withRepeat(withTiming(360, ARC_TIMING), -1)
+  }, [reduceMotion, rotation])
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],

@@ -25,6 +25,7 @@ import { TextArea } from '@/components/TextArea'
 import { TopBar } from '@/components/TopBar'
 import { toast } from '@/components/Toast'
 import { EDITOR_LIMITS, useEditor } from '@features/editor'
+import { haptic } from '@animations/haptics'
 import { colors, spacing, typography } from '@theme'
 
 import { styles } from './styles'
@@ -70,11 +71,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const handleSave = useCallback(async () => {
     const ok = await save()
     if (ok) {
+      haptic('saveSuccess')
       toast.success(isNew ? '日记已创建' : '已保存')
       setTimeout(() => navigation.goBack(), 300)
     } else if (error) {
+      haptic('error')
       toast.error(error)
     } else {
+      haptic('error')
       toast.error('内容不能为空')
     }
   }, [save, isNew, error, navigation])

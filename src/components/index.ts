@@ -101,3 +101,7 @@ export type { LoadingOverlayProps } from './LoadingOverlay/types'
 // -- Calendar --
 export { Calendar } from './Calendar'
 export type { CalendarProps } from './Calendar/types'
+
+// -- Motion (Task17) --
+export { PressableScale } from './PressableScale'
+export type { PressableScaleProps } from './PressableScale'

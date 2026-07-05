@@ -15,6 +15,7 @@ import { PrimaryButton } from '@/components/PrimaryButton'
 import { TopBar } from '@/components/TopBar'
 import { toast } from '@/components/Toast'
 import { ROUTES } from '@constants/routes'
+import { haptic } from '@animations/haptics'
 import { colors, spacing } from '@theme'
 import { useDiaryStore } from '@store/diaryStore'
 
@@ -46,10 +47,14 @@ export const DiaryViewScreen: React.FC<DiaryViewScreenProps> = ({ navigation, ro
 
   const handleTogglePin = useCallback(async () => {
     await togglePin(id)
+    haptic('toggle')
     toast.success(diary?.isPinned ? '已取消置顶' : '已置顶')
+    setActionSheetVisible(false)
   }, [id, diary?.isPinned, togglePin])
 
   const handleDelete = useCallback(async () => {
+    setActionSheetVisible(false)
+    haptic('delete')
     await removeDiary(id)
     toast.success('已删除')
     setTimeout(() => navigation.goBack(), 400)
@@ -57,6 +62,7 @@ export const DiaryViewScreen: React.FC<DiaryViewScreenProps> = ({ navigation, ro
 
   const handleUnlock = useCallback(() => {
     setUnlocked(true)
+    haptic('complete')
     toast.success('已解锁')
   }, [])
 

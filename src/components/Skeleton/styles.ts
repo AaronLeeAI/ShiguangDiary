@@ -1,18 +1,33 @@
 /**
- * Skeleton 样式
+ * Skeleton styles.
  *
- * 当前 Task1 阶段留空。后续 Task 补充具体样式。
- *
- * 注意：颜色/间距/圆角必须通过 `@theme` 访问，禁止硬编码。
+ * Colors, radius, and spacing must come from `@theme` design tokens.
  */
 import { StyleSheet } from 'react-native'
-import { radius, spacing, colors } from '@theme'
+import { colors, radius, spacing } from '@theme'
 
 export const styles = StyleSheet.create({
   container: {
+    overflow: 'hidden',
+    backgroundColor: colors.neutral.gray10,
+  },
+  line: {
+    borderRadius: radius.full,
+  },
+  circle: {
+    borderRadius: radius.full,
+  },
+  card: {
     padding: spacing.base,
-    backgroundColor: colors.semantic.bg.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+  },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: '35%',
+    backgroundColor: colors.neutral.white,
+    opacity: 0.45,
   },
 })
 

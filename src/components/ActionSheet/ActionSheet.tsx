@@ -9,6 +9,7 @@ import React from 'react'
 import { Modal, Pressable, Text, View } from 'react-native'
 
 import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
 import { colors } from '@theme'
 import { styles } from './styles'
 import type { ActionSheetProps } from './types'
@@ -29,11 +30,13 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
 }) => {
   const handleBackdropPress = () => {
     if (backdropDismiss) {
+      haptic('tap')
       onClose()
     }
   }
 
-  const handleItemPress = (onPress?: () => void) => {
+  const handleItemPress = (onPress?: () => void, destructive?: boolean) => {
+    haptic(destructive ? 'delete' : 'tap')
     if (onPress) {
       onPress()
     }
@@ -69,7 +72,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
                   accessibilityRole="button"
                   accessibilityState={{ disabled: !!item.disabled }}
                   disabled={item.disabled}
-                  onPress={() => handleItemPress(item.onPress)}
+                  onPress={() => handleItemPress(item.onPress, item.destructive)}
                   style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
                 >
                   {item.icon && (
@@ -101,7 +104,10 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
             ))}
             <Pressable
               accessibilityRole="button"
-              onPress={onClose}
+              onPress={() => {
+                haptic('tap')
+                onClose()
+              }}
               style={({ pressed }) => [styles.cancelButton, pressed && { opacity: 0.7 }]}
             >
               <Text style={styles.cancelLabel}>{cancelLabel}</Text>

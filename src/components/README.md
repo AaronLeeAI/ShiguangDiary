@@ -15,14 +15,14 @@ Last Updated: 2026-07-04
 ## Usage
 
 ```ts
-import {PrimaryButton, Icon, Avatar} from '@components';
+import { PrimaryButton, Icon, Avatar } from '@components'
 ```
 
 禁止使用相对路径：
 
 ```ts
 // ✗ 错误
-import {PrimaryButton} from '../../components/PrimaryButton';
+import { PrimaryButton } from '../../components/PrimaryButton'
 ```
 
 ---
@@ -31,59 +31,60 @@ import {PrimaryButton} from '../../components/PrimaryButton';
 
 ### Layout
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Screen | ✓ | 全屏容器 + SafeArea |
-| Divider | ✓ | 分割线 |
+| Component | Status | Notes               |
+| --------- | ------ | ------------------- |
+| Screen    | ✓      | 全屏容器 + SafeArea |
+| Divider   | ✓      | 分割线              |
 
 ### Button
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| PrimaryButton | ✓ | 主操作按钮 |
-| IconButton | ✓ | 图标按钮 |
-| FloatingActionButton | ✓ | 悬浮操作按钮 |
-| TextButton | ✓ | 文字按钮 |
+| Component            | Status | Notes        |
+| -------------------- | ------ | ------------ |
+| PrimaryButton        | ✓      | 主操作按钮   |
+| IconButton           | ✓      | 图标按钮     |
+| FloatingActionButton | ✓      | 悬浮操作按钮 |
+| TextButton           | ✓      | 文字按钮     |
 
 ### Input
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| TextField | ✓ | 单行输入 |
-| TextArea | ✓ | 多行输入 |
-| PasswordInput | ✓ | 密码输入 |
-| SearchBar | ✓ | 搜索栏 |
-| Checkbox | ✓ | 复选框 |
-| Switch | ✓ | 开关 |
-| DateTimePicker | ✓ | 日期时间选择 |
-| PasswordInput | TODO | 密码输入 |
-| RadioGroup | ✓ | 单选组 |
+| Component      | Status | Notes        |
+| -------------- | ------ | ------------ |
+| TextField      | ✓      | 单行输入     |
+| TextArea       | ✓      | 多行输入     |
+| PasswordInput  | ✓      | 密码输入     |
+| SearchBar      | ✓      | 搜索栏       |
+| Checkbox       | ✓      | 复选框       |
+| Switch         | ✓      | 开关         |
+| DateTimePicker | ✓      | 日期时间选择 |
+| PasswordInput  | TODO   | 密码输入     |
+| RadioGroup     | ✓      | 单选组       |
 
 ### Display
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Icon | ✓ | 40+ SVG 图标，主题感知 |
-| Avatar | ✓ | 头像 |
-| Tag | ✓ | 标签 |
-| EmptyState | ✓ | 空状态 |
-| Loading | ✓ | 加载状态 |
-| Skeleton | ✓ | 骨架屏 |
-| TabItem | ✓ | Tab 单项 |
-| BottomTabBar | ✓ | 底部 Tab 栏 |
-| TopBar | ✓ | 顶部导航栏 |
-| Calendar | ✓ | 日历 |
+| Component    | Status | Notes                  |
+| ------------ | ------ | ---------------------- |
+| Icon         | ✓      | 40+ SVG 图标，主题感知 |
+| Avatar       | ✓      | 头像                   |
+| Tag          | ✓      | 标签                   |
+| EmptyState   | ✓      | 空状态                 |
+| Loading      | ✓      | 加载状态               |
+| Skeleton     | ✓      | 骨架屏                 |
+| TabItem      | ✓      | Tab 单项               |
+| BottomTabBar | ✓      | 底部 Tab 栏            |
+| TopBar       | ✓      | 顶部导航栏             |
+| Calendar     | ✓      | 日历                   |
 
 ### Feedback
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Toast | ✓ | 轻提示 |
-| BottomSheet | ✓ | 底部弹层 |
-| ActionSheet | ✓ | 操作列表 |
-| AlertDialog | ✓ | 警告弹窗 |
-| Modal | ✓ | 模态框 |
-| LoadingOverlay | ✓ | 全局加载遮罩 |
+| Component      | Status | Notes                         |
+| -------------- | ------ | ----------------------------- |
+| Toast          | ✓      | 轻提示                        |
+| BottomSheet    | ✓      | 底部弹层                      |
+| ActionSheet    | ✓      | 操作列表                      |
+| AlertDialog    | ✓      | 警告弹窗                      |
+| Modal          | ✓      | 模态框                        |
+| PressableScale | Done   | Press scale + haptic feedback |
+| LoadingOverlay | ✓      | 全局加载遮罩                  |
 
 ---
 

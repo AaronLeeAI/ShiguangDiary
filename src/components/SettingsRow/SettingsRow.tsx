@@ -4,10 +4,11 @@
  * icon + label + (hint | right | chevron)
  */
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { Pressable, Text, View } from 'react-native'
 
 import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
 import { colors } from '@theme'
 import { styles } from './styles'
 import type { SettingsRowProps } from './types'
@@ -28,13 +29,18 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
   testID,
   accessibilityLabel,
 }) => {
+  const handlePress = useCallback(() => {
+    haptic(destructive ? 'delete' : 'tap')
+    onPress?.()
+  }, [destructive, onPress])
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled }}
       testID={testID}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       style={({ pressed }) => [
         styles.container,

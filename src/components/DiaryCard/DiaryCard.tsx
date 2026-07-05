@@ -10,7 +10,8 @@
  */
 
 import React from 'react'
-import { View, Text, TouchableOpacity, ViewStyle } from 'react-native'
+import { View, Text, ViewStyle } from 'react-native'
+import { PressableScale } from '@/components/PressableScale'
 import { styles } from './styles'
 import type { Diary } from '@types'
 
@@ -30,7 +31,13 @@ export interface DiaryCardProps {
  */
 export const DiaryCard: React.FC<DiaryCardProps> = ({ item, onPress, style }) => {
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={[styles.container, style]}>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={`日记:${item.title || '未命名'}`}
+      hapticIntent="tap"
+      onPress={onPress}
+      style={[styles.container, style]}
+    >
       {/* 头部：日期 + 置顶/加密标记 */}
       <View style={styles.header}>
         <View style={styles.dateBlock}>
@@ -53,7 +60,7 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({ item, onPress, style }) =>
         </Text>
         <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   )
 }
 

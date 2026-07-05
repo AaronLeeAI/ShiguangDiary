@@ -19,6 +19,7 @@ import {
 } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
+import { haptic } from '@animations/haptics'
 import { useTheme } from '@theme'
 import { Screen } from '@components'
 import { ROUTES } from '@constants/routes'
@@ -94,6 +95,9 @@ function MainTabs() {
 
   return (
     <Tab.Navigator
+      screenListeners={{
+        tabPress: () => haptic('tap'),
+      }}
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
@@ -122,6 +126,9 @@ export function AppNavigator() {
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
+          animationDuration: 300,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       >
         <Stack.Screen name={ROUTES.SPLASH} component={Splash} />

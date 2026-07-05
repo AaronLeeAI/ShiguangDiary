@@ -1,35 +1,28 @@
 # Skeleton
 
-> 骨架屏
+Unified skeleton loading placeholder.
 
-## 规范来源
+## Purpose
 
-- 详细规范：[docs/project-设计-docs/components/Skeleton.md](../../../../../docs/project-设计-docs/components/Skeleton.md)
-- 设计 Token：[docs/project-设计-docs/docs/04_Design_System.md](../../../../../docs/project-设计-docs/docs/04_Design_System.md)
+- Display lightweight placeholders for loading content.
+- Provide `line`, `circle`, and `card` variants.
+- Use Motion tokens for shimmer timing.
+- Respect system Reduce Motion by disabling shimmer.
+
+## Example
+
+```tsx
+import { Skeleton } from '@components/Skeleton'
+
+<Skeleton variant="line" width="70%" />
+<Skeleton variant="circle" width={48} height={48} />
+<Skeleton variant="card" />
+```
 
 ## Props
 
-参见 `types.ts`。
+See `types.ts`.
 
-## 使用示例
+## Status
 
-```tsx
-import { Skeleton } from '@components/Skeleton';
-
-<Skeleton ...props />
-```
-
-## 状态
-
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
-
-## 目录结构
-
-```
-Skeleton/
-├── Skeleton.tsx        # 组件实现
-├── types.ts          # 类型定义
-├── styles.ts         # 样式
-├── index.ts          # 入口
-└── README.md         # 本文件
-```
+Implemented in Task17.
