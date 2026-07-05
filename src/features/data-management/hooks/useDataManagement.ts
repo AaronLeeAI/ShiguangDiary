@@ -12,9 +12,10 @@
 import { useCallback, useEffect } from 'react'
 
 import { backupService, syncService } from '@services'
+import { useDiaryStore } from '@store/diaryStore'
 import { checkIntegrity } from '../utils/integrityChecker'
 import { useDataManagementStore } from '../store/dataManagementStore'
-import type { BackupMetadata, IntegrityReport, BackupProgress } from '../types'
+import type { BackupMetadata, IntegrityReport, BackupProgress, BackupStats } from '../types'
 
 export interface UseDataManagementResult {
   // 状态
@@ -34,6 +35,7 @@ export interface UseDataManagementResult {
   refreshSyncStatus: () => Promise<void>
   createBackup: () => Promise<BackupMetadata | null>
   deleteBackup: (filename: string) => Promise<void>
+  restore: (meta: BackupMetadata) => Promise<BackupStats | null>
   exportJSON: () => Promise<{ filename: string; content: string } | null>
   runIntegrityCheck: () => Promise<IntegrityReport | null>
   validateImport: (json: string) => ReturnType<typeof backupService.validateImport>
@@ -155,6 +157,31 @@ export function useDataManagement(): UseDataManagementResult {
 
   const clearError = useCallback(() => store.setLastError(null), [store])
 
+  // 恢复备份:读 back文件 + 校验 + 逐表恢复,成功后刷新应用内存缓存,
+  // 否则 Home/Calendar/Search/Statistics 仍显示恢复前的旧数据(state 一致性 P0)。
+  const restore = useCallback(
+    async (meta: BackupMetadata): Promise<BackupStats | null> => {
+      store.setBusy('restore')
+      store.setProgress(tick('读取备份', 0.1))
+      try {
+        store.setProgress(tick('恢复数据', 0.5))
+        const stats = await backupService.restoreBackup(meta)
+        store.setProgress(tick('刷新缓存', 1))
+        // 恢复写库后,重新加载 diaryStore 内存缓存,使各派生视图(Home/Calendar/Search/Statistics)同步。
+        await useDiaryStore.getState().reload()
+        store.setBusy('idle')
+        store.setProgress(null)
+        return stats
+      } catch (e) {
+        store.setLastError(e instanceof Error ? e.message : String(e))
+        store.setBusy('idle')
+        store.setProgress(null)
+        return null
+      }
+    },
+    [store],
+  )
+
   return {
     busy: store.busy,
     progress: store.progress,
@@ -169,6 +196,7 @@ export function useDataManagement(): UseDataManagementResult {
     refreshSyncStatus,
     createBackup,
     deleteBackup,
+    restore,
     exportJSON,
     runIntegrityCheck,
     validateImport,

@@ -11,6 +11,7 @@
 import { create } from 'zustand'
 
 import { diaryService, notebookService, albumService } from '@services'
+import { applyDiaryUpdate, bumpNotebookCount } from './diaryStorePure'
 import type { DiaryModel, NotebookModel, AlbumModel } from '@database'
 import { initDatabase } from '@database'
 import type { Diary, Notebook, Album } from '@types'
@@ -391,38 +392,49 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
     }
 
     if (get().useFallback) {
-      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      set(state => ({
+        diaries: [newDiary, ...state.diaries],
+        // 同步内存 notebook diaryCount(与 service 写库一致,Task16 集成修复)
+        notebooks: state.notebooks.map(n => (n.id === data.notebookId ? bumpNotebookCount(n) : n)),
+      }))
       return newDiary
     }
 
     try {
       await diaryService.create({ diary: diaryModelFromDomain(newDiary) as DiaryModel })
-      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      set(state => ({
+        diaries: [newDiary, ...state.diaries],
+        notebooks: state.notebooks.map(n => (n.id === data.notebookId ? bumpNotebookCount(n) : n)),
+      }))
       return newDiary
     } catch (e) {
       console.warn('[DiaryStore] createDiary failed:', e)
-      set(state => ({ diaries: [newDiary, ...state.diaries] }))
+      set(state => ({
+        diaries: [newDiary, ...state.diaries],
+        notebooks: state.notebooks.map(n => (n.id === data.notebookId ? bumpNotebookCount(n) : n)),
+      }))
       return newDiary
     }
   },
 
   updateDiary: async (id, data) => {
     const now = Date.now()
+    const apply = (d: Diary): Diary => applyDiaryUpdate(d, data, now)
     if (get().useFallback) {
       set(state => ({
-        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+        diaries: state.diaries.map(d => (d.id === id ? apply(d) : d)),
       }))
       return
     }
     try {
       await diaryService.update(id, diaryModelFromDomain(data))
       set(state => ({
-        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+        diaries: state.diaries.map(d => (d.id === id ? apply(d) : d)),
       }))
     } catch (e) {
       console.warn('[DiaryStore] updateDiary failed:', e)
       set(state => ({
-        diaries: state.diaries.map(d => (d.id === id ? { ...d, ...data, updatedAt: now } : d)),
+        diaries: state.diaries.map(d => (d.id === id ? apply(d) : d)),
       }))
     }
   },

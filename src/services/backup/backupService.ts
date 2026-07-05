@@ -256,12 +256,37 @@ export const backupService = {
   },
 
   /**
-   * 恢复备份:将 payload 写回各 Repository(best-effort)。
+   * 恢复备份:读取 backups bucket 内指定备份文件,校验后逐表 best-effort 恢复。
    *
    * 本 Task 实现数据级恢复骨架:逐表 upsert/insert,失败项记日志不抛(满足"不破坏原始数据")。
    * 完整事务性回滚(closeDatabase → 原子替换 SQLite → 重开)属 Out of Scope,留后续 task
    * (Task15 Risks:"恢复覆盖错误数据";当前阶段校验在前 + best-effort,避免半恢复一致性问题,
    * 但不保证强原子性)。
+   *
+   * 返回恢复统计;调用方(页面/hook)在成功后应刷新应用内存缓存(如 diaryStore.reload()),
+   * 否则各派生视图会显示恢复前的旧数据。
+   *
+   * @param meta 备份元数据(filename 决定读取哪一个备份)。
+   */
+  async restoreBackup(meta: BackupMetadata): Promise<BackupStats> {
+    try {
+      const raw = await fileStorage.readText(BACKUP_BUCKET, meta.filename)
+      const { valid, errors, payload } = validateBackupPayload(parseRawPayload(raw))
+      if (!valid || !payload) {
+        throw new Error(`备份文件校验失败:${errors.join('; ')}`)
+      }
+      return await backupService.restoreFromPayload(payload)
+    } catch (error) {
+      log.error('restoreBackup failed', meta.filename, error)
+      throw toServiceError(error)
+    }
+  },
+
+  /**
+   * 恢复备份:将 payload 写回各 Repository(best-effort)。
+   *
+   * 不负责读取/校验文件(由 restoreBackup 上一层完成),也不刷新应用内存缓存
+   * (调用方负责,避免 service 层依赖具体 store)。
    */
   async restoreFromPayload(payload: BackupPayload): Promise<BackupStats> {
     try {

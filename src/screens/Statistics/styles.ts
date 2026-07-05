@@ -16,6 +16,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,
   },
+  rangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+  },
   title: {
     ...typography.titleM,
     fontWeight: '600',

@@ -6,7 +6,7 @@
  */
 
 import { diaryService, notebookService, albumService } from '@services'
-import { toServiceError, createLogger } from '../../../services/core'
+import { toServiceError, createLogger } from '@services/core'
 import type { DiaryModel, NotebookModel, AlbumModel } from '@database'
 
 const log = createLogger('HomeService')

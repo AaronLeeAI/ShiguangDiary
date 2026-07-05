@@ -41,6 +41,34 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     includeFontPadding: false,
   },
+  fallbackBanner: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.base,
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  fallbackText: {
+    fontSize: fontSize.caption,
+    color: colors.semantic.text.tertiary,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.base,
+    backgroundColor: colors.semantic.bg.subtle,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    fontSize: fontSize.caption,
+    color: colors.func.danger,
+  },
+  errorAction: {
+    fontSize: fontSize.caption,
+    color: colors.brand.primary,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+  },
 })
 
 export default styles

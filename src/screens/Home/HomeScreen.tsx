@@ -27,7 +27,7 @@ import type { HomeScreenProps } from './types'
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets()
-  const { diaries, initialized, loading, isEmpty, init } = useHome()
+  const { diaries, initialized, loading, isEmpty, useFallback, error, reload, init } = useHome()
   const cal = useCalendar()
 
   useEffect(() => {
@@ -97,6 +97,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       />
 
       <Calendar cal={cal} />
+
+      {/* Task16 集成修复:DB 不可用时显降级提示(与 Statistics 一致);真实错误时显 error banner + 重试。 */}
+      {useFallback && (
+        <View style={styles.fallbackBanner}>
+          <Text style={styles.fallbackText}>数据库不可用，以下为本地示例数据</Text>
+        </View>
+      )}
+      {!useFallback && error ? (
+        <Pressable style={styles.errorBanner} onPress={reload}>
+          <Text style={styles.errorText}>数据加载失败：{error}</Text>
+          <Text style={styles.errorAction}>点击重试</Text>
+        </Pressable>
+      ) : null}
 
       <View style={styles.body}>
         {loading || !initialized ? (

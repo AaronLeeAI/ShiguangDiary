@@ -14,7 +14,7 @@ import {
   type DiaryModel,
   type AttachmentModel,
 } from '@database'
-import { tagRepository } from '@database'
+import { tagRepository, notebookRepository } from '@database'
 import { ServiceError, toServiceError, createLogger } from '../core'
 
 const log = createLogger('DiaryService')
@@ -69,6 +69,14 @@ export const diaryService = {
             await tagRepository.update(tagId, { diaryCount: tag.diaryCount + 1 })
           }
         }
+      }
+      // 归属笔记本 diaryCount +1（与 Notebook 卡片显示一致;Task16 集成修复）。
+      // 若 notebookId 指向的笔记本不存在/已软删,则静默跳过(避免拖垮创建事务)。
+      const notebook = input.diary.notebookId
+        ? await notebookRepository.findById(input.diary.notebookId)
+        : null
+      if (notebook) {
+        await notebookRepository.update(notebook.id, { diaryCount: notebook.diaryCount + 1 })
       }
       log.info('diary created', input.diary.id)
       return input.diary

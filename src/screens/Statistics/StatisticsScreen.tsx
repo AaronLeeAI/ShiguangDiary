@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { EmptyState } from '@/components/EmptyState'
 import { Loading } from '@/components/Loading'
+import { TopBar } from '@/components/TopBar'
 import { RangeSelector, SummaryCard, TrendChart, useStatistics } from '@features/statistics'
 import type { StatisticsRange } from '@features/statistics'
 import { spacing } from '@theme'
@@ -81,8 +82,9 @@ export const StatisticsScreen: React.FC<StatisticsScreenProps> = ({ navigation }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>数据统计</Text>
+      {/* Task16 集成修复:补 back affordance(与 Home/About/Settings 一致,原先非空态死路) */}
+      <TopBar title="数据统计" showBack onBackPress={handleBackHome} />
+      <View style={styles.rangeRow}>
         <RangeSelector value={range} onChange={handleRangeChange} />
       </View>
       <View style={styles.body}>{renderBody()}</View>

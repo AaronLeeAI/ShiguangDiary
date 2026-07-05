@@ -18,6 +18,7 @@ import { SettingsGroup } from '@/components/SettingsGroup'
 import { SettingsRow } from '@/components/SettingsRow'
 import { TopBar } from '@/components/TopBar'
 import { BackupCard, SyncStatusCard, useDataManagement } from '@features/data-management'
+import type { BackupMetadata } from '@features/data-management'
 import { syncService, localSyncProvider } from '@services'
 import type { RootStackParamList } from '@navigation/types'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -59,20 +60,27 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
     [confirmDanger, dm],
   )
 
-  const handleRestore = useCallback(() => {
-    Alert.alert(
-      '恢复备份',
-      '恢复功能当前为最佳努力(best-effort)骨架:逐表 upsert/insert,不具备强原子回滚。\n\n确定继续?',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '稍后',
-          style: 'default',
-          onPress: () => Alert.alert('提示', '完整事务性恢复留待后续版本(见 TODO)。'),
+  const handleRestore = useCallback(
+    (meta: BackupMetadata) => {
+      confirmDanger(
+        `恢复备份 ${meta.filename}?\n` +
+          '当前为最佳努力恢复:逐表 upsert,不具备强原子回滚。\n' +
+          '恢复后应用缓存将自动刷新,顶部出现的旧数据将被覆盖。',
+        async () => {
+          const stats = await dm.restore(meta)
+          if (stats) {
+            Alert.alert(
+              '恢复完成',
+              `已恢复 ${stats.diaries} 日记 · ${stats.notebooks} 日记本 · ${stats.albums} 相册\n应用缓存已刷新。`,
+            )
+          } else {
+            Alert.alert('恢复失败', dm.lastError ?? '未知错误')
+          }
         },
-      ],
-    )
-  }, [])
+      )
+    },
+    [confirmDanger, dm],
+  )
 
   const handleExport = useCallback(async () => {
     const file = await dm.exportJSON()
@@ -180,7 +188,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
             <BackupCard
               key={b.filename}
               data={b}
-              onRestore={handleRestore}
+              onRestore={() => handleRestore(b)}
               onDelete={() => handleDeleteBackup(b.filename)}
             />
           ))

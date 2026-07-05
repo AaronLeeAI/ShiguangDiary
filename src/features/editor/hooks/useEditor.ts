@@ -121,8 +121,20 @@ export function useEditor(diaryId: string | null): UseEditorResult {
     useEditorStore.setState({ saving: true, error: null })
     try {
       if (mode === 'create') {
+        // 不再硬编码 notebookId='nb-1'(Task16 集成修复):选首个未软删的笔记本,
+        // 否则在 nb-1 被删除后新日记会成为孤儿(integrityChecker 会标记)。
+        // TODO: 未来的 notebook 选择器 UI 应让用户显式选目标笔记本。
+        const notebooks = useDiaryStore.getState().notebooks
+        const targetNotebook =
+          notebooks.find(n => n.deletedAt === null || n.deletedAt === undefined) ??
+          notebooks[0] ??
+          null
+        if (!targetNotebook) {
+          useEditorStore.setState({ saving: false, error: '请先创建日记本后再写日记' })
+          return false
+        }
         await createDiary({
-          notebookId: 'nb-1',
+          notebookId: targetNotebook.id,
           title: snapshot.title.trim(),
           summary: snapshot.content.slice(0, 80),
           content: snapshot.content,

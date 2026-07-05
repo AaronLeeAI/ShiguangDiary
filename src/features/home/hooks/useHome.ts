@@ -15,6 +15,8 @@ export interface UseHomeResult {
   initialized: boolean
   isEmpty: boolean
   useFallback: boolean
+  /** DB init / 操作失败时的错误信息(null 表示无错)。 */
+  error: string | null
   init: () => Promise<void>
   reload: () => Promise<void>
 }
@@ -24,6 +26,7 @@ export function useHome(): UseHomeResult {
   const loading = useDiaryStore(s => s.loading)
   const initialized = useDiaryStore(s => s.initialized)
   const useFallback = useDiaryStore(s => s.useFallback)
+  const error = useDiaryStore(s => s.error)
   const init = useDiaryStore(s => s.init)
   const reload = useDiaryStore(s => s.reload)
 
@@ -36,6 +39,7 @@ export function useHome(): UseHomeResult {
     initialized,
     isEmpty: initialized && !loading && diaries.length === 0,
     useFallback,
+    error,
     init: handleInit,
     reload: handleReload,
   }
