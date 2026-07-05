@@ -17,4 +17,5 @@ export const storePersistKeys = {
   preferences: 'preferences-store',
   session: 'session-store',
   editorDrafts: 'editor-drafts-store',
+  searchHistory: 'search-history-store',
 } as const

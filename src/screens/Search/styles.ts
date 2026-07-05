@@ -13,41 +13,6 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // 搜索历史
-  historySection: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.titleS,
-    color: colors.semantic.text.primary,
-  },
-  clearButton: {
-    ...typography.bodyS,
-    color: colors.semantic.text.tertiary,
-  },
-  historyTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  historyTag: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.semantic.bg.subtle,
-    borderRadius: radius.full,
-  },
-  historyTagText: {
-    ...typography.bodyS,
-    color: colors.semantic.text.secondary,
-  },
-
   // 结果列表
   listContent: {
     padding: spacing.base,
@@ -56,10 +21,41 @@ export const styles = StyleSheet.create({
   separator: {
     height: spacing.md,
   },
+
+  // 结果头:计数 + 排序
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xxs,
+  },
   resultCount: {
     ...typography.bodyS,
     color: colors.semantic.text.tertiary,
-    marginBottom: spacing.md,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  sortRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  sortButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+    borderRadius: radius.full,
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  sortButtonActive: {
+    backgroundColor: colors.brand.primaryGhost,
+  },
+  sortText: {
+    ...typography.bodyS,
+    color: colors.semantic.text.tertiary,
+  },
+  sortTextActive: {
+    color: colors.brand.primary,
+    fontWeight: '600',
   },
 })
 
