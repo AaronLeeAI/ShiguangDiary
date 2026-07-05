@@ -30,6 +30,7 @@ import { HomeScreen } from '@/screens/Home'
 import { NotebookScreen } from '@/screens/Notebook'
 import { ProfileScreen } from '@/screens/Profile'
 import { SearchScreen } from '@/screens/Search'
+import { StatisticsScreen } from '@/screens/Statistics'
 import {
   NotebookCreate,
   NotebookSort,
@@ -40,7 +41,6 @@ import {
   DarkMode,
   Export,
   VIP,
-  Statistics,
   Drafts,
   Preferences,
   ListStyle,
@@ -74,6 +74,7 @@ const Notebook = NotebookScreen
 const Album = AlbumScreen
 const Profile = ProfileScreen
 const Search = SearchScreen
+const Statistics = StatisticsScreen
 const DiaryView = DiaryViewScreen
 const DiaryEdit = DiaryEditScreen
 
