@@ -17,6 +17,7 @@ export * from './tag'
 export * from './attachment'
 export * from './settings'
 export * from './sync'
+export * from './backup'
 
 // HTTP / API foundation（远程访问预留，业务层不直接依赖）
 export { apiClient } from './api/client'
@@ -30,6 +31,7 @@ import { tagService } from './tag'
 import { attachmentService } from './attachment'
 import { settingsService } from './settings'
 import { syncService } from './sync'
+import { backupService } from './backup'
 
 let registered = false
 
@@ -48,5 +50,6 @@ export function registerServices(): void {
   registerService(SERVICE_KEYS.attachment, attachmentService)
   registerService(SERVICE_KEYS.settings, settingsService)
   registerService(SERVICE_KEYS.sync, syncService)
+  registerService(SERVICE_KEYS.backup, backupService)
   registered = true
 }

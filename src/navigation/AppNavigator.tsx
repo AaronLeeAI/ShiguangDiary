@@ -26,6 +26,7 @@ import { RootStackParamList, TabParamList } from '@navigation/types'
 import { AlbumScreen } from '@/screens/Album'
 import AboutScreen from '@/screens/About'
 import { DarkModeScreen } from '@/screens/DarkMode'
+import { DataManagementScreen } from '@/screens/DataManagement'
 import { DiaryEditScreen } from '@/screens/DiaryEdit'
 import { DiaryViewScreen } from '@/screens/DiaryView'
 import { HomeScreen } from '@/screens/Home'
@@ -41,7 +42,6 @@ import {
   AlbumCreate,
   Account,
   Recycle,
-  Export,
   VIP,
   Drafts,
   ListStyle,
@@ -82,6 +82,7 @@ const About = AboutScreen
 const DarkMode = DarkModeScreen
 const Preferences = PreferencesScreen
 const Settings = SettingsScreen
+const Export = DataManagementScreen
 
 // Stack Navigator
 const Stack = createNativeStackNavigator<RootStackParamList>()
