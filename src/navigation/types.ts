@@ -28,6 +28,7 @@ export type RootStackParamList = {
   NotebookSort: undefined
   AlbumCreate: undefined
   Account: undefined
+  Settings: undefined
   About: undefined
   Recycle: undefined
   DarkMode: undefined

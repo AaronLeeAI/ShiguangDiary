@@ -24,25 +24,26 @@ import { Screen } from '@components'
 import { ROUTES } from '@constants/routes'
 import { RootStackParamList, TabParamList } from '@navigation/types'
 import { AlbumScreen } from '@/screens/Album'
+import AboutScreen from '@/screens/About'
+import { DarkModeScreen } from '@/screens/DarkMode'
 import { DiaryEditScreen } from '@/screens/DiaryEdit'
 import { DiaryViewScreen } from '@/screens/DiaryView'
 import { HomeScreen } from '@/screens/Home'
 import { NotebookScreen } from '@/screens/Notebook'
+import { PreferencesScreen } from '@/screens/Preferences'
 import { ProfileScreen } from '@/screens/Profile'
 import { SearchScreen } from '@/screens/Search'
+import { SettingsScreen } from '@/screens/Settings'
 import { StatisticsScreen } from '@/screens/Statistics'
 import {
   NotebookCreate,
   NotebookSort,
   AlbumCreate,
   Account,
-  About,
   Recycle,
-  DarkMode,
   Export,
   VIP,
   Drafts,
-  Preferences,
   ListStyle,
   ThemeBackground,
   EditorToolbarPicker,
@@ -77,6 +78,10 @@ const Search = SearchScreen
 const Statistics = StatisticsScreen
 const DiaryView = DiaryViewScreen
 const DiaryEdit = DiaryEditScreen
+const About = AboutScreen
+const DarkMode = DarkModeScreen
+const Preferences = PreferencesScreen
+const Settings = SettingsScreen
 
 // Stack Navigator
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -129,6 +134,7 @@ export function AppNavigator() {
         <Stack.Screen name={ROUTES.NOTEBOOK_SORT} component={NotebookSort} />
         <Stack.Screen name={ROUTES.ALBUM_CREATE} component={AlbumCreate} />
         <Stack.Screen name={ROUTES.ACCOUNT} component={Account} />
+        <Stack.Screen name={ROUTES.SETTINGS} component={Settings} />
         <Stack.Screen name={ROUTES.ABOUT} component={About} />
         <Stack.Screen name={ROUTES.RECYCLE} component={Recycle} />
         <Stack.Screen name={ROUTES.DARK_MODE} component={DarkMode} />

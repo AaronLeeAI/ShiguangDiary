@@ -27,6 +27,7 @@ export const ROUTES = {
   NOTEBOOK_SORT: 'NotebookSort',
   ALBUM_CREATE: 'AlbumCreate',
   ACCOUNT: 'Account',
+  SETTINGS: 'Settings',
   ABOUT: 'About',
   RECYCLE: 'Recycle',
   DARK_MODE: 'DarkMode',

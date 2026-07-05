@@ -24,6 +24,7 @@ import type { ProfileMenuItem, ProfileScreenProps } from './types'
 
 const MENU_GROUPS: ProfileMenuItem[][] = [
   [
+    { key: 'settings', label: '设置', icon: 'settings', showArrow: true, route: 'Settings' },
     { key: 'recycle', label: '回收站', icon: 'recycle', showArrow: true, route: 'Recycle' },
     { key: 'drafts', label: '草稿箱', icon: 'edit', showArrow: true, route: 'Drafts' },
     { key: 'statistics', label: '数据统计', icon: 'chart', showArrow: true, route: 'Statistics' },
