@@ -48,19 +48,19 @@ Some future-facing entries are intentionally disabled in the RC UI and marked `�
 
 ## Documentation
 
-| Document | Purpose |
-| --- | --- |
-| [PROJECT_INFO.md](./PROJECT_INFO.md) | Architecture and directory overview |
-| [docs/RELEASE_NOTES_v1.0.0.md](./docs/RELEASE_NOTES_v1.0.0.md) | RC release notes |
-| [docs/FINAL_QA_REPORT_Task19.md](./docs/FINAL_QA_REPORT_Task19.md) | Final QA evidence and verdict |
-| [docs/REGRESSION_REPORT_Task19.md](./docs/REGRESSION_REPORT_Task19.md) | Regression report |
-| [docs/PIXEL_PERFECT_REPORT_Task19.md](./docs/PIXEL_PERFECT_REPORT_Task19.md) | Pixel/UI consistency review |
-| [docs/ACCESSIBILITY_REPORT_Task19.md](./docs/ACCESSIBILITY_REPORT_Task19.md) | Accessibility baseline review |
-| [docs/SECURITY_REVIEW_Task19.md](./docs/SECURITY_REVIEW_Task19.md) | Security/permission review |
-| [docs/RELEASE_BUILD_Task19.md](./docs/RELEASE_BUILD_Task19.md) | Release build details |
-| [docs/reports/PROJECT_POSTMORTEM.md](./docs/reports/PROJECT_POSTMORTEM.md) | Project postmortem |
-| [docs/development/Architecture.md](./docs/development/Architecture.md) | Architecture details |
-| [docs/ai/DevelopmentWorkflow.md](./docs/ai/DevelopmentWorkflow.md) | AI development workflow |
+| Document                                                                     | Purpose                             |
+| ---------------------------------------------------------------------------- | ----------------------------------- |
+| [PROJECT_INFO.md](./PROJECT_INFO.md)                                         | Architecture and directory overview |
+| [docs/RELEASE_NOTES_v1.0.0.md](./docs/RELEASE_NOTES_v1.0.0.md)               | RC release notes                    |
+| [docs/FINAL_QA_REPORT_Task19.md](./docs/FINAL_QA_REPORT_Task19.md)           | Final QA evidence and verdict       |
+| [docs/REGRESSION_REPORT_Task19.md](./docs/REGRESSION_REPORT_Task19.md)       | Regression report                   |
+| [docs/PIXEL_PERFECT_REPORT_Task19.md](./docs/PIXEL_PERFECT_REPORT_Task19.md) | Pixel/UI consistency review         |
+| [docs/ACCESSIBILITY_REPORT_Task19.md](./docs/ACCESSIBILITY_REPORT_Task19.md) | Accessibility baseline review       |
+| [docs/SECURITY_REVIEW_Task19.md](./docs/SECURITY_REVIEW_Task19.md)           | Security/permission review          |
+| [docs/RELEASE_BUILD_Task19.md](./docs/RELEASE_BUILD_Task19.md)               | Release build details               |
+| [docs/reports/PROJECT_POSTMORTEM.md](./docs/reports/PROJECT_POSTMORTEM.md)   | Project postmortem                  |
+| [docs/development/Architecture.md](./docs/development/Architecture.md)       | Architecture details                |
+| [docs/ai/DevelopmentWorkflow.md](./docs/ai/DevelopmentWorkflow.md)           | AI development workflow             |
 
 External source-of-truth references:
 
@@ -113,17 +113,17 @@ cd android
 
 ## Tech Stack
 
-| Area | Selection |
-| --- | --- |
-| Framework | React Native 0.76.5 |
-| Language | TypeScript 5.0.4 |
-| Navigation | React Navigation 7 |
-| State | Zustand 5 + TanStack Query 5 |
-| Storage | SQLite + MMKV + RNFS |
-| Animation | Reanimated 3 + gesture-handler |
-| Lists | FlashList |
-| Images | FastImage |
-| Rich editor | react-native-pell-rich-editor |
+| Area        | Selection                      |
+| ----------- | ------------------------------ |
+| Framework   | React Native 0.76.5            |
+| Language    | TypeScript 5.0.4               |
+| Navigation  | React Navigation 7             |
+| State       | Zustand 5 + TanStack Query 5   |
+| Storage     | SQLite + MMKV + RNFS           |
+| Animation   | Reanimated 3 + gesture-handler |
+| Lists       | FlashList                      |
+| Images      | FastImage                      |
+| Rich editor | react-native-pell-rich-editor  |
 
 ---
 
@@ -152,4 +152,4 @@ src/
 
 ## License
 
-MIT License © 2026 拾光日记 Team
+Apache License 2.0
