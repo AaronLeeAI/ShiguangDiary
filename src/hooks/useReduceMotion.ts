@@ -20,10 +20,14 @@ export const useReduceMotion = (): boolean => {
     const read = async (): Promise<void> => {
       try {
         const enabled = await AccessibilityInfo.isReduceMotionEnabled()
-        if (mounted) setReduceMotion(enabled)
+        if (mounted) {
+          setReduceMotion(enabled)
+        }
       } catch {
         // 无障碍 API 不可用时按"未启用"处理(默认走动画)
-        if (mounted) setReduceMotion(false)
+        if (mounted) {
+          setReduceMotion(false)
+        }
       }
     }
 
@@ -33,7 +37,9 @@ export const useReduceMotion = (): boolean => {
     if (Platform.OS === 'ios' || Platform.OS === 'android') {
       try {
         subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', enabled => {
-          if (mounted) setReduceMotion(enabled)
+          if (mounted) {
+            setReduceMotion(enabled)
+          }
         }) as unknown as { remove: () => void }
       } catch {
         // 个别 RN 版本无该事件:静默退回轮询态(read 已读初始值)

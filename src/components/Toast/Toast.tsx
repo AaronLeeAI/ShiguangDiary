@@ -160,30 +160,48 @@ export const useToast = (): ToastApi => {
  */
 export const toast: ToastApi = {
   show: options => {
-    if (globalHandler) return globalHandler.show(options)
+    if (globalHandler) {
+      return globalHandler.show(options)
+    }
     if (__DEV__) {
       console.warn('[toast] ToastProvider not mounted. Fallback to console:', options.message)
     }
     return ''
   },
   success: (message, opts) => {
-    if (globalHandler) return globalHandler.success(message, opts)
-    if (__DEV__) console.warn('[toast]', message)
+    if (globalHandler) {
+      return globalHandler.success(message, opts)
+    }
+    if (__DEV__) {
+      console.warn('[toast]', message)
+    }
     return ''
   },
   error: (message, opts) => {
-    if (globalHandler) return globalHandler.error(message, opts)
-    if (__DEV__) console.warn('[toast]', message)
+    if (globalHandler) {
+      return globalHandler.error(message, opts)
+    }
+    if (__DEV__) {
+      console.warn('[toast]', message)
+    }
     return ''
   },
   info: (message, opts) => {
-    if (globalHandler) return globalHandler.info(message, opts)
-    if (__DEV__) console.warn('[toast]', message)
+    if (globalHandler) {
+      return globalHandler.info(message, opts)
+    }
+    if (__DEV__) {
+      console.warn('[toast]', message)
+    }
     return ''
   },
   warning: (message, opts) => {
-    if (globalHandler) return globalHandler.warning(message, opts)
-    if (__DEV__) console.warn('[toast]', message)
+    if (globalHandler) {
+      return globalHandler.warning(message, opts)
+    }
+    if (__DEV__) {
+      console.warn('[toast]', message)
+    }
     return ''
   },
   dismiss: id => globalHandler?.dismiss(id),

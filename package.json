@@ -1,7 +1,7 @@
 {
   "name": "ShiguangDiary",
   "displayName": "拾光日记",
-  "version": "0.1.0",
+  "version": "1.0.0-rc.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",

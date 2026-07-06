@@ -24,6 +24,7 @@ import { syncService, localSyncProvider } from '@services'
 import type { RootStackParamList } from '@navigation/types'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { colors, spacing, typography } from '@theme'
+import { APP_VERSION_LABEL } from '@constants/app'
 
 export type DataManagementScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -96,7 +97,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
       haptic('saveSuccess')
       Alert.alert(
         '导出完成',
-        `JSON 已生成(${file.content.length} 字符)\n文件名:${file.filename}\n(分享面板为后续 TODO)`,
+        `JSON 已导出(${file.content.length} 字符)\n文件名:${file.filename}\n路径:${file.path}`,
       )
     }
   }, [dm])
@@ -180,12 +181,12 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
           <SettingsRow
             icon="doc"
             label="关于数据管理"
-            hint="v0.1.0"
+            hint={APP_VERSION_LABEL}
             showArrow={false}
             onPress={() =>
               Alert.alert(
                 '关于数据管理',
-                'Local First:本地数据为唯一可信来源。\n本版本支持 JSON 备份/导出 + 完整性检查 + 同步框架(Local)。\nZIP 打包/附件二进制/云同步/导入文件选取为后续版本。',
+                'Local First:本地数据为唯一可信来源。\n本版本支持 JSON 备份/导出落盘 + 完整性检查 + 同步框架(Local)。\nZIP 打包/附件二进制/云同步/导入文件选取为后续版本。',
               )
             }
           />

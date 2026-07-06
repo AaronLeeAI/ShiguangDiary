@@ -33,7 +33,9 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
   const createNotebook = useDiaryStore(s => s.createNotebook)
 
   useEffect(() => {
-    if (!initialized) init()
+    if (!initialized) {
+      init()
+    }
   }, [initialized, init])
 
   const handleItemPress = useCallback((id: string) => {
@@ -61,7 +63,9 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
 
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {
-      if (tab === 'Notebook') return
+      if (tab === 'Notebook') {
+        return
+      }
       navigation.navigate(ROUTES.MAIN_TABS, { screen: tab })
     },
     [navigation],

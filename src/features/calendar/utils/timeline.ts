@@ -48,7 +48,9 @@ export const daysInMonth = (year: number, month: number): number =>
 
 /** 月份标题:设计稿 "5月12日"(月) / "2026"(年)。 */
 export function formatTitle(year: number, month: number, mode: 'week' | 'month' | 'year'): string {
-  if (mode === 'year') return `${year}`
+  if (mode === 'year') {
+    return `${year}`
+  }
   return `${month}月`
 }
 
@@ -124,7 +126,9 @@ export function computeMonthMatrix(
     hasDiary: markers.has(c.key),
   }))
   const weeks: CalendarDay[][] = []
-  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7))
+  }
   return { year, month, weeks }
 }
 

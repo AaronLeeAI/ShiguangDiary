@@ -19,8 +19,12 @@ const defaultFormat = (ts: number, mode: 'date' | 'time' | 'datetime') => {
   const D = String(d.getDate()).padStart(2, '0')
   const h = String(d.getHours()).padStart(2, '0')
   const m = String(d.getMinutes()).padStart(2, '0')
-  if (mode === 'date') return `${Y}-${M}-${D}`
-  if (mode === 'time') return `${h}:${m}`
+  if (mode === 'date') {
+    return `${Y}-${M}-${D}`
+  }
+  if (mode === 'time') {
+    return `${h}:${m}`
+  }
   return `${Y}-${M}-${D} ${h}:${m}`
 }
 

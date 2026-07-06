@@ -38,7 +38,9 @@ export const mmkvStorage: StateStorage = {
   getItem: (name: string): string | null => {
     try {
       const storage = getMMKV()
-      if (!storage) return null
+      if (!storage) {
+        return null
+      }
       return storage.getString(name) ?? null
     } catch {
       return null
@@ -48,7 +50,9 @@ export const mmkvStorage: StateStorage = {
   setItem: (name: string, value: string): void => {
     try {
       const storage = getMMKV()
-      if (!storage) return
+      if (!storage) {
+        return
+      }
       storage.set(name, value)
     } catch {
       // silent fail
@@ -58,7 +62,9 @@ export const mmkvStorage: StateStorage = {
   removeItem: (name: string): void => {
     try {
       const storage = getMMKV()
-      if (!storage) return
+      if (!storage) {
+        return
+      }
       storage.delete(name)
     } catch {
       // silent fail

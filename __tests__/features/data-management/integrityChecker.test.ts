@@ -13,12 +13,7 @@
 import { it, expect, describe } from '@jest/globals'
 
 import { checkIntegrity } from '../../../src/features/data-management/utils/integrityChecker'
-import type {
-  DiaryModel,
-  NotebookModel,
-  AlbumModel,
-  AttachmentModel,
-} from '@database'
+import type { DiaryModel, NotebookModel, AlbumModel, AttachmentModel } from '@database'
 
 const diary = (id: string, notebookId: string | null = null): DiaryModel =>
   ({
@@ -36,7 +31,7 @@ const diary = (id: string, notebookId: string | null = null): DiaryModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  }) as DiaryModel
+  } as DiaryModel)
 
 const notebook = (id: string): NotebookModel =>
   ({
@@ -50,7 +45,7 @@ const notebook = (id: string): NotebookModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  }) as NotebookModel
+  } as NotebookModel)
 
 const album = (id: string, diaryIds: string[]): AlbumModel =>
   ({
@@ -62,7 +57,7 @@ const album = (id: string, diaryIds: string[]): AlbumModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  }) as AlbumModel
+  } as AlbumModel)
 
 const attachment = (id: string, diaryId: string): AttachmentModel =>
   ({
@@ -73,7 +68,7 @@ const attachment = (id: string, diaryId: string): AttachmentModel =>
     thumbnail: null,
     size: 0,
     createdAt: 1,
-  }) as AttachmentModel
+  } as AttachmentModel)
 
 const allValid = {
   diaries: [diary('d1', 'nb1'), diary('d2', 'nb1')],
@@ -144,13 +139,21 @@ describe('checkIntegrity', () => {
     const badAlbum = { ...album('a1', []), diaryIds: 'not-json' } as AlbumModel
     const r = checkIntegrity({ ...allValid, albums: [badAlbum] })
     expect(r.ok).toBe(false)
-    expect(r.issues.some(i => i.kind === 'album-diary-missing' && i.message.includes('malformed'))).toBe(true)
+    expect(
+      r.issues.some(i => i.kind === 'album-diary-missing' && i.message.includes('malformed')),
+    ).toBe(true)
   })
 
   it('accepts null config stores as empty (no issue)', () => {
     const r = checkIntegrity({
       ...allValid,
-      config: { app: null, preferences: null, session: null, editorDrafts: null, searchHistory: null },
+      config: {
+        app: null,
+        preferences: null,
+        session: null,
+        editorDrafts: null,
+        searchHistory: null,
+      },
     })
     expect(r.issues.some(i => i.kind === 'config-corrupted')).toBe(false)
   })

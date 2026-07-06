@@ -129,9 +129,15 @@ export function migrateConfig(raw: unknown): { config: ConfigSnapshot; changed: 
  */
 export function diffConfig(prev: ConfigSnapshot, next: ConfigSnapshot): ConfigChange {
   const keys: Array<keyof ConfigSnapshot> = []
-  if (prev.themeMode !== next.themeMode) keys.push('themeMode')
-  if (prev.homeListStyle !== next.homeListStyle) keys.push('homeListStyle')
-  if (prev.diarySortOrder !== next.diarySortOrder) keys.push('diarySortOrder')
+  if (prev.themeMode !== next.themeMode) {
+    keys.push('themeMode')
+  }
+  if (prev.homeListStyle !== next.homeListStyle) {
+    keys.push('homeListStyle')
+  }
+  if (prev.diarySortOrder !== next.diarySortOrder) {
+    keys.push('diarySortOrder')
+  }
   if (
     prev.editor.fontScale !== next.editor.fontScale ||
     prev.editor.toolbarEnabled !== next.editor.toolbarEnabled ||

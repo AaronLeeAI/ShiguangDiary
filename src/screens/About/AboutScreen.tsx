@@ -13,12 +13,9 @@ import { SettingsGroup } from '@/components/SettingsGroup'
 import { SettingsRow } from '@/components/SettingsRow'
 import { TopBar } from '@/components/TopBar'
 import { spacing } from '@theme'
+import { APP_DESCRIPTION, APP_NAME, APP_VERSION } from '@constants/app'
 
 import type { AboutScreenProps } from './types'
-
-export const APP_NAME = '拾光日记'
-export const APP_VERSION = '0.1.0'
-export const APP_DESCRIPTION = '记录每一个值得记住的瞬间。'
 
 export const AboutScreen: React.FC<AboutScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets()

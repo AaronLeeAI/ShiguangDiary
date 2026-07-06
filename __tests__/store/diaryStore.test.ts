@@ -12,10 +12,7 @@
 
 import { it, expect, describe } from '@jest/globals'
 
-import {
-  applyDiaryUpdate,
-  bumpNotebookCount,
-} from '../../src/store/diaryStorePure'
+import { applyDiaryUpdate, bumpNotebookCount } from '../../src/store/diaryStorePure'
 import type { Diary, Notebook } from '../../src/types/models'
 
 const baseDiary = (overrides: Partial<Diary> = {}): Diary => ({

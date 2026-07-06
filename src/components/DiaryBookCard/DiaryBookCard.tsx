@@ -20,7 +20,9 @@ const hashString = (str: string): number => {
 }
 
 const pickCoverColor = (id: string, override?: string): string => {
-  if (override) return override
+  if (override) {
+    return override
+  }
   const idx = hashString(id) % DIARY_BOOK_COVER_DEFAULT_COLORS.length
   return DIARY_BOOK_COVER_DEFAULT_COLORS[idx]
 }

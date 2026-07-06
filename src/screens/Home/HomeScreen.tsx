@@ -32,7 +32,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const cal = useCalendar()
 
   useEffect(() => {
-    if (!initialized) init()
+    if (!initialized) {
+      init()
+    }
   }, [initialized, init])
 
   const handleItemPress = useCallback(
@@ -64,7 +66,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {
-      if (tab === 'Home') return
+      if (tab === 'Home') {
+        return
+      }
       navigation.navigate(ROUTES.MAIN_TABS, { screen: tab })
     },
     [navigation],

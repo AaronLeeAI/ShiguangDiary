@@ -23,7 +23,9 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 }) => {
   const { colors, typography, spacing, radius } = useTheme()
 
-  if (!visible) return null
+  if (!visible) {
+    return null
+  }
 
   return (
     <Modal

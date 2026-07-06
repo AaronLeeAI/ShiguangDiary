@@ -60,10 +60,16 @@ export const TextArea: React.FC<TextAreaProps> = ({
 
   const len = value.length
   const countStyle = (() => {
-    if (!maxLength) return styles.countText
+    if (!maxLength) {
+      return styles.countText
+    }
     const ratio = len / maxLength
-    if (ratio >= 1) return [styles.countText, styles.countTextDanger]
-    if (ratio >= 0.9) return [styles.countText, styles.countTextWarn]
+    if (ratio >= 1) {
+      return [styles.countText, styles.countTextDanger]
+    }
+    if (ratio >= 0.9) {
+      return [styles.countText, styles.countTextWarn]
+    }
     return styles.countText
   })()
 

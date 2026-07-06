@@ -34,7 +34,9 @@ export const DiaryViewScreen: React.FC<DiaryViewScreenProps> = ({ navigation, ro
   const [actionSheetVisible, setActionSheetVisible] = useState(false)
 
   useEffect(() => {
-    if (!initialized) init()
+    if (!initialized) {
+      init()
+    }
   }, [initialized, init])
 
   const handleBack = useCallback(() => {

@@ -1,170 +1,155 @@
-# 拾光日记 (Shiguang Diary)
+﻿# 拾光日记 (Shiguang Diary)
 
 > 安静地记录每一天。
 
 **拾光日记** 是一款基于 React Native + TypeScript 的 Android 日记应用。
-项目当前处于 **Task 1：Foundation** 阶段，仅完成工程基础设施搭建，不含任何页面/业务实现。
+
+Current release: **v1.0.0-rc.1**  
+Current milestone: **Task19 — Release Candidate & Final QA**
 
 ---
 
-## 📖 文档导航
+## Release Candidate Status
 
-| 文档 | 说明 |
-|------|------|
-| [PROJECT_INFO.md](./PROJECT_INFO.md) | 项目架构 + 目录结构说明 |
-| [docs/development/Architecture.md](./docs/development/Architecture.md) | 整体架构 |
-| [docs/development/DirectoryGuide.md](./docs/development/DirectoryGuide.md) | 目录详解 |
-| [docs/development/CodingStyle.md](./docs/development/CodingStyle.md) | 代码风格 |
-| [docs/development/NamingConvention.md](./docs/development/NamingConvention.md) | 命名约定 |
-| [docs/development/ComponentConvention.md](./docs/development/ComponentConvention.md) | 组件规范 |
-| [docs/development/ImportConvention.md](./docs/development/ImportConvention.md) | 导入规范 |
-| [docs/development/ReactNativeConvention.md](./docs/development/ReactNativeConvention.md) | RN 规范 |
-| [docs/ai/ClaudeCodeGuide.md](./docs/ai/ClaudeCodeGuide.md) | Claude Code 开发指南 |
-| [docs/ai/DevelopmentWorkflow.md](./docs/ai/DevelopmentWorkflow.md) | 开发工作流 |
-| [docs/ai/TaskConvention.md](./docs/ai/TaskConvention.md) | Task 约定 |
-| [docs/ai/ReviewChecklist.md](./docs/ai/ReviewChecklist.md) | Review 检查清单 |
-| [docs/ai/PromptConvention.md](./docs/ai/PromptConvention.md) | Prompt 约定 |
+Task19 已完成自动化/静态 QA 与 Release Candidate 构建验证：
 
-外部设计参考：
-- `D:/my dev/docs/project-设计-docs/` — 设计文档（页面/组件/交互/动画）
-- `D:/my dev/docs/apk-analysis-docs/` — APK 拆解分析
+- Jest: `6` suites / `57` tests passed
+- TypeScript: `tsc --noEmit` passed
+- ESLint: `0` errors（现存 warnings 作为非阻塞遗留债务记录）
+- Android release build: `assembleRelease` passed
+- APK metadata: `com.shiguangdiary`, `versionName=1.0.0-rc.1`, label `拾光日记`
+- APK signature verification: passed for RC debug-key artifact
+
+RC APK:
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
+SHA-256: 43A42C620775EC0AD149D17AF1CE06B0652FECB52FB42DED3C451DEAC7DE91C8
+```
+
+> Production note: `v1.0.0-rc.1` is an internal RC artifact signed with the debug keystore. Final `v1.0.0` must be signed with a private release keystore and smoke-tested on an Android device.
 
 ---
 
-## 🚀 快速开始
+## Features
 
-### 环境要求
+- Home diary timeline and diary view/edit flows
+- Notebook and album organization basics
+- Search and statistics modules
+- Calendar/timeline utility foundation
+- Settings, preferences, dark mode, about, profile
+- Local-first persistence with SQLite + MMKV
+- JSON backup/export, integrity checking, and sync-provider abstraction
+- Shared component library, design tokens, motion/haptics wrappers
 
-- Node.js **>= 18**
-- npm 或 yarn
-- Android Studio (含 Android SDK Platform 33+)
+Some future-facing entries are intentionally disabled in the RC UI and marked `敬请期待`.
+
+---
+
+## Documentation
+
+| Document | Purpose |
+| --- | --- |
+| [PROJECT_INFO.md](./PROJECT_INFO.md) | Architecture and directory overview |
+| [docs/RELEASE_NOTES_v1.0.0.md](./docs/RELEASE_NOTES_v1.0.0.md) | RC release notes |
+| [docs/FINAL_QA_REPORT_Task19.md](./docs/FINAL_QA_REPORT_Task19.md) | Final QA evidence and verdict |
+| [docs/REGRESSION_REPORT_Task19.md](./docs/REGRESSION_REPORT_Task19.md) | Regression report |
+| [docs/PIXEL_PERFECT_REPORT_Task19.md](./docs/PIXEL_PERFECT_REPORT_Task19.md) | Pixel/UI consistency review |
+| [docs/ACCESSIBILITY_REPORT_Task19.md](./docs/ACCESSIBILITY_REPORT_Task19.md) | Accessibility baseline review |
+| [docs/SECURITY_REVIEW_Task19.md](./docs/SECURITY_REVIEW_Task19.md) | Security/permission review |
+| [docs/RELEASE_BUILD_Task19.md](./docs/RELEASE_BUILD_Task19.md) | Release build details |
+| [docs/reports/PROJECT_POSTMORTEM.md](./docs/reports/PROJECT_POSTMORTEM.md) | Project postmortem |
+| [docs/development/Architecture.md](./docs/development/Architecture.md) | Architecture details |
+| [docs/ai/DevelopmentWorkflow.md](./docs/ai/DevelopmentWorkflow.md) | AI development workflow |
+
+External source-of-truth references:
+
+- `D:/my dev/docs/PROJECT_PLAN.md`
+- `D:/my dev/docs/tasks/Task19.md`
+- `D:/my dev/docs/project-设计-docs/`
+- `D:/my dev/docs/apk-analysis-docs/`
+
+---
+
+## Quick Start
+
+### Requirements
+
+- Node.js >= 18
+- npm
+- Android Studio / Android SDK
 - JDK 17
-- React Native CLI（通过 `npx` 调用）
+- React Native CLI via `npx`
 
-### 安装依赖
+### Install
 
 ```bash
-cd ShiguangDiary
 npm install
 ```
 
-### 运行（Android）
+### Run Android Debug Build
 
 ```bash
-# 终端 1：启动 Metro
 npm start
-
-# 终端 2：构建并运行 Android
 npm run android
 ```
 
-### 类型检查 / Lint / 格式化
+### Quality Gates
 
 ```bash
-npm run typecheck     # tsc --noEmit
-npm run lint          # ESLint
-npm run lint:fix      # 自动修复
-npm run format        # Prettier
+npm test -- --runInBand
+npm run typecheck
+npm run lint
 ```
 
-### 测试
+### Release Candidate Build
 
-```bash
-npm test              # Jest
-npm run test:watch    # Watch 模式
-npm run test:coverage # 覆盖率
-```
-
----
-
-## 📦 技术栈
-
-| 类别 | 选型 |
-|------|------|
-| 框架 | React Native 0.76.5 |
-| 语言 | TypeScript 5.0.4 |
-| 导航 | @react-navigation v7 |
-| 状态管理 | Zustand 5 + @tanstack/react-query 5 |
-| 存储 | react-native-sqlite-storage + react-native-mmkv |
-| 动画 | react-native-reanimated 3 |
-| 手势 | react-native-gesture-handler |
-| 列表 | @shopify/flash-list |
-| 图片 | react-native-fast-image |
-| 富文本 | react-native-pell-rich-editor |
-
-完整依赖见 `package.json`。
-
----
-
-## 📁 目录速览
-
-```
-ShiguangDiary/
-├── android/                # Android 原生工程
-├── ios/                    # iOS 原生工程（预留扩展）
-├── assets/                 # 静态资源
-├── src/
-│   ├── assets/             # 资源索引
-│   ├── navigation/         # 路由
-│   ├── screens/            # 页面（待实现）
-│   ├── components/         # 公共组件（41 个骨架）
-│   ├── theme/              # 设计 Token 系统
-│   ├── hooks/              # 自定义 Hooks
-│   ├── providers/          # Provider 组件
-│   ├── contexts/           # React Context
-│   ├── services/           # 业务服务
-│   │   └── api/            # 网络层
-│   ├── database/           # SQLite 数据层
-│   ├── store/              # Zustand 状态
-│   ├── utils/              # 工具
-│   ├── constants/          # 常量
-│   ├── types/              # 类型
-│   ├── features/           # 10 个业务 Feature
-│   ├── animations/         # 动画封装
-│   ├── configs/            # 运行时配置
-│   ├── locales/            # 国际化
-│   └── permissions/        # 权限管理
-├── docs/
-│   ├── development/        # 开发规范
-│   └── ai/                 # AI 开发规范
-├── App.tsx                 # 应用入口
-├── index.js                # 注册入口
-├── tsconfig.json           # TypeScript 配置
-├── babel.config.js         # Babel 配置
-├── metro.config.js         # Metro 配置
-├── package.json            # 依赖
-└── README.md               # 本文件
+```powershell
+cd android
+.\gradlew.bat assembleRelease --no-daemon
 ```
 
 ---
 
-## 🎨 Design Foundation
+## Tech Stack
 
-**所有 Theme、颜色、字体、间距、阴影、动画** 严格遵循 [`docs/project-设计-docs/docs/04_Design_System.md`](D:/my dev/docs/project-设计-docs/docs/04_Design_System.md) 和 [`docs/project-设计-docs/docs/08_Animation.md`](D:/my dev/docs/project-设计-docs/docs/08_Animation.md)。
-
-主色：`#1AAD66`（拾光日记绿）
-
-详见 `src/theme/` 下各 Token 文件。
-
----
-
-## 🤖 AI 协作
-
-本项目遵循统一的 AI 开发规范（见 `docs/ai/`）。
-所有由 Claude Code 执行的 Task 必须符合：
-- **TaskConvention** — 任务边界
-- **DevelopmentWorkflow** — 开发工作流
-- **ReviewChecklist** — Review 检查清单
-- **PromptConvention** — Prompt 风格
+| Area | Selection |
+| --- | --- |
+| Framework | React Native 0.76.5 |
+| Language | TypeScript 5.0.4 |
+| Navigation | React Navigation 7 |
+| State | Zustand 5 + TanStack Query 5 |
+| Storage | SQLite + MMKV + RNFS |
+| Animation | Reanimated 3 + gesture-handler |
+| Lists | FlashList |
+| Images | FastImage |
+| Rich editor | react-native-pell-rich-editor |
 
 ---
 
-## 📐 开发规范
+## Architecture Snapshot
 
-详见 [`docs/development/`](./docs/development/)，所有 AI 生成的代码必须严格遵守。
+```text
+src/
+├── animations/     # Motion/haptic wrappers
+├── assets/         # Asset index
+├── components/     # Shared UI component library
+├── constants/      # App/routes constants
+├── contexts/       # React contexts
+├── database/       # SQLite DAO/repository layer
+├── features/       # Feature hooks, engines, components
+├── hooks/          # Shared hooks
+├── navigation/     # Root stack / tabs / route types
+├── providers/      # App providers
+├── screens/        # Screen composition
+├── services/       # Backup/sync/API/logging/storage services
+├── store/          # Zustand stores
+├── theme/          # Design tokens
+└── utils/          # Utilities
+```
 
 ---
 
-## 📜 License
+## License
 
 MIT License © 2026 拾光日记 Team

@@ -29,7 +29,9 @@ let _trigger: TriggerFn | null = null
 let _importFailed = false
 
 async function loadTrigger(): Promise<void> {
-  if (_trigger || _importFailed) return
+  if (_trigger || _importFailed) {
+    return
+  }
   try {
     // require 避免 top-level import 在 jest 下触发原生模块解析失败
     const mod = require('react-native-haptic-feedback')
@@ -71,12 +73,16 @@ export const hapticSupported = (): boolean => Platform.OS === 'android' || Platf
  * 不支持平台或原生模块不可用时静默跳过(返回 false),绝不抛错避免影响业务。
  */
 export const haptic = (intent: HapticIntent): boolean => {
-  if (!hapticSupported()) return false
+  if (!hapticSupported()) {
+    return false
+  }
   if (!_trigger) {
     // 同步路径:首次未加载则尝试同步 require(已加载时 _trigger 非 null)。
     // 注:loadTrigger 异步,首次调用可能未就绪;在 App 启动时预热(见 useHapticWarmup 或 index)。
     void loadTrigger()
-    if (!_trigger) return false
+    if (!_trigger) {
+      return false
+    }
   }
   const type = HAPTIC_TYPE_MAP[intent]
   try {

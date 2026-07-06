@@ -60,14 +60,20 @@ describe('validateBackupPayload', () => {
 
   it('rejects schemaVersion higher than current', () => {
     const p = validPayload()
-    const { valid, errors } = validateBackupPayload({ ...p, schemaVersion: BACKUP_SCHEMA_VERSION + 1 })
+    const { valid, errors } = validateBackupPayload({
+      ...p,
+      schemaVersion: BACKUP_SCHEMA_VERSION + 1,
+    })
     expect(valid).toBe(false)
     expect(errors[0]).toMatch(/unsupported/)
   })
 
   it('rejects legacy schemaVersion (no migration yet)', () => {
     const p = validPayload()
-    const { valid, errors } = validateBackupPayload({ ...p, schemaVersion: BACKUP_SCHEMA_VERSION - 1 })
+    const { valid, errors } = validateBackupPayload({
+      ...p,
+      schemaVersion: BACKUP_SCHEMA_VERSION - 1,
+    })
     expect(valid).toBe(false)
     expect(errors[0]).toMatch(/legacy/)
   })
@@ -119,7 +125,16 @@ describe('validateBackupPayload', () => {
 
   it('accepts null config values (empty store)', () => {
     const p = validPayload()
-    const { valid } = validateBackupPayload({ ...p, config: { app: null, preferences: null, session: null, editorDrafts: null, searchHistory: null } })
+    const { valid } = validateBackupPayload({
+      ...p,
+      config: {
+        app: null,
+        preferences: null,
+        session: null,
+        editorDrafts: null,
+        searchHistory: null,
+      },
+    })
     expect(valid).toBe(true)
   })
 })

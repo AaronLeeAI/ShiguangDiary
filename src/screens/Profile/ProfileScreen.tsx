@@ -15,6 +15,7 @@ import { Pressable } from 'react-native'
 import { SettingsGroup } from '@/components/SettingsGroup'
 import { SettingsRow } from '@/components/SettingsRow'
 import { TopBar } from '@/components/TopBar'
+import { APP_VERSION_LABEL } from '@constants/app'
 import { ROUTES } from '@constants/routes'
 import { colors, spacing, typography } from '@theme'
 import { useDiaryStore } from '@store/diaryStore'
@@ -25,20 +26,42 @@ import type { ProfileMenuItem, ProfileScreenProps } from './types'
 const MENU_GROUPS: ProfileMenuItem[][] = [
   [
     { key: 'settings', label: '设置', icon: 'settings', showArrow: true, route: 'Settings' },
-    { key: 'recycle', label: '回收站', icon: 'recycle', showArrow: true, route: 'Recycle' },
-    { key: 'drafts', label: '草稿箱', icon: 'edit', showArrow: true, route: 'Drafts' },
+    {
+      key: 'recycle',
+      label: '回收站',
+      icon: 'recycle',
+      hint: '敬请期待',
+      showArrow: false,
+      disabled: true,
+    },
+    {
+      key: 'drafts',
+      label: '草稿箱',
+      icon: 'edit',
+      hint: '敬请期待',
+      showArrow: false,
+      disabled: true,
+    },
     { key: 'statistics', label: '数据统计', icon: 'chart', showArrow: true, route: 'Statistics' },
   ],
   [
     { key: 'darkmode', label: '深色模式', icon: 'moon', showArrow: true, route: 'DarkMode' },
     { key: 'preferences', label: '偏好设置', icon: 'tune', showArrow: true, route: 'Preferences' },
-    { key: 'liststyle', label: '列表样式', icon: 'list', showArrow: true, route: 'ListStyle' },
+    {
+      key: 'liststyle',
+      label: '列表样式',
+      icon: 'list',
+      hint: '敬请期待',
+      showArrow: false,
+      disabled: true,
+    },
     {
       key: 'theme-bg',
       label: '主题背景',
       icon: 'image',
-      showArrow: true,
-      route: 'ThemeBackground',
+      hint: '敬请期待',
+      showArrow: false,
+      disabled: true,
     },
   ],
   [
@@ -57,7 +80,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const init = useDiaryStore(s => s.init)
 
   useEffect(() => {
-    if (!initialized) init()
+    if (!initialized) {
+      init()
+    }
   }, [initialized, init])
 
   const stats = useMemo(
@@ -82,13 +107,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     [navigation],
   )
 
-  const handleEditProfile = useCallback(() => {
-    navigation.navigate(ROUTES.ACCOUNT)
-  }, [navigation])
-
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {
-      if (tab === 'Profile') return
+      if (tab === 'Profile') {
+        return
+      }
       navigation.navigate(ROUTES.MAIN_TABS, { screen: tab })
     },
     [navigation],
@@ -104,11 +127,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Avatar size="large" name="拾光" />
           <Text style={styles.userName}>拾光日记</Text>
           <Text style={styles.userBio}>记录每一个值得记住的瞬间</Text>
-          <Pressable
-            onPress={handleEditProfile}
-            style={({ pressed }) => [styles.editButton, pressed && { opacity: 0.6 }]}
-          >
-            <Text style={styles.editButtonText}>编辑资料</Text>
+          <Pressable disabled style={[styles.editButton, { opacity: 0.6 }]}>
+            <Text style={styles.editButtonText}>编辑资料 · 敬请期待</Text>
           </Pressable>
         </View>
 
@@ -136,6 +156,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 hint={item.hint}
                 showArrow={item.showArrow !== false}
                 destructive={item.destructive}
+                disabled={item.disabled}
                 onPress={() => handleItemPress(item)}
               />
             ))}
@@ -150,7 +171,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             marginTop: spacing.lg,
           }}
         >
-          拾光日记 · v0.1.0
+          拾光日记 · {APP_VERSION_LABEL}
         </Text>
       </ScrollView>
 

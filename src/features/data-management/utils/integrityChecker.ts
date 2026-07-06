@@ -26,7 +26,9 @@ const computeStats = (
 
 /** JSON.parse 守卫。 */
 const safeParse = (s: string | null): { ok: boolean } => {
-  if (s === null) return { ok: false }
+  if (s === null) {
+    return { ok: false }
+  }
   try {
     JSON.parse(s)
     return { ok: true }

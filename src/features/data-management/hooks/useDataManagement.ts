@@ -36,7 +36,7 @@ export interface UseDataManagementResult {
   createBackup: () => Promise<BackupMetadata | null>
   deleteBackup: (filename: string) => Promise<void>
   restore: (meta: BackupMetadata) => Promise<BackupStats | null>
-  exportJSON: () => Promise<{ filename: string; content: string } | null>
+  exportJSON: () => Promise<{ filename: string; content: string; path: string } | null>
   runIntegrityCheck: () => Promise<IntegrityReport | null>
   validateImport: (json: string) => ReturnType<typeof backupService.validateImport>
   clearError: () => void
@@ -116,10 +116,12 @@ export function useDataManagement(): UseDataManagementResult {
     store.setProgress(tick('收集数据', 0.1))
     try {
       const file = await backupService.exportJSON()
+      store.setProgress(tick('写入导出文件', 0.8))
+      const path = await backupService.writeExport(file.filename, file.content)
       store.setProgress(tick('生成 JSON', 1))
       store.setBusy('idle')
       store.setProgress(null)
-      return file
+      return { ...file, path }
     } catch (e) {
       store.setLastError(e instanceof Error ? e.message : String(e))
       store.setBusy('idle')

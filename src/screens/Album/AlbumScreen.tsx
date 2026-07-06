@@ -30,7 +30,9 @@ export const AlbumScreen: React.FC<AlbumScreenProps> = ({ navigation }) => {
   const createAlbum = useDiaryStore(s => s.createAlbum)
 
   useEffect(() => {
-    if (!initialized) init()
+    if (!initialized) {
+      init()
+    }
   }, [initialized, init])
 
   const handleItemPress = useCallback((id: string) => {
@@ -52,7 +54,9 @@ export const AlbumScreen: React.FC<AlbumScreenProps> = ({ navigation }) => {
 
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {
-      if (tab === 'Album') return
+      if (tab === 'Album') {
+        return
+      }
       navigation.navigate(ROUTES.MAIN_TABS, { screen: tab })
     },
     [navigation],

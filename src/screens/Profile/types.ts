@@ -33,4 +33,6 @@ export interface ProfileMenuItem {
   onPress?: () => void
   /** 危险项（红色） */
   destructive?: boolean
+  /** 是否禁用（用于 RC 暂不开放入口，避免进入占位页） */
+  disabled?: boolean
 }

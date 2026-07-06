@@ -11,6 +11,7 @@
 
 import RNFS from 'react-native-fs'
 
+import { APP_VERSION } from '@constants/app'
 import {
   diaryRepository,
   notebookRepository,
@@ -40,7 +41,6 @@ import type {
 const log = createLogger('BackupService')
 
 const BACKUP_BUCKET: FileBucket = 'backups'
-const APP_VERSION = '0.1.0'
 
 /** 读 MMKV 各 store 的原始 JSON 字符串(配置快照)。 */
 async function readConfigSnapshot(): Promise<ConfigSnapshot> {
@@ -87,7 +87,9 @@ async function collectPayload(): Promise<BackupPayload> {
   const attachments = []
   for (const d of diaries) {
     const items = await attachmentRepository.findByDiaryId(d.id)
-    for (const a of items) attachments.push(a)
+    for (const a of items) {
+      attachments.push(a)
+    }
   }
 
   const config = await readConfigSnapshot()
@@ -164,7 +166,9 @@ export const backupService = {
       const names = await fileStorage.list(BACKUP_BUCKET)
       const metas: BackupMetadata[] = []
       for (const filename of names) {
-        if (!filename.endsWith('.json')) continue
+        if (!filename.endsWith('.json')) {
+          continue
+        }
         try {
           const content = await fileStorage.readText(BACKUP_BUCKET, filename)
           const raw = parseRawPayload(content)

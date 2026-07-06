@@ -125,13 +125,22 @@ describe('diffConfig', () => {
   })
 
   it('returns empty keys when configs are equal', () => {
-    const { keys } = diffConfig(DEFAULT_CONFIG, { ...DEFAULT_CONFIG, editor: { ...DEFAULT_CONFIG.editor } })
+    const { keys } = diffConfig(DEFAULT_CONFIG, {
+      ...DEFAULT_CONFIG,
+      editor: { ...DEFAULT_CONFIG.editor },
+    })
     expect(keys).toEqual([])
   })
 
   it('detects editor deep change (toolbarEnabled toggle)', () => {
-    const prev: ConfigSnapshot = { ...DEFAULT_CONFIG, editor: { ...DEFAULT_CONFIG.editor, toolbarEnabled: true } }
-    const next: ConfigSnapshot = { ...DEFAULT_CONFIG, editor: { ...DEFAULT_CONFIG.editor, toolbarEnabled: false } }
+    const prev: ConfigSnapshot = {
+      ...DEFAULT_CONFIG,
+      editor: { ...DEFAULT_CONFIG.editor, toolbarEnabled: true },
+    }
+    const next: ConfigSnapshot = {
+      ...DEFAULT_CONFIG,
+      editor: { ...DEFAULT_CONFIG.editor, toolbarEnabled: false },
+    }
     expect(diffConfig(prev, next).keys).toEqual(['editor'])
   })
 })

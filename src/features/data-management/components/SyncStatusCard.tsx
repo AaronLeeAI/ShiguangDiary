@@ -20,7 +20,9 @@ export interface SyncStatusCardProps {
 }
 
 const formatTime = (ms: number | null): string => {
-  if (ms === null) return '从未同步'
+  if (ms === null) {
+    return '从未同步'
+  }
   const d = new Date(ms)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(

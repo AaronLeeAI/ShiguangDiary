@@ -60,14 +60,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
             hint={themeHint}
             onPress={go(ROUTES.DARK_MODE)}
           />
-          <SettingsRow
-            icon="image"
-            label="主题背景"
-            hint="敬请期待"
-            disabled
-            showArrow={false}
-            onPress={go(ROUTES.THEME_BACKGROUND)}
-          />
+          <SettingsRow icon="image" label="主题背景" hint="敬请期待" disabled showArrow={false} />
         </SettingsGroup>
 
         <SettingsGroup title="通用">
@@ -77,31 +70,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
             hint={`${HOME_LIST_LABELS[homeListStyle] ?? ''} · ${SORT_LABELS[diarySortOrder] ?? ''}`}
             onPress={go(ROUTES.PREFERENCES)}
           />
-          <SettingsRow
-            icon="list"
-            label="列表样式"
-            hint={HOME_LIST_LABELS[homeListStyle] ?? ''}
-            onPress={go(ROUTES.LIST_STYLE)}
-          />
+          <SettingsRow icon="list" label="列表样式" hint="敬请期待" disabled showArrow={false} />
         </SettingsGroup>
 
         <SettingsGroup title="编辑器">
-          <SettingsRow
-            icon="edit"
-            label="工具栏定制"
-            hint="敬请期待"
-            disabled
-            showArrow={false}
-            onPress={go(ROUTES.EDITOR_TOOLBAR_PICKER)}
-          />
-          <SettingsRow
-            icon="bold"
-            label="字体管理"
-            hint="敬请期待"
-            disabled
-            showArrow={false}
-            onPress={go(ROUTES.FONT_MANAGEMENT)}
-          />
+          <SettingsRow icon="edit" label="工具栏定制" hint="敬请期待" disabled showArrow={false} />
+          <SettingsRow icon="bold" label="字体管理" hint="敬请期待" disabled showArrow={false} />
         </SettingsGroup>
 
         <SettingsGroup title="关于">
