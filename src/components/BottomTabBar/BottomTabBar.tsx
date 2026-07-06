@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BottomTabBar - 底部 Tab 导航栏
  *
  * 4 个一级 Tab：Home / Notebook / Album / Profile
@@ -50,7 +50,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
       {tabs.map(tab => {
         const isActive = tab.name === activeTab
         const iconName = isActive ? tab.activeIcon ?? tab.icon : tab.icon
-        const iconColor = isActive ? colors.brand.primary : colors.semantic.icon.tertiary
+        const iconColor = isActive ? colors.neutral.gray60 : colors.neutral.gray50
         return (
           <Pressable
             key={tab.name}

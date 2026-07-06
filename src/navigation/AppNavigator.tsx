@@ -12,6 +12,7 @@
  */
 
 import React, { useEffect } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
@@ -20,8 +21,9 @@ import {
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
 import { haptic } from '@animations/haptics'
-import { useTheme } from '@theme'
+import { colors, fontSize, radius, spacing, useTheme } from '@theme'
 import { Screen } from '@components'
+import { Icon } from '@/components/Icon'
 import { ROUTES } from '@constants/routes'
 import { RootStackParamList, TabParamList } from '@navigation/types'
 import { AlbumScreen } from '@/screens/Album'
@@ -69,7 +71,14 @@ const Splash = ({
     return () => clearTimeout(timer)
   }, [navigation])
 
-  return <Screen style={{ justifyContent: 'center', alignItems: 'center' }} />
+  return (
+    <Screen style={styles.splashScreen}>
+      <View style={styles.splashLogo}>
+        <Icon name="doc" size={42} color={colors.neutral.white} />
+      </View>
+      <Text style={styles.splashTitle}>????</Text>
+    </Screen>
+  )
 }
 
 // 4 Tab + DiaryView + DiaryEdit + Search 已实现
@@ -87,13 +96,35 @@ const Preferences = PreferencesScreen
 const Settings = SettingsScreen
 const Export = DataManagementScreen
 
+const styles = StyleSheet.create({
+  splashScreen: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.semantic.bg.canvas,
+  },
+  splashLogo: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.xl,
+    backgroundColor: colors.brand.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.base,
+  },
+  splashTitle: {
+    fontSize: fontSize.titleM,
+    fontWeight: '700',
+    color: colors.semantic.text.primary,
+  },
+})
+
 // Stack Navigator
 const Stack = createNativeStackNavigator<RootStackParamList>()
 const Tab = createBottomTabNavigator<TabParamList>()
 
 // Tab Navigator
 function MainTabs() {
-  const { colors } = useTheme()
+  const { colors: themeColors } = useTheme()
 
   return (
     <Tab.Navigator
@@ -103,13 +134,10 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: colors.brand.primary,
-        tabBarInactiveTintColor: colors.semantic.icon.tertiary,
-        tabBarStyle: {
-          backgroundColor: colors.semantic.bg.bottomTab,
-          borderTopColor: colors.semantic.border.default,
-          borderTopWidth: 0.5,
-        },
+        tabBarActiveTintColor: themeColors.brand.primary,
+        tabBarInactiveTintColor: themeColors.semantic.icon.tertiary,
+        // Main tab screens render the custom BottomTabBar themselves; hide React Navigation's default bar.
+        tabBarStyle: { display: 'none' },
       }}
     >
       <Tab.Screen name={ROUTES.HOME} component={Home} />

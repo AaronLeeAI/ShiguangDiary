@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BottomTabBar 类型定义
  *
  * 底部 Tab 栏：Home / Notebook / Album / Profile
@@ -27,7 +27,7 @@ export interface BottomTabConfig {
 /** 固定的 4 个 Tab 配置 */
 export const BOTTOM_TABS = [
   { name: 'Home', icon: 'list', activeIcon: 'listActive', label: '日记' },
-  { name: 'Notebook', icon: 'book', activeIcon: 'bookActive', label: '日记本' },
+  { name: 'Notebook', icon: 'book', activeIcon: 'bookActive', label: '笔记本' },
   { name: 'Album', icon: 'album', activeIcon: 'albumActive', label: '相册' },
   { name: 'Profile', icon: 'profile', activeIcon: 'profileActive', label: '我的' },
 ] as const satisfies readonly BottomTabConfig[]

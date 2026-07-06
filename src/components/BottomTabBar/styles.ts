@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BottomTabBar 样式
  *
  * 颜色/间距/字号严格遵循 @theme，禁止硬编码。
@@ -29,11 +29,11 @@ export const styles = StyleSheet.create({
   },
   label: {
     ...typography.tabLabel,
-    color: colors.semantic.icon.tertiary,
+    color: colors.neutral.gray50,
     marginTop: spacing.xxs,
   },
   labelActive: {
-    color: colors.brand.primary,
+    color: colors.neutral.gray60,
   },
 })
 

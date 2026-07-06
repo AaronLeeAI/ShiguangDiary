@@ -5,7 +5,7 @@
  */
 
 import type { ReactNode } from 'react'
-import type { ViewStyle } from 'react-native'
+import type { StyleProp, ViewStyle } from 'react-native'
 import type { IconName } from '@/components/Icon'
 
 export type FabVariant = 'primary' | 'danger'
@@ -26,7 +26,7 @@ export interface FloatingActionButtonProps {
   /** 测试 ID */
   testID?: string
   /** 容器样式覆盖 */
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
   /** 是否禁用 */
   disabled?: boolean
 }

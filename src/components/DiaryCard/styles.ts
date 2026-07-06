@@ -13,6 +13,44 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.semantic.bg.card,
     borderRadius: radius.lg,
   },
+  homeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  homeDateBlock: {
+    flexBasis: '25%',
+    paddingRight: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  homeDay: {
+    fontFamily: typography.titleL.fontFamily,
+    fontSize: typography.titleL.fontSize,
+    fontWeight: typography.titleL.fontWeight,
+    color: colors.semantic.text.primary,
+    lineHeight: typography.titleL.lineHeight,
+  },
+  homeMonthYear: {
+    fontSize: typography.caption.fontSize,
+    lineHeight: typography.caption.lineHeight,
+    color: colors.semantic.text.tertiary,
+    marginTop: spacing.xxs,
+    marginLeft: -spacing.xs,
+  },
+  homeContent: {
+    flex: 1,
+    paddingLeft: spacing.xs,
+    alignItems: 'flex-start',
+  },
+  homeCoverFrame: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  homeCoverImage: {
+    width: '100%',
+    height: 168,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
