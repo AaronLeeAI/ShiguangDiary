@@ -5,7 +5,7 @@
  * 页面经 useHome hook 访问视图状态，不直接读取 Store 内部实现。
  */
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   FlatList,
   Modal,
@@ -14,6 +14,8 @@ import {
   View,
   type ImageSourcePropType,
   type ListRenderItem,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -38,6 +40,8 @@ import type { HomeScreenProps } from './types'
 
 const homeReferenceImage = require('./assets/home-reference-game-card.jpg') as number
 const LOCAL_HOME_COVER_KEYS = new Set(['home-reference-game-card'])
+const FAB_HIDE_SCROLL_Y = 180
+const FAB_SCROLL_DELTA = 8
 
 type HomeDisplayOverride = {
   day: string
@@ -49,24 +53,24 @@ type HomeDisplayOverride = {
 const HOME_DISPLAY_OVERRIDES: Record<string, HomeDisplayOverride> = {
   'seed-1': {
     day: '15',
-    monthYear: '???????',
-    title: '??',
-    summary: '??????????????...',
+    monthYear: '\u5341\u4e00\u6708\u2022\u661f\u671f\u516d',
+    title: '\u968f\u8bb0',
+    summary:
+      '\u5ffd\u77e5\u5ffd\u89c9\uff0c\u4f3c\u4e4e\u6211\u5df2\u7ecf\u7ed3\u675f\u8bfe\u7a0b...',
   },
   'seed-2': {
     day: '11',
-    monthYear: '???????',
-    title: '??',
-    summary: '???????...',
+    monthYear: '\u5341\u4e00\u6708\u2022\u661f\u671f\u4e8c',
+    title: '\u968f\u8bb0',
+    summary: '\u6700\u8fd1\u8fd8\u662f\u5728\u8eba\u5e73...',
   },
   'seed-3': {
     day: '05',
-    monthYear: '???????',
-    title: '????',
-    summary: '????????...',
+    monthYear: '\u5341\u4e00\u6708\u2022\u661f\u671f\u4e09',
+    title: '\u968f\u611f\u968f\u8bb0',
+    summary: '\u6210\u957f\u7684\u70e6\u607c\u597d\u591a\u554a...',
   },
 }
-
 type HomeListItem = {
   diary: Diary
   display?: HomeDisplayOverride
@@ -134,8 +138,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const cal = useCalendar()
   const [calendarVisible, setCalendarVisible] = useState(false)
   const [actionDiary, setActionDiary] = useState<Diary | null>(null)
-  const [notebookSheetVisible, setNotebookSheetVisible] = useState(false)
+  const [notebookDropdownVisible, setNotebookDropdownVisible] = useState(false)
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(null)
+  const [fabVisible, setFabVisible] = useState(true)
+  const lastScrollYRef = useRef(0)
 
   useEffect(() => {
     if (!initialized) {
@@ -162,6 +168,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, [])
 
   const handleNewDiary = useCallback(() => {
+    setNotebookDropdownVisible(false)
     navigation.navigate(ROUTES.DIARY_EDIT, {})
   }, [navigation])
 
@@ -189,10 +196,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, [actionDiary, removeDiary])
 
   const handleOpenSearch = useCallback(() => {
+    setNotebookDropdownVisible(false)
     navigation.navigate(ROUTES.SEARCH)
   }, [navigation])
 
   const handleOpenCalendar = useCallback(() => {
+    setNotebookDropdownVisible(false)
     setCalendarVisible(true)
   }, [])
 
@@ -200,12 +209,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     setCalendarVisible(false)
   }, [])
 
-  const handleOpenNotebookSheet = useCallback(() => {
-    setNotebookSheetVisible(true)
+  const handleToggleNotebookDropdown = useCallback(() => {
+    setNotebookDropdownVisible(visible => !visible)
   }, [])
 
-  const handleCloseNotebookSheet = useCallback(() => {
-    setNotebookSheetVisible(false)
+  const handleCloseNotebookDropdown = useCallback(() => {
+    setNotebookDropdownVisible(false)
+  }, [])
+
+  const handleSelectNotebook = useCallback((notebookId: string | null) => {
+    setSelectedNotebookId(notebookId)
+    setNotebookDropdownVisible(false)
   }, [])
 
   // 选中日 → 仅显示该日日记；否则显示全部（diaryStore 已降序）。
@@ -244,22 +258,46 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     [filteredVisibleDiaries],
   )
 
-  const notebookActionItems = useMemo(
+  const notebookDiaryCounts = useMemo(
+    () =>
+      diaries.reduce<Record<string, number>>((acc, diary) => {
+        if (!diary.isEncrypted && diary.notebookId) {
+          acc[diary.notebookId] = (acc[diary.notebookId] ?? 0) + 1
+        }
+        return acc
+      }, {}),
+    [diaries],
+  )
+
+  const allNotebookDiaryCount = useMemo(
+    () => diaries.filter(diary => !diary.isEncrypted).length,
+    [diaries],
+  )
+
+  const notebookMenuItems = useMemo(
     () => [
       {
         key: 'all',
-        label: '全部 - 不含加密记录',
-        icon: 'list' as const,
-        onPress: () => setSelectedNotebookId(null),
+        label: '\u5168\u90e8',
+        count: allNotebookDiaryCount,
+        selected: selectedNotebookId === null,
+        onPress: () => handleSelectNotebook(null),
       },
       ...notebooks.map(notebook => ({
         key: notebook.id,
         label: notebook.name,
-        icon: 'book' as const,
-        onPress: () => setSelectedNotebookId(notebook.id),
+        count: notebookDiaryCounts[notebook.id] ?? 0,
+        selected: selectedNotebookId === notebook.id,
+        onPress: () => handleSelectNotebook(notebook.id),
       })),
     ],
-    [notebooks],
+    [
+      allNotebookDiaryCount,
+      handleSelectNotebook,
+      notebookDiaryCounts,
+      notebooks,
+      selectedNotebookId,
+    ],
   )
 
   const handleTabPress = useCallback(
@@ -296,20 +334,66 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
 
+  const handleHomeListScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentY = Math.max(0, event.nativeEvent.contentOffset.y)
+    const deltaY = currentY - lastScrollYRef.current
+
+    if (currentY > FAB_HIDE_SCROLL_Y && deltaY > FAB_SCROLL_DELTA) {
+      setFabVisible(false)
+    } else if (deltaY < -FAB_SCROLL_DELTA || currentY < FAB_HIDE_SCROLL_Y / 2) {
+      setFabVisible(true)
+    }
+
+    lastScrollYRef.current = currentY
+  }, [])
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Pressable
-          style={styles.filterPill}
-          onPress={handleOpenNotebookSheet}
-          accessibilityRole="button"
-          accessibilityLabel={`选择首页日记本，当前为${filterLabel}`}
-        >
-          <Text style={styles.filterPillText} numberOfLines={1}>
-            {filterLabel}
-          </Text>
-          <Icon name="chevronDown" size={14} color={colors.semantic.icon.tertiary} />
-        </Pressable>
+        <View style={styles.filterArea}>
+          <Pressable
+            style={[styles.filterPill, notebookDropdownVisible && styles.filterPillExpanded]}
+            onPress={handleToggleNotebookDropdown}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: notebookDropdownVisible }}
+            accessibilityLabel={`\u9009\u62e9\u9996\u9875\u65e5\u8bb0\u672c\uff0c\u5f53\u524d\u4e3a${filterLabel}`}
+          >
+            <View style={styles.filterPillIconSquare} />
+            <Text style={styles.filterPillText} numberOfLines={1}>
+              {filterLabel}
+            </Text>
+            <Icon name="chevronDown" size={14} color={colors.brand.primary} />
+          </Pressable>
+
+          {notebookDropdownVisible ? (
+            <View style={styles.dropdownPanel}>
+              {notebookMenuItems.map(item => (
+                <Pressable
+                  key={item.key}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: item.selected }}
+                  onPress={item.onPress}
+                  style={({ pressed }) => [
+                    styles.dropdownItem,
+                    item.selected && styles.dropdownItemSelected,
+                    pressed && styles.dropdownItemPressed,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.dropdownItemIconSquare,
+                      item.selected && styles.dropdownItemIconSquareSelected,
+                    ]}
+                  />
+                  <Text style={styles.dropdownItemLabel} numberOfLines={1}>
+                    {item.label}
+                    <Text style={styles.dropdownItemCount}>{`\uff08${item.count}\uff09`}</Text>
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
 
         <View style={styles.topActionsCompact}>
           <Pressable
@@ -335,6 +419,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </Pressable>
         </View>
       </View>
+
+      {notebookDropdownVisible ? (
+        <Pressable style={styles.dropdownDismissLayer} onPress={handleCloseNotebookDropdown} />
+      ) : null}
 
       {!useFallback && error ? (
         <Pressable style={styles.errorBanner} onPress={reload}>
@@ -368,25 +456,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             maxToRenderPerBatch={8}
             windowSize={7}
             removeClippedSubviews
+            onScroll={handleHomeListScroll}
+            scrollEventThrottle={16}
           />
         )}
       </View>
 
-      <FloatingActionButton
-        onPress={handleNewDiary}
-        accessibilityLabel="新建日记"
-        style={[styles.fab, { bottom: 76 + insets.bottom }]}
-      />
+      {fabVisible ? (
+        <FloatingActionButton
+          onPress={handleNewDiary}
+          accessibilityLabel="新建日记"
+          style={[styles.fab, { bottom: 76 + insets.bottom }]}
+        >
+          <Text style={styles.fabPlus}>{'\uff0b'}</Text>
+        </FloatingActionButton>
+      ) : null}
 
       <BottomTabBar currentTab="Home" onTabPress={handleTabPress} />
-
-      <ActionSheet
-        visible={notebookSheetVisible}
-        onClose={handleCloseNotebookSheet}
-        title="选择日记本"
-        description="首页仅展示所选日记本中的非加密记录"
-        items={notebookActionItems}
-      />
 
       <ActionSheet
         visible={actionDiary !== null}

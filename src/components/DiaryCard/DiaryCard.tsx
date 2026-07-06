@@ -81,8 +81,12 @@ export const DiaryCard: React.FC<DiaryCardProps> = ({
         <View>
           <View style={styles.homeRow}>
             <View style={styles.homeDateBlock}>
-              <Text style={styles.homeDay}>{day}</Text>
-              <Text style={styles.homeMonthYear}>{monthYear}</Text>
+              <View style={styles.homeDateTextGroup}>
+                <Text style={styles.homeDay}>{day}</Text>
+                <Text style={styles.homeMonthYear} numberOfLines={1}>
+                  {monthYear}
+                </Text>
+              </View>
             </View>
             <View style={styles.homeContent}>
               <Text style={styles.title} numberOfLines={1}>

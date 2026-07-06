@@ -18,9 +18,14 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   homeDateBlock: {
-    flexBasis: '25%',
-    paddingRight: spacing.sm,
+    flexBasis: '30%',
+    paddingRight: spacing.xs,
     alignItems: 'flex-start',
+  },
+  homeDateTextGroup: {
+    minWidth: 88,
+    marginLeft: -spacing.xs,
+    alignItems: 'center',
   },
   homeDay: {
     fontFamily: typography.titleL.fontFamily,
@@ -28,13 +33,14 @@ export const styles = StyleSheet.create({
     fontWeight: typography.titleL.fontWeight,
     color: colors.semantic.text.primary,
     lineHeight: typography.titleL.lineHeight,
+    textAlign: 'center',
   },
   homeMonthYear: {
     fontSize: typography.caption.fontSize,
     lineHeight: typography.caption.lineHeight,
     color: colors.semantic.text.tertiary,
     marginTop: spacing.xxs,
-    marginLeft: -spacing.xs,
+    textAlign: 'center',
   },
   homeContent: {
     flex: 1,
