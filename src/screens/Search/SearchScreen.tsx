@@ -9,13 +9,13 @@
  */
 
 import React, { useCallback } from 'react'
-import { FlatList, Pressable, Text, View } from 'react-native'
+import { FlatList, Pressable, Text, View, type ListRenderItem } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { EmptyState } from '@/components/EmptyState'
 import { Loading } from '@/components/Loading'
 import { SearchBar } from '@/components/SearchBar'
-import { SearchHistory, SearchResultItem, useSearch } from '@features/search'
+import { SearchHistory, SearchResultItem, useSearch, type SearchResult } from '@features/search'
 import { ROUTES } from '@constants/routes'
 
 import { styles } from './styles'
@@ -112,6 +112,15 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
 
   const showResults = !isIdle && (status === 'done' || (status === 'searching' && !isTyping))
 
+  const keyExtractor = useCallback((result: SearchResult) => result.item.id, [])
+
+  const renderResultItem = useCallback<ListRenderItem<SearchResult>>(
+    ({ item }) => <SearchResultItem result={item} onPress={handleItemPress} />,
+    [handleItemPress],
+  )
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <SearchBar
@@ -131,13 +140,17 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
         ) : showResults ? (
           <FlatList
             data={results}
-            keyExtractor={r => r.item.id}
-            renderItem={({ item }) => <SearchResultItem result={item} onPress={handleItemPress} />}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            keyExtractor={keyExtractor}
+            renderItem={renderResultItem}
+            ItemSeparatorComponent={renderSeparator}
             ListHeaderComponent={ListHeader}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
           />
         ) : (
           <Loading variant="inline" visible />

@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo } from 'react'
-import { FlatList, Pressable, Text, View } from 'react-native'
+import { FlatList, Pressable, Text, View, type ListRenderItem } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BottomTabBar } from '@/components/BottomTabBar'
@@ -23,6 +23,7 @@ import { ROUTES } from '@constants/routes'
 import { colors, spacing } from '@theme'
 
 import { styles } from './styles'
+import type { Diary } from '@types'
 import type { HomeScreenProps } from './types'
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
@@ -71,6 +72,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const showEmpty =
     !loading && initialized && (isEmpty || (isFilteredByDate && visibleDiaries.length === 0))
+
+  const keyExtractor = useCallback((item: Diary) => item.id, [])
+
+  const renderDiaryItem = useCallback<ListRenderItem<Diary>>(
+    ({ item }) => <DiaryCard item={item} onPress={() => handleItemPress(item.id)} />,
+    [handleItemPress],
+  )
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -127,13 +137,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         ) : (
           <FlatList
             data={visibleDiaries}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <DiaryCard item={item} onPress={() => handleItemPress(item.id)} />
-            )}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            keyExtractor={keyExtractor}
+            renderItem={renderDiaryItem}
+            ItemSeparatorComponent={renderSeparator}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
           />
         )}
       </View>

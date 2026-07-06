@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useEffect } from 'react'
-import { FlatList, Pressable, View } from 'react-native'
+import { FlatList, Pressable, View, type ListRenderItem } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { BottomTabBar } from '@/components/BottomTabBar'
@@ -21,6 +21,7 @@ import { useDiaryStore } from '@store/diaryStore'
 import { toast } from '@/components/Toast'
 
 import { styles } from './styles'
+import type { Notebook } from '@types'
 import type { NotebookScreenProps } from './types'
 
 export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) => {
@@ -66,6 +67,21 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
     [navigation],
   )
 
+  const keyExtractor = useCallback((item: Notebook) => item.id, [])
+
+  const renderNotebookItem = useCallback<ListRenderItem<Notebook>>(
+    ({ item }) => (
+      <DiaryBookCard
+        item={item}
+        onPress={() => handleItemPress(item.id)}
+        onLongPress={() => handleItemLongPress(item.id)}
+      />
+    ),
+    [handleItemLongPress, handleItemPress],
+  )
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
@@ -85,17 +101,15 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
         ) : (
           <FlatList
             data={notebooks}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <DiaryBookCard
-                item={item}
-                onPress={() => handleItemPress(item.id)}
-                onLongPress={() => handleItemLongPress(item.id)}
-              />
-            )}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            keyExtractor={keyExtractor}
+            renderItem={renderNotebookItem}
+            ItemSeparatorComponent={renderSeparator}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
           />
         )}
       </View>

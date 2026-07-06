@@ -124,6 +124,36 @@ const migrations: Migration[] = [
       `)
     },
   },
+  {
+    version: 2,
+    description: 'Task18 performance indexes',
+    up: async () => {
+      const db = await getDatabase()
+      const statements = [
+        // Home/Search/Calendar load active diaries by time while excluding soft-deleted rows.
+        'CREATE INDEX IF NOT EXISTS idx_diary_active_created ON diary (deletedAt, createdAt DESC)',
+        // Notebook-scoped future queries and integrity checks.
+        'CREATE INDEX IF NOT EXISTS idx_diary_notebook_active ON diary (notebookId, deletedAt, createdAt DESC)',
+        // Pinned-first lists can avoid scanning all active diaries.
+        'CREATE INDEX IF NOT EXISTS idx_diary_pinned_active ON diary (isPinned, deletedAt, createdAt DESC)',
+        // Notebook list sort path.
+        'CREATE INDEX IF NOT EXISTS idx_notebook_active_sort ON notebook (deletedAt, sortOrder)',
+        // Album list sort path.
+        'CREATE INDEX IF NOT EXISTS idx_album_active_created ON album (deletedAt, createdAt DESC)',
+        // Attachment detail lookup and cleanup by diary.
+        'CREATE INDEX IF NOT EXISTS idx_attachment_diary_created ON attachment (diaryId, createdAt ASC)',
+        // Reverse tag lookup for future tag detail/search flows.
+        'CREATE INDEX IF NOT EXISTS idx_diary_tag_tag ON diary_tag (tagId, diaryId)',
+        // Draft/recycle maintenance paths.
+        'CREATE INDEX IF NOT EXISTS idx_draft_updated ON draft (updatedAt DESC)',
+        'CREATE INDEX IF NOT EXISTS idx_recycle_deleted ON recycle (deletedAt DESC)',
+      ]
+
+      for (const sql of statements) {
+        await db.executeSql(sql)
+      }
+    },
+  },
 ]
 
 /**

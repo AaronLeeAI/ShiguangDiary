@@ -13,6 +13,7 @@ import { fileStorage } from '../storage/fileStorage'
 import { DatabaseError, toDatabaseError } from './errors'
 
 let initialized = false
+let initializing: Promise<void> | null = null
 
 /**
  * 初始化数据层。幂等，重复调用直接返回。
@@ -21,22 +22,31 @@ export async function initDatabase(): Promise<void> {
   if (initialized) {
     return
   }
-
-  try {
-    await openDatabase()
-    await runMigrations()
-    await fileStorage.init()
-    initialized = true
-  } catch (error) {
-    // 归一化为 INIT_FAILED；保留原始 cause 便于排查
-    if (error instanceof DatabaseError) {
-      throw error
-    }
-    throw toDatabaseError(error, 'INIT_FAILED')
+  if (initializing) {
+    return initializing
   }
+
+  initializing = (async () => {
+    try {
+      await openDatabase()
+      await runMigrations()
+      await fileStorage.init()
+      initialized = true
+    } catch (error) {
+      // Normalize to INIT_FAILED while preserving the original cause.
+      if (error instanceof DatabaseError) {
+        throw error
+      }
+      throw toDatabaseError(error, 'INIT_FAILED')
+    } finally {
+      initializing = null
+    }
+  })()
+
+  return initializing
 }
 
-/** 数据层是否已初始化。 */
+/** Whether the data layer has been initialized. */
 export function isDatabaseReady(): boolean {
   return initialized
 }

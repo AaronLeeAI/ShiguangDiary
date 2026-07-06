@@ -16,6 +16,9 @@ import type {
   PreferenceModel,
 } from '../models'
 
+const pickUpdateEntries = <T extends object>(patch: Partial<T>): [string, unknown][] =>
+  Object.entries(patch).filter(([key, value]) => key !== 'id' && value !== undefined)
+
 /**
  * 日记 DAO
  */
@@ -60,13 +63,12 @@ export const diaryDao = {
 
   async update(id: string, diary: Partial<DiaryModel>): Promise<void> {
     const db = await getDatabase()
-    const fields = Object.keys(diary)
-      .filter(k => k !== 'id')
-      .map(k => `${k} = ?`)
-      .join(', ')
-    const values = Object.entries(diary)
-      .filter(([k]) => k !== 'id')
-      .map(([_, v]) => v)
+    const entries = pickUpdateEntries<DiaryModel>(diary)
+    if (entries.length === 0) {
+      return
+    }
+    const fields = entries.map(([key]) => `${key} = ?`).join(', ')
+    const values = entries.map(([, value]) => value)
     await db.executeSql(`UPDATE diary SET ${fields}, updatedAt = ? WHERE id = ?`, [
       ...values,
       Date.now(),
@@ -120,13 +122,12 @@ export const notebookDao = {
 
   async update(id: string, notebook: Partial<NotebookModel>): Promise<void> {
     const db = await getDatabase()
-    const fields = Object.keys(notebook)
-      .filter(k => k !== 'id')
-      .map(k => `${k} = ?`)
-      .join(', ')
-    const values = Object.entries(notebook)
-      .filter(([k]) => k !== 'id')
-      .map(([_, v]) => v)
+    const entries = pickUpdateEntries<NotebookModel>(notebook)
+    if (entries.length === 0) {
+      return
+    }
+    const fields = entries.map(([key]) => `${key} = ?`).join(', ')
+    const values = entries.map(([, value]) => value)
     await db.executeSql(`UPDATE notebook SET ${fields}, updatedAt = ? WHERE id = ?`, [
       ...values,
       Date.now(),
@@ -203,13 +204,12 @@ export const tagDao = {
 
   async update(id: string, tag: Partial<TagModel>): Promise<void> {
     const db = await getDatabase()
-    const fields = Object.keys(tag)
-      .filter(k => k !== 'id')
-      .map(k => `${k} = ?`)
-      .join(', ')
-    const values = Object.entries(tag)
-      .filter(([k]) => k !== 'id')
-      .map(([, v]) => v)
+    const entries = pickUpdateEntries<TagModel>(tag)
+    if (entries.length === 0) {
+      return
+    }
+    const fields = entries.map(([key]) => `${key} = ?`).join(', ')
+    const values = entries.map(([, value]) => value)
     await db.executeSql(`UPDATE tag SET ${fields} WHERE id = ?`, [...values, id])
   },
 

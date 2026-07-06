@@ -10,11 +10,13 @@
 
 import { create } from 'zustand'
 
-import { diaryService, notebookService, albumService } from '@services'
+import { diaryService, notebookService, albumService, createLogger } from '@services'
 import { applyDiaryUpdate, bumpNotebookCount } from './diaryStorePure'
 import type { DiaryModel, NotebookModel, AlbumModel } from '@database'
 import { initDatabase } from '@database'
 import type { Diary, Notebook, Album } from '@types'
+
+const log = createLogger('DiaryStore')
 
 // ========== Model <-> Domain 转换 ==========
 
@@ -355,7 +357,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
     } catch (e: unknown) {
       // 数据库失败 → 降级到 mock
 
-      console.warn('[DiaryStore] DB init failed, fallback to mock:', e)
+      log.warn('DB init failed, fallback to mock', e)
       set({
         diaries: SEED_DIARIES,
         notebooks: SEED_NOTEBOOKS,
@@ -369,7 +371,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
   },
 
   reload: async () => {
-    set({ initialized: false, loading: true })
+    set({ initialized: false, loading: false, error: null })
     await get().init()
   },
 
@@ -408,7 +410,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       }))
       return newDiary
     } catch (e) {
-      console.warn('[DiaryStore] createDiary failed:', e)
+      log.warn('createDiary failed', e)
       set(state => ({
         diaries: [newDiary, ...state.diaries],
         notebooks: state.notebooks.map(n => (n.id === data.notebookId ? bumpNotebookCount(n) : n)),
@@ -432,7 +434,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         diaries: state.diaries.map(d => (d.id === id ? apply(d) : d)),
       }))
     } catch (e) {
-      console.warn('[DiaryStore] updateDiary failed:', e)
+      log.warn('updateDiary failed', e)
       set(state => ({
         diaries: state.diaries.map(d => (d.id === id ? apply(d) : d)),
       }))
@@ -448,7 +450,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       await diaryService.remove(id)
       set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     } catch (e) {
-      console.warn('[DiaryStore] removeDiary failed:', e)
+      log.warn('removeDiary failed', e)
       set(state => ({ diaries: state.diaries.filter(d => d.id !== id) }))
     }
   },
@@ -484,7 +486,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       set(state => ({ notebooks: [nb, ...state.notebooks] }))
       return nb
     } catch (e) {
-      console.warn('[DiaryStore] createNotebook failed:', e)
+      log.warn('createNotebook failed', e)
       set(state => ({ notebooks: [nb, ...state.notebooks] }))
       return nb
     }
@@ -504,7 +506,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
         notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
       }))
     } catch (e) {
-      console.warn('[DiaryStore] updateNotebook failed:', e)
+      log.warn('updateNotebook failed', e)
       set(state => ({
         notebooks: state.notebooks.map(n => (n.id === id ? { ...n, ...data, updatedAt: now } : n)),
       }))
@@ -520,7 +522,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       await notebookService.remove(id)
       set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     } catch (e) {
-      console.warn('[DiaryStore] removeNotebook failed:', e)
+      log.warn('removeNotebook failed', e)
       set(state => ({ notebooks: state.notebooks.filter(n => n.id !== id) }))
     }
   },
@@ -549,7 +551,7 @@ export const useDiaryStore = create<DiaryStoreState>((set, get) => ({
       set(state => ({ albums: [al, ...state.albums] }))
       return al
     } catch (e) {
-      console.warn('[DiaryStore] createAlbum failed:', e)
+      log.warn('createAlbum failed', e)
       set(state => ({ albums: [al, ...state.albums] }))
       return al
     }

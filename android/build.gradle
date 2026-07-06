@@ -19,3 +19,24 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Task18 release stability: react-native-screens 4.x always registers CMake tasks,
+// but the app deliberately runs the Paper architecture (newArchEnabled=false).
+// In that mode screens does not load librnscreens.so at runtime; skipping these
+// native tasks avoids a Windows/AGP prefab configuration failure while preserving
+// the native build path if the New Architecture is enabled later.
+subprojects { subproject ->
+    if (subproject.name == "react-native-screens") {
+        subproject.afterEvaluate {
+            if (rootProject.findProperty("newArchEnabled") != "true") {
+                subproject.tasks.matching { task ->
+                    task.name.startsWith("configureCMake") ||
+                        task.name.startsWith("buildCMake") ||
+                        task.name.startsWith("externalNativeBuild")
+                }.configureEach { task ->
+                    task.enabled = false
+                }
+            }
+        }
+    }
+}
