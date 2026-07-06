@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Shared Component Library — Barrel Export
  *
  * 所有公共组件必须从此文件统一导出。业务代码使用：
@@ -51,6 +51,9 @@ export type { SearchBarProps } from './SearchBar/types'
 export { DateTimePicker } from './DateTimePicker'
 export type { DateTimePickerProps } from './DateTimePicker/types'
 
+export { FilterDropdown } from './FilterDropdown'
+export type { FilterDropdownProps, FilterOption } from './FilterDropdown/types'
+
 // -- Display --
 export { Icon } from './Icon'
 export type { IconProps, IconName, IconSize, IconVariant } from './Icon'
@@ -58,8 +61,29 @@ export type { IconProps, IconName, IconSize, IconVariant } from './Icon'
 export { Avatar } from './Avatar'
 export type { AvatarProps } from './Avatar/types'
 
+export { AlbumCard } from './AlbumCard'
+export type { AlbumCardProps } from './AlbumCard/types'
+
+export { DiaryBookCard } from './DiaryBookCard'
+export type { DiaryBookCardProps } from './DiaryBookCard/types'
+
+export { DiaryCard } from './DiaryCard'
+export type { DiaryCardProps } from './DiaryCard/types'
+
+export { DiaryListItem } from './DiaryListItem'
+export type { DiaryListItemProps } from './DiaryListItem/types'
+
+export { DateBlock } from './DateBlock'
+export type { DateBlockProps } from './DateBlock/types'
+
 export { Tag } from './Tag'
 export type { TagProps } from './Tag/types'
+
+export { ColorSwatch } from './ColorSwatch'
+export type { ColorSwatchProps } from './ColorSwatch/types'
+
+export { ListRow } from './ListRow'
+export type { ListRowProps } from './ListRow/types'
 
 export { EmptyState } from './EmptyState'
 export type { EmptyStateProps } from './EmptyState/types'
@@ -95,6 +119,9 @@ export type { AlertDialogProps } from './AlertDialog/types'
 export { Modal } from './Modal'
 export type { ModalProps } from './Modal/types'
 
+export { EventReminderDialog } from './EventReminderDialog'
+export type { EventReminderDialogProps } from './EventReminderDialog/types'
+
 export { LoadingOverlay } from './LoadingOverlay'
 export type { LoadingOverlayProps } from './LoadingOverlay/types'
 
@@ -105,3 +132,31 @@ export type { CalendarProps } from './Calendar/types'
 // -- Motion (Task17) --
 export { PressableScale } from './PressableScale'
 export type { PressableScaleProps } from './PressableScale'
+
+export { EditorToolbar } from './EditorToolbar'
+export type { EditorToolbarProps, EditorTool } from './EditorToolbar/types'
+
+// -- Settings / Preferences --
+export { SettingsGroup } from './SettingsGroup'
+export type { SettingsGroupProps } from './SettingsGroup/types'
+
+export { SettingsRow } from './SettingsRow'
+export type { SettingsRowProps } from './SettingsRow/types'
+
+export { ListStyleCard } from './ListStyleCard'
+export type { ListStyleCardProps } from './ListStyleCard/types'
+
+export { ThemePreviewCard } from './ThemePreviewCard'
+export type { ThemePreviewCardProps } from './ThemePreviewCard/types'
+
+export { FontCard } from './FontCard'
+export type { FontCardProps } from './FontCard/types'
+
+export { LockPattern } from './LockPattern'
+export type { LockPatternProps } from './LockPattern/types'
+
+export { StickyNoteEditor } from './StickyNoteEditor'
+export type { StickyNoteEditorProps } from './StickyNoteEditor/types'
+
+export { RadioGroup } from './RadioGroup'
+export type { RadioGroupProps, RadioOption } from './RadioGroup/types'

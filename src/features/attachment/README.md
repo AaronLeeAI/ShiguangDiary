@@ -1,31 +1,7 @@
-# Attachment Feature
+﻿# Attachment Feature
 
-> 附件管理功能
+> 附件领域预留 feature 入口
 
-## 职责范围
+当前附件数据访问由 `src/services/attachment/` 与数据库层承载；图片/录音等完整采集、预览和二进制打包能力仍属于产品确认后的扩展范围。
 
-- 图片选择（相册/相机）
-- 图片压缩
-- 附件上传
-- 附件预览
-- 附件删除
-
-## 目录
-
-```
-attachment/
-├── README.md
-├── index.ts
-├── components/    # ImageGrid, AttachmentItem
-├── hooks/         # useImagePicker, useAttachmentUpload
-└── utils/         # 图片压缩、文件存储
-```
-
-## 关联
-
-- **依赖**：api（上传）、storage（本地缓存）
-- **被引用**：editor（写日记插入图片）、diary（附件展示）
-
-## 状态
-
-🚧 **待开发**
+本目录保留为后续拆分附件选择器、预览器、多选管理等 UI 能力的 feature barrel。

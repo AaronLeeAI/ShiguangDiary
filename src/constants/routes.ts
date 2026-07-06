@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Routes 常量
  *
  * 单一可信来源：src/navigation/types.ts
@@ -24,8 +24,10 @@ export const ROUTES = {
   DIARY_VIEW: 'DiaryView',
   DIARY_EDIT: 'DiaryEdit',
   NOTEBOOK_CREATE: 'NotebookCreate',
+  NOTEBOOK_DETAIL: 'NotebookDetail',
   NOTEBOOK_SORT: 'NotebookSort',
   ALBUM_CREATE: 'AlbumCreate',
+  ALBUM_DETAIL: 'AlbumDetail',
   ACCOUNT: 'Account',
   SETTINGS: 'Settings',
   ABOUT: 'About',

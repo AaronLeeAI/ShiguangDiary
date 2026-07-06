@@ -1,32 +1,27 @@
-# Sync Feature
+﻿# Sync Feature
 
-> 同步与备份功能
+> 同步与备份能力入口
 
 ## 职责范围
 
-- 云端同步（按账号）
-- 备份与还原
-- 同步状态指示
-- 冲突解决
-- 离线缓存队列
+- 暴露同步服务框架
+- 本地优先 LocalProvider
+- 与 services/sync、services/backup 对齐
+- 为未来 WebDAV/Git/Cloud Provider 保留扩展点
 
 ## 目录
 
 ```
 sync/
-├── README.md
 ├── index.ts
-├── components/    # SyncStatusIndicator, ConflictResolver
-├── hooks/         # useSyncStatus, useSyncTrigger
-├── services/      # 同步逻辑
-└── types.ts
+└── README.md
 ```
 
 ## 关联
 
-- **依赖**：api、database、store
-- **被引用**：profile（云同步入口）
+- **依赖**：src/services/sync、src/services/backup
+- **被引用**：数据管理与同步状态能力
 
 ## 状态
 
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
+✅ **框架已实现** — 同步/备份服务已在 src/services 暴露；当前使用 LocalProvider，本地优先且无远端云同步。

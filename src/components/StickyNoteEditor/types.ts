@@ -1,14 +1,11 @@
-/**
- * StickyNoteEditor 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface StickyNoteEditorProps {
+  value?: string
+  onChangeText?: (value: string) => void
+  placeholder?: string
+  maxLength?: number
+  editable?: boolean
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface StickyNoteEditorState {
-  // TODO: 补充内部状态
-}
-
-export type StickyNoteEditorRef = unknown

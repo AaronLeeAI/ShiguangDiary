@@ -1,14 +1,14 @@
-/**
- * EventReminderDialog 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface EventReminderDialogProps {
+  visible?: boolean
+  title?: string
+  description?: string
+  dateText?: string
+  confirmText?: string
+  cancelText?: string
+  onConfirm?: () => void
+  onCancel?: () => void
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface EventReminderDialogState {
-  // TODO: 补充内部状态
-}
-
-export type EventReminderDialogRef = unknown

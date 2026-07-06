@@ -1,30 +1,59 @@
-/**
- * EventReminderDialog
- *
- * 事件提醒
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+﻿import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { AlertDialog } from '@/components/AlertDialog'
+import { Icon } from '@/components/Icon'
+import { brand, neutral, radius, spacing, typography } from '@theme'
+import type { EventReminderDialogProps } from './types'
 
-export interface EventReminderDialogProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const EventReminderDialog: React.FC<EventReminderDialogProps> = ({
+  visible = false,
+  title = '事件提醒',
+  description = '设置提醒时间，避免错过重要记录。',
+  dateText,
+  confirmText = '保存',
+  cancelText = '取消',
+  onConfirm,
+  onCancel,
+  style,
+  testID,
+}) => (
+  <AlertDialog
+    visible={visible}
+    title={title}
+    description={description}
+    confirmText={confirmText}
+    cancelText={cancelText}
+    onConfirm={onConfirm}
+    onCancel={onCancel}
+    style={style}
+    testID={testID}
+  >
+    {dateText ? (
+      <View style={styles.datePill}>
+        <Icon name="bell" size={16} color={brand.primary} />
+        <Text style={styles.dateText}>{dateText}</Text>
+      </View>
+    ) : null}
+  </AlertDialog>
+)
 
-/**
- * EventReminderDialog 组件
- */
-export const EventReminderDialog: React.FC<EventReminderDialogProps> = ({ testID, style }) => {
-  return (
-    <View testID={testID} style={style}>
-      <Text>EventReminderDialog Skeleton</Text>
-    </View>
-  )
-}
+const styles = StyleSheet.create({
+  datePill: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: brand.primaryGhost,
+    borderRadius: radius.full,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.base,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  dateText: {
+    ...typography.bodyS,
+    color: neutral.gray80,
+  },
+})
 
 export default EventReminderDialog

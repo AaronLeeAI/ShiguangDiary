@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 导航容器
  *
  * 整个应用的路由结构：
@@ -39,8 +39,10 @@ import { SettingsScreen } from '@/screens/Settings'
 import { StatisticsScreen } from '@/screens/Statistics'
 import {
   NotebookCreate,
+  NotebookDetail,
   NotebookSort,
   AlbumCreate,
+  AlbumDetail,
   Account,
   Recycle,
   VIP,
@@ -139,8 +141,10 @@ export function AppNavigator() {
         <Stack.Screen name={ROUTES.DIARY_VIEW} component={DiaryView} />
         <Stack.Screen name={ROUTES.DIARY_EDIT} component={DiaryEdit} />
         <Stack.Screen name={ROUTES.NOTEBOOK_CREATE} component={NotebookCreate} />
+        <Stack.Screen name={ROUTES.NOTEBOOK_DETAIL} component={NotebookDetail} />
         <Stack.Screen name={ROUTES.NOTEBOOK_SORT} component={NotebookSort} />
         <Stack.Screen name={ROUTES.ALBUM_CREATE} component={AlbumCreate} />
+        <Stack.Screen name={ROUTES.ALBUM_DETAIL} component={AlbumDetail} />
         <Stack.Screen name={ROUTES.ACCOUNT} component={Account} />
         <Stack.Screen name={ROUTES.SETTINGS} component={Settings} />
         <Stack.Screen name={ROUTES.ABOUT} component={About} />

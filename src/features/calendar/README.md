@@ -1,4 +1,4 @@
-# Calendar Feature
+﻿# Calendar Feature
 
 > 日历视图功能
 
@@ -6,27 +6,27 @@
 
 - 日历展示（周/月/年三态）
 - 日期切换
-- 有"记"标记
-- 农历/节气/节日展示
+- 有“记”标记
 - 日期点击跳转
+- Timeline Engine 生成周/月矩阵
 
 ## 目录
 
 ```
 calendar/
-├── README.md
-├── index.ts
-├── components/    # CalendarGrid, CalendarHeader 等
-├── hooks/         # useCalendarState
-├── utils/         # 农历、节气、节日计算
+├── components/    # Calendar、WeekView、YearView 等
+├── hooks/         # useCalendar
+├── services/      # calendarService
+├── store/         # calendarStore
+├── utils/         # timeline 计算
 └── types.ts
 ```
 
 ## 关联
 
-- **依赖**：diary（查询某天的日记）
-- **被引用**：home（首页日历）、editor（时间选择器）
+- **依赖**：diaryStore 数据快照
+- **被引用**：首页日历、统计/时间线能力
 
 ## 状态
 
-🚧 **待开发**
+✅ **已实现** — 已提供 Timeline Engine、周/月/年视图组件、useCalendar、calendarStore 与 calendarService。

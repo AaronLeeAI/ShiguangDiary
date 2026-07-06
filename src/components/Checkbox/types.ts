@@ -1,14 +1,14 @@
-/**
- * Checkbox 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface CheckboxProps {
+  checked?: boolean
+  value?: boolean
+  defaultChecked?: boolean
+  onChange?: (checked: boolean) => void
+  onValueChange?: (checked: boolean) => void
+  disabled?: boolean
+  label?: string
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
+  accessibilityLabel?: string
 }
-
-export interface CheckboxState {
-  // TODO: 补充内部状态
-}
-
-export type CheckboxRef = unknown

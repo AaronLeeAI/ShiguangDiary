@@ -1,30 +1,109 @@
-/**
- * FilterDropdown
- *
- * 筛选下拉
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+﻿import React, { useCallback, useMemo, useState } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
+import { brand, neutral, radius, semantic, shadow, spacing, typography } from '@theme'
+import type { FilterDropdownProps } from './types'
 
-export interface FilterDropdownProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const FilterDropdown = <T extends string = string>({
+  label = '筛选',
+  value,
+  options = [],
+  onChange,
+  style,
+  testID,
+}: FilterDropdownProps<T>) => {
+  const [open, setOpen] = useState(false)
+  const current = useMemo(() => options.find(item => item.value === value), [options, value])
+  const toggle = useCallback(() => {
+    haptic('tap')
+    setOpen(v => !v)
+  }, [])
 
-/**
- * FilterDropdown 组件
- */
-export const FilterDropdown: React.FC<FilterDropdownProps> = ({ testID, style }) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>FilterDropdown Skeleton</Text>
+    <View style={[styles.container, style]} testID={testID}>
+      <Pressable accessibilityRole="button" onPress={toggle} style={styles.trigger}>
+        <Text style={styles.triggerText}>{current?.label ?? label}</Text>
+        <Icon name={open ? 'chevronUp' : 'chevronDown'} size={16} color={semantic.icon.tertiary} />
+      </Pressable>
+      {open ? (
+        <View style={styles.menu}>
+          {options.map(option => {
+            const selected = option.value === value
+            return (
+              <Pressable
+                key={option.value}
+                onPress={() => {
+                  haptic('tap')
+                  onChange?.(option.value)
+                  setOpen(false)
+                }}
+                style={styles.option}
+              >
+                <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                  {option.label}
+                </Text>
+                {typeof option.count === 'number' ? (
+                  <Text style={styles.count}>{option.count}</Text>
+                ) : null}
+                {selected ? <Icon name="check" size={16} color={brand.primary} /> : null}
+              </Pressable>
+            )
+          })}
+        </View>
+      ) : null}
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+    zIndex: 10,
+  },
+  trigger: {
+    alignItems: 'center',
+    backgroundColor: semantic.bg.subtle,
+    borderRadius: radius.full,
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  triggerText: {
+    ...typography.bodyS,
+    color: neutral.gray80,
+    marginRight: spacing.xs,
+  },
+  menu: {
+    ...shadow('md'),
+    backgroundColor: neutral.white,
+    borderRadius: radius.md,
+    minWidth: 160,
+    paddingVertical: spacing.xs,
+    position: 'absolute',
+    right: 0,
+    top: 40,
+  },
+  option: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+  },
+  optionText: {
+    ...typography.bodyM,
+    color: neutral.gray80,
+    flex: 1,
+  },
+  optionTextSelected: {
+    color: brand.primary,
+  },
+  count: {
+    ...typography.caption,
+    color: neutral.gray50,
+    marginRight: spacing.xs,
+  },
+})
 
 export default FilterDropdown

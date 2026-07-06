@@ -1,14 +1,12 @@
-/**
- * TabItem 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
+import type { IconName } from '@/components/Icon'
 
 export interface TabItemProps {
+  label?: string
+  icon?: IconName
+  activeIcon?: IconName
+  active?: boolean
+  onPress?: () => void
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface TabItemState {
-  // TODO: 补充内部状态
-}
-
-export type TabItemRef = unknown

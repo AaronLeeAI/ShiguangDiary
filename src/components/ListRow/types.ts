@@ -1,14 +1,16 @@
-/**
- * ListRow 类型定义
- */
+import type { ReactNode } from 'react'
+import type { StyleProp, ViewStyle } from 'react-native'
+import type { IconName } from '@/components/Icon'
 
 export interface ListRowProps {
+  title?: string
+  subtitle?: string
+  icon?: IconName
+  left?: ReactNode
+  right?: ReactNode
+  showArrow?: boolean
+  disabled?: boolean
+  onPress?: () => void
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface ListRowState {
-  // TODO: 补充内部状态
-}
-
-export type ListRowRef = unknown

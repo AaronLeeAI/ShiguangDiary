@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Avatar Component
  *
  * 头像组件。基于设计规范 docs/project-设计-docs/components/Avatar.md
@@ -8,8 +8,7 @@
  * - 可选圆形或方形
  * - 支持 editable 时叠加相机角标
  *
- * 注意：当前 Task1 阶段不集成 react-native-fast-image（依赖 rnpm link），
- * 使用 RN 内置 Image。后续可在性能瓶颈时切换。
+ * 注意：当前实现使用 RN 内置 Image，避免额外原生依赖；后续如出现性能瓶颈可再评估图片缓存库。
  */
 
 import React from 'react'

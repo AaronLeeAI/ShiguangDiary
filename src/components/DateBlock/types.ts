@@ -1,14 +1,13 @@
-/**
- * DateBlock 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface DateBlockProps {
+  day?: string | number
+  month?: string
+  weekday?: string
+  lunar?: string
+  selected?: boolean
+  hasDiary?: boolean
+  onPress?: () => void
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface DateBlockState {
-  // TODO: 补充内部状态
-}
-
-export type DateBlockRef = unknown

@@ -1,30 +1,55 @@
-/**
- * StickyNoteEditor
- *
- * 便签编辑器
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+﻿import React from 'react'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { neutral, radius, spacing, typography } from '@theme'
+import type { StickyNoteEditorProps } from './types'
 
-export interface StickyNoteEditorProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const StickyNoteEditor: React.FC<StickyNoteEditorProps> = ({
+  value = '',
+  onChangeText,
+  placeholder = '写下想固定到桌面的内容',
+  maxLength = 200,
+  editable = true,
+  style,
+  testID,
+}) => (
+  <View style={[styles.card, style]} testID={testID}>
+    <TextInput
+      editable={editable}
+      maxLength={maxLength}
+      multiline
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      placeholderTextColor={neutral.gray50}
+      style={styles.input}
+      textAlignVertical="top"
+      value={value}
+    />
+    <Text style={styles.counter}>
+      {value.length}/{maxLength}
+    </Text>
+  </View>
+)
 
-/**
- * StickyNoteEditor 组件
- */
-export const StickyNoteEditor: React.FC<StickyNoteEditorProps> = ({ testID, style }) => {
-  return (
-    <View testID={testID} style={style}>
-      <Text>StickyNoteEditor Skeleton</Text>
-    </View>
-  )
-}
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFF8D6',
+    borderRadius: radius.lg,
+    minHeight: 160,
+    padding: spacing.base,
+  },
+  input: {
+    ...typography.bodyL,
+    color: neutral.gray90,
+    flex: 1,
+    minHeight: 116,
+    padding: 0,
+  },
+  counter: {
+    ...typography.caption,
+    color: neutral.gray50,
+    textAlign: 'right',
+  },
+})
 
 export default StickyNoteEditor

@@ -1,14 +1,16 @@
-/**
- * FilterDropdown 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
-export interface FilterDropdownProps {
+export interface FilterOption<T extends string = string> {
+  label: string
+  value: T
+  count?: number
+}
+
+export interface FilterDropdownProps<T extends string = string> {
+  label?: string
+  value?: T
+  options?: FilterOption<T>[]
+  onChange?: (value: T) => void
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface FilterDropdownState {
-  // TODO: 补充内部状态
-}
-
-export type FilterDropdownRef = unknown

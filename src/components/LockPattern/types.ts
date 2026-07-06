@@ -1,14 +1,11 @@
-/**
- * LockPattern 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface LockPatternProps {
+  value?: number[]
+  onChange?: (value: number[]) => void
+  onComplete?: (value: number[]) => void
+  disabled?: boolean
+  size?: number
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface LockPatternState {
-  // TODO: 补充内部状态
-}
-
-export type LockPatternRef = unknown

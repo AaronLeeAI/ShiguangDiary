@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Backup Schema - 导入校验纯函数
  *
  * 校验未知来源数据为合法 BackupPayload:版本检查 + 结构检查 + 字段类型检查,
@@ -55,7 +55,7 @@ export function validateBackupPayload(raw: unknown): ImportValidation {
     // 初版允许向前兼容:未来此处加入逐版本迁移。
     // 暂直接拒绝,避免静默导入旧结构。
     errors.push(
-      `legacy schemaVersion ${raw.schemaVersion}; migration to ${BACKUP_SCHEMA_VERSION} not implemented yet`,
+      `legacy schemaVersion ${raw.schemaVersion}; no migration registered for target ${BACKUP_SCHEMA_VERSION}`,
     )
     return { valid: false, errors, payload: null }
   }

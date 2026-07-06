@@ -1,4 +1,4 @@
-# Notebook Screen - P002 日记本列表
+﻿# Notebook Screen - P002 日记本列表
 
 > 日记本列表页：日记本卡片列表 + 新建/排序操作。
 
@@ -15,19 +15,19 @@
 - 右下角 FAB → 跳转 NotebookCreate
 - 底部 BottomTabBar（currentTab="Notebook"）
 - 长按日记本：预留 onLongPress（后续接 ActionSheet）
-- 点击日记本：预留 onPress（后续接 NotebookDetail）
+- 点击日记本：进入 NotebookDetail 日记本内页
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| TopBar | 头部 + 排序入口 |
-| BottomTabBar | Tab 切换 |
-| DiaryBookCard | 单个日记本卡片 |
-| EmptyState | 空状态（含新建按钮） |
-| FloatingActionButton | 新建日记本 |
-| Loading | 加载态 |
-| Icon | 排序图标 |
+| 组件                 | 用途                 |
+| -------------------- | -------------------- |
+| TopBar               | 头部 + 排序入口      |
+| BottomTabBar         | Tab 切换             |
+| DiaryBookCard        | 单个日记本卡片       |
+| EmptyState           | 空状态（含新建按钮） |
+| FloatingActionButton | 新建日记本           |
+| Loading              | 加载态               |
+| Icon                 | 排序图标             |
 
 ## 目录结构
 
@@ -43,6 +43,6 @@ screens/Notebook/
 ## 后续 TODO
 
 1. 接入数据库查询
-2. 实现 NotebookDetail 页面（日记本内页：日记列表）
+2. NotebookDetail 页面已接入导航，后续可扩展筛选/批量管理
 3. 排序弹层（按创建时间/更新时间/篇数）
 4. 长按 ActionSheet（编辑/排序/删除/导出）

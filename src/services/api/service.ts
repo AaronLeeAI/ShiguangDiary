@@ -1,11 +1,8 @@
-/**
- * API Service - 业务服务层
+﻿/**
+ * API Service - 业务服务层命名空间
  *
- * Service 在 Repository 之上提供业务逻辑封装。
- * 当 UI 层需要复杂业务（如查询过滤、关联查询等），使用 Service。
+ * 当前业务服务已按领域收敛在 `src/services/*`（diary/statistics/search/backup/sync 等）。
+ * 本文件保留为远程 API 专属业务服务的统一出口，避免 UI 层直接感知 HTTP 细节。
  */
-
-// TODO: 后续 Task 中实现具体业务服务
-// 例如：diaryService、notebookService、statisticsService 等
 
 export {}

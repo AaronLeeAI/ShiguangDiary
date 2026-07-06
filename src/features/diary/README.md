@@ -1,32 +1,13 @@
-# Diary Feature
+﻿# Diary Feature
 
-> 日记核心功能
+> 日记领域预留 feature 入口
 
-## 职责范围
+当前日记领域的运行时代码由以下模块承载：
 
-- 日记列表展示
-- 日记查看
-- 日记增删改查
-- 日记列表多选/排序/筛选
+- `src/store/diaryStore.ts`
+- `src/services/diary/`
+- `src/screens/Home/`
+- `src/screens/DiaryView/`
+- `src/screens/DiaryEdit/`
 
-## 目录
-
-```
-diary/
-├── README.md           # 本文件
-├── index.ts            # 公共导出
-├── types.ts            # 类型定义
-├── components/         # 该 Feature 私有组件
-├── hooks/              # 该 Feature 私有 hooks
-├── utils/              # 该 Feature 私有工具
-└── screens/            # 该 Feature 相关页面
-```
-
-## 关联
-
-- **依赖**：database、store/api
-- **被引用**：navigation（首页/详情/编辑入口）、search、statistics
-
-## 状态
-
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
+本目录保留为后续按 feature 目录拆分 hooks/components/types 的 barrel，不包含独立运行时代码。

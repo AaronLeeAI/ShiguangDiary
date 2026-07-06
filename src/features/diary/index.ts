@@ -1,10 +1,8 @@
-/**
+﻿/**
  * Diary Feature - 公共导出
  *
- * 当前 Task1 仅声明空接口。后续 Task 在此文件中补充导出。
+ * 日记领域当前由 @store/diaryStore 与 @services/diary 承载。
+ * 本目录保留为后续拆分 hooks/components/types 的 feature barrel，当前无运行时导出。
  */
 
-// TODO: 在后续 Task 中补充导出
-// export * from './types';
-// export * from './hooks';
 export {}

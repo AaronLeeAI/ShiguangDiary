@@ -1,4 +1,4 @@
-# Switch
+﻿# Switch
 
 > 开关
 
@@ -21,7 +21,7 @@ import { Switch } from '@components/Switch';
 
 ## 状态
 
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
+✅ **已实现** — 已完成可复用组件实现、类型定义与统一导出，可按当前 props 在业务页面中使用。
 
 ## 目录结构
 

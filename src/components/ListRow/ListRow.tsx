@@ -1,30 +1,80 @@
-/**
- * ListRow
- *
- * 通用列表行
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+import React, { useCallback } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
+import { neutral, semantic, spacing, typography } from '@theme'
+import type { ListRowProps } from './types'
 
-export interface ListRowProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const ListRow: React.FC<ListRowProps> = ({
+  title,
+  subtitle,
+  icon,
+  left,
+  right,
+  showArrow = false,
+  disabled = false,
+  onPress,
+  style,
+  testID,
+}) => {
+  const handlePress = useCallback(() => {
+    haptic('tap')
+    onPress?.()
+  }, [onPress])
 
-/**
- * ListRow 组件
- */
-export const ListRow: React.FC<ListRowProps> = ({ testID, style }) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>ListRow Skeleton</Text>
-    </View>
+    <Pressable
+      accessibilityRole={onPress ? 'button' : 'text'}
+      disabled={disabled || !onPress}
+      onPress={handlePress}
+      style={({ pressed }) => [
+        styles.container,
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabled,
+        style,
+      ]}
+      testID={testID}
+    >
+      {left ?? (icon ? <Icon name={icon} size={22} color={semantic.icon.secondary} /> : null)}
+      <View style={styles.content}>
+        {title ? <Text style={styles.title}>{title}</Text> : null}
+        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      </View>
+      {right}
+      {showArrow ? <Icon name="chevronRight" size={16} color={semantic.icon.tertiary} /> : null}
+    </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    borderBottomColor: semantic.divider.subtle,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    minHeight: 56,
+    paddingHorizontal: spacing.base,
+  },
+  pressed: {
+    backgroundColor: semantic.bg.subtle,
+  },
+  disabled: {
+    opacity: 0.45,
+  },
+  content: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  title: {
+    ...typography.bodyL,
+    color: neutral.gray90,
+  },
+  subtitle: {
+    ...typography.bodyS,
+    color: neutral.gray50,
+    marginTop: 2,
+  },
+})
 
 export default ListRow

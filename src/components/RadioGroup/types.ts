@@ -1,14 +1,18 @@
-/**
- * RadioGroup 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
 
-export interface RadioGroupProps {
+export interface RadioOption<T extends string = string> {
+  label: string
+  value: T
+  description?: string
+  disabled?: boolean
+}
+
+export interface RadioGroupProps<T extends string = string> {
+  options?: RadioOption<T>[]
+  value?: T
+  onChange?: (value: T) => void
+  direction?: 'vertical' | 'horizontal'
+  disabled?: boolean
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface RadioGroupState {
-  // TODO: 补充内部状态
-}
-
-export type RadioGroupRef = unknown

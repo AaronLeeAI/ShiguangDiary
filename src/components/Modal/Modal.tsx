@@ -1,30 +1,50 @@
-/**
- * Modal
- *
- * 通用模态
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
-
 import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { Modal as RNModal, Pressable, StyleSheet, View } from 'react-native'
 
-export interface ModalProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+import { semantic } from '@theme'
+import type { ModalProps } from './types'
 
-/**
- * Modal 组件
- */
-export const Modal: React.FC<ModalProps> = ({ testID, style }) => {
+export const Modal: React.FC<ModalProps> = ({
+  visible = false,
+  children,
+  animationType = 'fade',
+  transparent = true,
+  onRequestClose,
+  onClose,
+  closeOnBackdropPress = true,
+  contentStyle,
+  backdropStyle,
+  style,
+  testID,
+}) => {
+  const handleClose = onClose ?? onRequestClose
   return (
-    <View testID={testID} style={style}>
-      <Text>Modal Skeleton</Text>
-    </View>
+    <RNModal
+      animationType={animationType}
+      onRequestClose={handleClose}
+      transparent={transparent}
+      visible={visible}
+    >
+      <View style={[styles.backdrop, backdropStyle, style]} testID={testID}>
+        {closeOnBackdropPress ? (
+          <Pressable style={styles.dismissLayer} onPress={handleClose} />
+        ) : null}
+        <View style={contentStyle}>{children}</View>
+      </View>
+    </RNModal>
   )
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    alignItems: 'center',
+    backgroundColor: semantic.bg.scrim,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  dismissLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+})
 
 export default Modal

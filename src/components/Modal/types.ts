@@ -1,14 +1,14 @@
-/**
- * Modal 类型定义
- */
+import type { ReactNode } from 'react'
+import type { ModalProps as RNModalProps, StyleProp, ViewStyle } from 'react-native'
 
-export interface ModalProps {
+export interface ModalProps
+  extends Pick<RNModalProps, 'animationType' | 'transparent' | 'onRequestClose'> {
+  visible?: boolean
+  children?: ReactNode
+  closeOnBackdropPress?: boolean
+  onClose?: () => void
+  contentStyle?: StyleProp<ViewStyle>
+  backdropStyle?: StyleProp<ViewStyle>
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface ModalState {
-  // TODO: 补充内部状态
-}
-
-export type ModalRef = unknown

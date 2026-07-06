@@ -1,30 +1,7 @@
-# Tag Feature
+﻿# Tag Feature
 
-> 标签管理功能
+> 标签领域预留 feature 入口
 
-## 职责范围
+当前标签数据访问由 `src/services/tag/` 与数据库层承载；业务页面主要通过日记编辑与搜索流程间接使用标签语义。
 
-- 标签 CRUD
-- 标签分组
-- 标签颜色/图标
-- 按标签筛选日记
-
-## 目录
-
-```
-tag/
-├── README.md
-├── index.ts
-├── components/    # TagBadge, TagEditor
-├── hooks/
-└── types.ts
-```
-
-## 关联
-
-- **依赖**：database（标签表）
-- **被引用**：editor（标签选择）、diary（按标签筛选）
-
-## 状态
-
-🚧 **待开发**
+本目录保留为后续拆分标签选择器、标签管理页与标签统计能力的 feature barrel。

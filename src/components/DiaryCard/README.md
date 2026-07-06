@@ -1,4 +1,4 @@
-# DiaryCard
+﻿# DiaryCard
 
 > 日记卡片组件
 
@@ -13,23 +13,22 @@
 
 ```typescript
 interface DiaryCardProps {
-  item: Diary;        // 日记数据
-  onPress?: () => void; // 点击回调
-  style?: ViewStyle;    // 自定义样式
+  item: Diary // 日记数据
+  onPress?: () => void // 点击回调
+  style?: ViewStyle // 自定义样式
 }
 ```
 
 ## 使用示例
 
 ```tsx
-import {DiaryCard} from '@components/DiaryCard';
-
-<DiaryCard item={diaryData} onPress={() => handlePress()} />
+import { DiaryCard } from '@components/DiaryCard'
+;<DiaryCard item={diaryData} onPress={() => handlePress()} />
 ```
 
 ## 状态
 
-🚧 **待开发** — 当前 Task1 仅创建目录骨架。
+✅ **已实现** — 已完成可复用组件实现、类型定义与统一导出，可按当前 props 在业务页面中使用。
 
 ## 目录结构
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DiaryEdit Screen - 日记编辑器
  *
  * 数据流：EditorScreen → useEditor → editorStore + diaryStore → diaryService → repository
@@ -93,11 +93,11 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     } else if (tool === 'image') {
       toast.info('图片选择器待实现')
     } else if (tool === 'mic') {
-      toast.info('录音功能待实现')
+      toast.info('录音需要接入原生能力，当前未开启')
     } else if (tool === 'link') {
       toast.info('链接插入待实现')
     } else if (tool === 'lock') {
-      toast.info('加密功能待实现')
+      toast.info('加密需要安全方案确认，当前未开启')
     } else {
       setActiveTools(prev => (prev.includes(tool) ? prev.filter(t => t !== tool) : [...prev, tool]))
     }

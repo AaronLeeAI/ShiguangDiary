@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Notebook Screen - P002 日记本列表
  *
  * 数据源：useDiaryStore
@@ -38,10 +38,12 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
     }
   }, [initialized, init])
 
-  const handleItemPress = useCallback((id: string) => {
-    // 后续接 NotebookDetail
-    toast.info(`打开日记本: ${id}`)
-  }, [])
+  const handleItemPress = useCallback(
+    (id: string) => {
+      navigation.navigate(ROUTES.NOTEBOOK_DETAIL, { id })
+    },
+    [navigation],
+  )
 
   const handleItemLongPress = useCallback((id: string) => {
     // 后续接 ActionSheet
@@ -58,8 +60,8 @@ export const NotebookScreen: React.FC<NotebookScreenProps> = ({ navigation }) =>
   }, [createNotebook, notebooks.length])
 
   const handleSort = useCallback(() => {
-    toast.info('排序功能待实现')
-  }, [])
+    navigation.navigate(ROUTES.NOTEBOOK_SORT)
+  }, [navigation])
 
   const handleTabPress = useCallback(
     (tab: 'Home' | 'Notebook' | 'Album' | 'Profile') => {

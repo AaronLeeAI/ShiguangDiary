@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Album Screen - P003 相册列表
  *
  * 数据源：useDiaryStore
@@ -35,9 +35,12 @@ export const AlbumScreen: React.FC<AlbumScreenProps> = ({ navigation }) => {
     }
   }, [initialized, init])
 
-  const handleItemPress = useCallback((id: string) => {
-    toast.info(`打开相册: ${id}`)
-  }, [])
+  const handleItemPress = useCallback(
+    (id: string) => {
+      navigation.navigate(ROUTES.ALBUM_DETAIL, { id })
+    },
+    [navigation],
+  )
 
   const handleItemLongPress = useCallback((id: string) => {
     toast.info(`长按相册: ${id}`)

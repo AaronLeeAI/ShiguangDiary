@@ -1,30 +1,7 @@
-# Timeline Feature
+﻿# Timeline Feature
 
-> 时间线视图功能
+> 时间线领域预留 feature 入口
 
-## 职责范围
+当前时间线/日历矩阵能力由 `src/features/calendar/utils/timeline.ts` 与 calendar feature 承载。
 
-- 按时间线展示日记
-- 年/月/日分组
-- 滚动定位
-- 时间线样式切换
-
-## 目录
-
-```
-timeline/
-├── README.md
-├── index.ts
-├── components/    # TimelineItem, TimelineHeader, TimelineSection
-├── hooks/         # useTimelineData, useTimelineScroll
-└── utils/
-```
-
-## 关联
-
-- **依赖**：diary（按时间分组）
-- **被引用**：home（时间线样式入口）
-
-## 状态
-
-🚧 **待开发**
+本目录保留为后续将独立时间线流、跨月聚合和虚拟列表能力拆分出来的 feature barrel。

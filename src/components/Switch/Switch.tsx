@@ -1,29 +1,41 @@
-/**
- * Switch
- *
- * 开关
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+import React, { useCallback } from 'react'
+import { Switch as RNSwitch } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { haptic } from '@animations/haptics'
+import { brand, neutral } from '@theme'
+import type { SwitchProps } from './types'
 
-export interface SwitchProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const Switch: React.FC<SwitchProps> = ({
+  value,
+  onValueChange,
+  disabled = false,
+  trackColorOn = brand.primary,
+  trackColorOff = neutral.gray30,
+  thumbColor = neutral.white,
+  style,
+  testID,
+  accessibilityLabel,
+}) => {
+  const handleChange = useCallback(
+    (next: boolean) => {
+      haptic('tap')
+      onValueChange?.(next)
+    },
+    [onValueChange],
+  )
 
-/**
- * Switch 组件
- */
-export const Switch: React.FC<SwitchProps> = ({ testID, style }) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>Switch Skeleton</Text>
-    </View>
+    <RNSwitch
+      accessibilityLabel={accessibilityLabel}
+      disabled={disabled}
+      ios_backgroundColor={trackColorOff}
+      onValueChange={handleChange}
+      style={style}
+      testID={testID}
+      thumbColor={thumbColor}
+      trackColor={{ false: trackColorOff, true: trackColorOn }}
+      value={value}
+    />
   )
 }
 

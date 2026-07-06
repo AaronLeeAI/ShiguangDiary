@@ -1,30 +1,74 @@
-/**
- * ColorSwatch
- *
- * 色块
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+import React, { useCallback } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
+import { brand, neutral, radius } from '@theme'
+import type { ColorSwatchProps } from './types'
 
-export interface ColorSwatchProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const ColorSwatch: React.FC<ColorSwatchProps> = ({
+  color = neutral.white,
+  selected = false,
+  disabled = false,
+  size = 32,
+  label,
+  onPress,
+  style,
+  testID,
+}) => {
+  const handlePress = useCallback(() => {
+    if (!disabled) {
+      haptic('tap')
+      onPress?.(color)
+    }
+  }, [color, disabled, onPress])
 
-/**
- * ColorSwatch 组件
- */
-export const ColorSwatch: React.FC<ColorSwatchProps> = ({ testID, style }) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>ColorSwatch Skeleton</Text>
-    </View>
+    <Pressable
+      accessibilityLabel={label ?? color}
+      accessibilityRole="button"
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled || !onPress}
+      onPress={handlePress}
+      style={[styles.touch, disabled && styles.disabled, style]}
+      testID={testID}
+    >
+      <View
+        style={[styles.outer, selected && styles.selected, { height: size + 8, width: size + 8 }]}
+      >
+        <View style={[styles.inner, { backgroundColor: color, height: size, width: size }]}>
+          {selected ? <Icon name="check" size={16} color={neutral.white} /> : null}
+        </View>
+      </View>
+    </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  touch: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.4,
+  },
+  outer: {
+    alignItems: 'center',
+    borderColor: 'transparent',
+    borderRadius: radius.full,
+    borderWidth: 2,
+    justifyContent: 'center',
+  },
+  selected: {
+    borderColor: brand.primary,
+  },
+  inner: {
+    alignItems: 'center',
+    borderColor: neutral.gray20,
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'center',
+  },
+})
 
 export default ColorSwatch

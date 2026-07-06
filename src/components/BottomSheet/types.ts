@@ -1,14 +1,13 @@
-/**
- * BottomSheet 类型定义
- */
+import type { ReactNode } from 'react'
+import type { StyleProp, ViewStyle } from 'react-native'
 
 export interface BottomSheetProps {
+  visible?: boolean
+  title?: string
+  children?: ReactNode
+  onClose?: () => void
+  closeOnBackdropPress?: boolean
+  contentStyle?: StyleProp<ViewStyle>
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
 }
-
-export interface BottomSheetState {
-  // TODO: 补充内部状态
-}
-
-export type BottomSheetRef = unknown

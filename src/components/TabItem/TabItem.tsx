@@ -1,30 +1,51 @@
-/**
- * TabItem
- *
- * Tab 单项
- *
- * 当前 Task1 阶段仅为骨架。后续 Task 在此基础上实现 UI 与交互。
- */
+import React, { useCallback } from 'react'
+import { Pressable, StyleSheet, Text } from 'react-native'
 
-import React from 'react'
-import { View, Text, ViewStyle } from 'react-native'
+import { Icon } from '@/components/Icon'
+import { haptic } from '@animations/haptics'
+import { brand, semantic, spacing, typography } from '@theme'
+import type { TabItemProps } from './types'
 
-export interface TabItemProps {
-  /** 业务侧传入的数据 */
-  // TODO: 根据实际需求补充 Props
-  testID?: string
-  style?: ViewStyle
-}
+export const TabItem: React.FC<TabItemProps> = ({
+  label = 'Tab',
+  icon = 'list',
+  activeIcon,
+  active = false,
+  onPress,
+  style,
+  testID,
+}) => {
+  const handlePress = useCallback(() => {
+    haptic('tap')
+    onPress?.()
+  }, [onPress])
+  const color = active ? brand.primary : semantic.icon.tertiary
 
-/**
- * TabItem 组件
- */
-export const TabItem: React.FC<TabItemProps> = ({ testID, style }) => {
   return (
-    <View testID={testID} style={style}>
-      <Text>TabItem Skeleton</Text>
-    </View>
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      onPress={handlePress}
+      style={[styles.container, style]}
+      testID={testID}
+    >
+      <Icon name={active && activeIcon ? activeIcon : icon} size={24} color={color} />
+      <Text style={[styles.label, { color }]}>{label}</Text>
+    </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    flex: 1,
+    gap: spacing.xs,
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  label: {
+    ...typography.tabLabel,
+  },
+})
 
 export default TabItem

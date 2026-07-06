@@ -1,14 +1,17 @@
-/**
- * IconButton 类型定义
- */
+import type { StyleProp, ViewStyle } from 'react-native'
+import type { IconName } from '@/components/Icon'
+
+export type IconButtonVariant = 'ghost' | 'filled' | 'outline'
 
 export interface IconButtonProps {
+  name: IconName
+  onPress?: () => void
+  size?: number
+  iconSize?: number
+  color?: string
+  disabled?: boolean
+  variant?: IconButtonVariant
+  style?: StyleProp<ViewStyle>
   testID?: string
-  // TODO: 补充 Props
+  accessibilityLabel?: string
 }
-
-export interface IconButtonState {
-  // TODO: 补充内部状态
-}
-
-export type IconButtonRef = unknown

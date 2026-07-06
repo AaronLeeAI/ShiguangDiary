@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Navigation Types
  *
  * Type definitions for all navigation stacks and tabs.
@@ -25,8 +25,10 @@ export type RootStackParamList = {
   DiaryView: { id: string }
   DiaryEdit: { id?: string; notebookId?: string }
   NotebookCreate: undefined
+  NotebookDetail: { id: string }
   NotebookSort: undefined
   AlbumCreate: undefined
+  AlbumDetail: { id: string }
   Account: undefined
   Settings: undefined
   About: undefined
@@ -62,8 +64,10 @@ export type ModalType =
   | 'DiaryView'
   | 'DiaryEdit'
   | 'NotebookCreate'
+  | 'NotebookDetail'
   | 'NotebookSort'
   | 'AlbumCreate'
+  | 'AlbumDetail'
   | 'Account'
   | 'About'
   | 'Recycle'

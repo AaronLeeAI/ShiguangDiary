@@ -9,27 +9,27 @@ Version: v1.0.0-rc.1
 
 ## Task Timeline
 
-| Task | Outcome |
-| --- | --- |
-| Task00 | APK reverse-engineering knowledge base completed. |
-| Task01 | Product/design specifications completed. |
-| Task02 | React Native foundation completed. |
-| Task03 | Asset pipeline completed. |
-| Task04 | Shared component library completed. |
-| Task05 | Navigation framework completed. |
-| Task06 | Global state completed. |
-| Task07 | Database layer completed. |
-| Task08 | API/service layer completed. |
-| Task09 | Home module completed. |
-| Task10 | Diary editor completed. |
-| Task11 | Calendar/timeline completed. |
-| Task12 | Search completed. |
-| Task13 | Statistics completed. |
-| Task14 | Settings/configuration center completed. |
-| Task15 | Data management/backup/sync framework completed. |
-| Task16 | Business workflow integration completed. |
-| Task17 | UX polish and motion system completed. |
-| Task18 | Performance/stability/release configuration completed. |
+| Task   | Outcome                                                              |
+| ------ | -------------------------------------------------------------------- |
+| Task00 | APK reverse-engineering knowledge base completed.                    |
+| Task01 | Product/design specifications completed.                             |
+| Task02 | React Native foundation completed.                                   |
+| Task03 | Asset pipeline completed.                                            |
+| Task04 | Shared component library completed.                                  |
+| Task05 | Navigation framework completed.                                      |
+| Task06 | Global state completed.                                              |
+| Task07 | Database layer completed.                                            |
+| Task08 | API/service layer completed.                                         |
+| Task09 | Home module completed.                                               |
+| Task10 | Diary editor completed.                                              |
+| Task11 | Calendar/timeline completed.                                         |
+| Task12 | Search completed.                                                    |
+| Task13 | Statistics completed.                                                |
+| Task14 | Settings/configuration center completed.                             |
+| Task15 | Data management/backup/sync framework completed.                     |
+| Task16 | Business workflow integration completed.                             |
+| Task17 | UX polish and motion system completed.                               |
+| Task18 | Performance/stability/release configuration completed.               |
 | Task19 | Release Candidate and Final QA completed for automated/static gates. |
 
 ## Architecture Review
@@ -48,7 +48,7 @@ This separation allowed late QA fixes (version labels, disabled placeholder entr
 
 ## Key Decisions
 
-- Local-first data remains the source of truth; cloud sync is abstracted but not implemented.
+- Local-first data remains the source of truth; cloud sync is abstracted and deferred beyond the local-first RC scope.
 - Configuration uses MMKV through Zustand persist rather than SQLite.
 - Backup/export uses JSON for v1.0 RC; ZIP/attachments/import picker remain roadmap items.
 - Release-incomplete features stay in route/type architecture but are hidden/disabled from RC user flows.
@@ -59,7 +59,7 @@ This separation allowed late QA fixes (version labels, disabled placeholder entr
 - Native-module Jest fragility was solved with explicit mocks in `jest.setup.js`.
 - User-facing version drift was solved through shared app constants.
 - Optional native modules injected excessive permissions; manifest-merger removal rules reduced the APK to a minimal permission surface.
-- Placeholder route exposure was reduced by disabling visible entries that lead to unimplemented pages.
+- Placeholder route exposure was reduced by disabling visible entries that lead to deferred pages.
 - Android app label was localized to `拾光日记`.
 
 ## Performance and Stability Outcome
