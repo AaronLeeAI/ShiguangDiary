@@ -5,7 +5,7 @@
  * 页面只做展示与交互，编辑逻辑（dirty / 自动保存 / 校验 / 草稿）由编辑引擎负责。
  */
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -112,6 +112,37 @@ const normalizeSelection = (selection: TextSelection, max: number): TextSelectio
 const getSelectedText = (text: string, selection: TextSelection) =>
   text.slice(selection.start, selection.end)
 
+const htmlEntityMap: Record<string, string> = {
+  '&lt;': '<',
+  '&gt;': '>',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+}
+
+const decodeHtmlEntities = (value: string) =>
+  value.replace(/&(lt|gt|amp|quot);|&#39;/g, entity => htmlEntityMap[entity] ?? entity)
+
+const normalizeLegacyToolbarMarkup = (value: string) => {
+  let normalized = value
+    .replace(
+      /<span\s+style="font-size:\s*1\.2em;">([\s\S]*?)<\/span>/g,
+      (_match, text) => `**${decodeHtmlEntities(text)}**`,
+    )
+    .replace(
+      /<span\s+style="font-size:\s*0\.9em;">([\s\S]*?)<\/span>/g,
+      (_match, text) => `_${decodeHtmlEntities(text)}_`,
+    )
+    .replace(/<u>([\s\S]*?)<\/u>/g, (_match, text) => `++${decodeHtmlEntities(text)}++`)
+    .replace(
+      /<div\s+align="center">\n?([\s\S]*?)\n?<\/div>/g,
+      (_match, text) => `::: center\n${decodeHtmlEntities(text).trim()}\n:::`,
+    )
+
+  normalized = normalized.replace(/<\/?[^>]+>/g, '')
+  return normalized
+}
+
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
   const { id } = route.params
@@ -122,6 +153,18 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const [contentSelection, setContentSelection] = useState<TextSelection>(DEFAULT_SELECTION)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
+
+  useEffect(() => {
+    if (!hydrated) {
+      return
+    }
+
+    const normalized = normalizeLegacyToolbarMarkup(content)
+    if (normalized !== content) {
+      setContent(normalized)
+      setContentSelection(current => normalizeSelection(current, normalized.length))
+    }
+  }, [content, hydrated, setContent])
 
   // 退出时统一走 editor.exit（处理草稿）
   const handleBack = useCallback(() => {
@@ -215,8 +258,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handleContentChange = useCallback(
     (nextContent: string) => {
-      setContent(nextContent)
-      setContentSelection(current => normalizeSelection(current, nextContent.length))
+      const normalized = normalizeLegacyToolbarMarkup(nextContent)
+      setContent(normalized)
+      setContentSelection(current => normalizeSelection(current, normalized.length))
     },
     [setContent],
   )
@@ -232,7 +276,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (tool === 'underline') {
-        wrapSelection('<u>', '</u>', '下划线文字')
+        wrapSelection('++', '++', '?????')
         return
       }
       if (tool === 'strikethrough') {
@@ -240,11 +284,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (tool === 'fontIncrease') {
-        wrapSelection('<span style="font-size: 1.2em;">', '</span>', '放大文字')
+        transformSelectedLines(line => (line.trim() ? `# ${line.replace(/^#{1,6}\s*/, '')}` : '# '))
         return
       }
       if (tool === 'fontDecrease') {
-        wrapSelection('<span style="font-size: 0.9em;">', '</span>', '缩小文字')
+        transformSelectedLines(line =>
+          line.trim() ? `###### ${line.replace(/^#{1,6}\s*/, '')}` : '###### ',
+        )
         return
       }
       if (tool === 'heading') {
@@ -258,7 +304,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (tool === 'alignCenter') {
-        wrapSelection('<div align="center">\n', '\n</div>', '居中内容')
+        wrapSelection('::: center\n', '\n:::', '????')
         return
       }
       if (tool === 'orderedList') {

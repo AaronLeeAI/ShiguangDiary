@@ -4,7 +4,7 @@
  * 数据源：useDiaryStore
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -21,6 +21,215 @@ import { useDiaryStore } from '@store/diaryStore'
 
 import { styles } from './styles'
 import type { DiaryViewScreenProps } from './types'
+
+const htmlEntityMap: Record<string, string> = {
+  '&lt;': '<',
+  '&gt;': '>',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&#39;': "'",
+}
+
+const decodeHtmlEntities = (value: string) =>
+  value.replace(/&(lt|gt|amp|quot);|&#39;/g, entity => htmlEntityMap[entity] ?? entity)
+
+const normalizeLegacyToolbarMarkup = (value: string) => {
+  let normalized = value
+    .replace(
+      /<span\s+style="font-size:\s*1\.2em;">([\s\S]*?)<\/span>/g,
+      (_match, inlineText) => `**${decodeHtmlEntities(inlineText)}**`,
+    )
+    .replace(
+      /<span\s+style="font-size:\s*0\.9em;">([\s\S]*?)<\/span>/g,
+      (_match, inlineText) => `_${decodeHtmlEntities(inlineText)}_`,
+    )
+    .replace(/<u>([\s\S]*?)<\/u>/g, (_match, inlineText) => `++${decodeHtmlEntities(inlineText)}++`)
+    .replace(
+      /<div\s+align="center">\n?([\s\S]*?)\n?<\/div>/g,
+      (_match, blockText) => `::: center\n${decodeHtmlEntities(blockText).trim()}\n:::`,
+    )
+
+  normalized = normalized.replace(/<\/?[^>]+>/g, '')
+  return normalized
+}
+
+type InlineRule = {
+  pattern: RegExp
+  style: object
+}
+
+const isMarkdownBlockStart = (line: string) =>
+  /^#{1,6}\s+/.test(line) ||
+  /^>\s?/.test(line) ||
+  /^\d+\.\s+/.test(line) ||
+  /^[-*]\s+/.test(line) ||
+  /^:::\s*center\s*$/.test(line.trim()) ||
+  /^---+$/.test(line.trim())
+
+const renderInlineMarkdown = (text: string, keyPrefix: string): ReactNode[] => {
+  const rules: InlineRule[] = [
+    { pattern: /\*\*([^*]+)\*\*/, style: styles.markdownBold },
+    { pattern: /~~([^~]+)~~/, style: styles.markdownStrike },
+    { pattern: /\+\+([^+]+)\+\+/, style: styles.markdownUnderline },
+    { pattern: /\*([^*]+)\*/, style: styles.markdownItalic },
+    { pattern: /\[([^\]]+)\]\(([^)]+)\)/, style: styles.markdownLink },
+  ]
+
+  const nodes: ReactNode[] = []
+  let rest = text
+  let nodeIndex = 0
+
+  while (rest.length > 0) {
+    let bestMatch: RegExpExecArray | null = null
+    let bestRule: InlineRule | null = null
+
+    for (const rule of rules) {
+      const match = rule.pattern.exec(rest)
+      if (match && (!bestMatch || match.index < bestMatch.index)) {
+        bestMatch = match
+        bestRule = rule
+      }
+    }
+
+    if (!bestMatch || !bestRule) {
+      nodes.push(rest)
+      break
+    }
+
+    if (bestMatch.index > 0) {
+      nodes.push(rest.slice(0, bestMatch.index))
+    }
+
+    const displayText = bestMatch[1]
+    nodes.push(
+      <Text key={`${keyPrefix}-inline-${nodeIndex++}`} style={bestRule.style}>
+        {renderInlineMarkdown(displayText, `${keyPrefix}-${nodeIndex}`)}
+      </Text>,
+    )
+    rest = rest.slice(bestMatch.index + bestMatch[0].length)
+  }
+
+  return nodes
+}
+
+const renderMarkdownBlocks = (markdown: string) => {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n')
+  const blocks: ReactNode[] = []
+  let index = 0
+
+  while (index < lines.length) {
+    const line = lines[index]
+    const trimmed = line.trim()
+    const key = `md-${index}`
+
+    if (!trimmed) {
+      index += 1
+      continue
+    }
+
+    if (/^---+$/.test(trimmed)) {
+      blocks.push(<View key={key} style={styles.markdownDivider} />)
+      index += 1
+      continue
+    }
+
+    if (/^:::\s*center\s*$/.test(trimmed)) {
+      const centeredLines: string[] = []
+      index += 1
+      while (index < lines.length && lines[index].trim() !== ':::') {
+        centeredLines.push(lines[index])
+        index += 1
+      }
+      blocks.push(
+        <Text key={key} style={[styles.content, styles.markdownCenter]}>
+          {renderInlineMarkdown(centeredLines.join('\n'), key)}
+        </Text>,
+      )
+      index += 1
+      continue
+    }
+
+    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line)
+    if (headingMatch) {
+      const headingStyle =
+        headingMatch[1].length === 1
+          ? styles.markdownHeading1
+          : headingMatch[1].length === 2
+          ? styles.markdownHeading2
+          : styles.markdownHeading3
+      blocks.push(
+        <Text key={key} style={[styles.content, headingStyle]}>
+          {renderInlineMarkdown(headingMatch[2], key)}
+        </Text>,
+      )
+      index += 1
+      continue
+    }
+
+    const quoteMatch = /^>\s?(.*)$/.exec(line)
+    if (quoteMatch) {
+      const quoteLines: string[] = [quoteMatch[1]]
+      index += 1
+      while (index < lines.length) {
+        const nextQuote = /^>\s?(.*)$/.exec(lines[index])
+        if (!nextQuote) {
+          break
+        }
+        quoteLines.push(nextQuote[1])
+        index += 1
+      }
+      blocks.push(
+        <View key={key} style={styles.markdownQuote}>
+          <Text style={styles.content}>{renderInlineMarkdown(quoteLines.join('\n'), key)}</Text>
+        </View>,
+      )
+      continue
+    }
+
+    const listMatch = /^(\d+\.|[-*])\s+(.*)$/.exec(line)
+    if (listMatch) {
+      const listItems: Array<{ marker: string; text: string }> = []
+      while (index < lines.length) {
+        const currentMatch = /^(\d+\.|[-*])\s+(.*)$/.exec(lines[index])
+        if (!currentMatch) {
+          break
+        }
+        listItems.push({
+          marker: currentMatch[1] === '-' || currentMatch[1] === '*' ? '\u2022' : currentMatch[1],
+          text: currentMatch[2],
+        })
+        index += 1
+      }
+      blocks.push(
+        <View key={key} style={styles.markdownList}>
+          {listItems.map((item, itemIndex) => (
+            <View key={`${key}-item-${itemIndex}`} style={styles.markdownListItem}>
+              <Text style={[styles.content, styles.markdownListMarker]}>{item.marker}</Text>
+              <Text style={[styles.content, styles.markdownListText]}>
+                {renderInlineMarkdown(item.text, `${key}-item-${itemIndex}`)}
+              </Text>
+            </View>
+          ))}
+        </View>,
+      )
+      continue
+    }
+
+    const paragraphLines = [line]
+    index += 1
+    while (index < lines.length && lines[index].trim() && !isMarkdownBlockStart(lines[index])) {
+      paragraphLines.push(lines[index])
+      index += 1
+    }
+    blocks.push(
+      <Text key={key} style={styles.content}>
+        {renderInlineMarkdown(paragraphLines.join('\n'), key)}
+      </Text>,
+    )
+  }
+
+  return blocks
+}
 
 export const DiaryViewScreen: React.FC<DiaryViewScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
@@ -121,7 +330,7 @@ export const DiaryViewScreen: React.FC<DiaryViewScreenProps> = ({ navigation, ro
         {!!diary.title && <Text style={styles.title}>{diary.title}</Text>}
 
         {showFullContent ? (
-          <Text style={styles.content}>{diary.content}</Text>
+          <View>{renderMarkdownBlocks(normalizeLegacyToolbarMarkup(diary.content))}</View>
         ) : (
           <View style={styles.encryptedMask}>
             <View style={styles.encryptedIcon}>

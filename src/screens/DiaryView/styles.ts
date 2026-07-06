@@ -57,6 +57,68 @@ export const styles = StyleSheet.create({
     ...typography.bodyL,
     color: colors.semantic.text.primary,
     lineHeight: typography.bodyL.lineHeight + 8,
+    marginBottom: spacing.sm,
+  },
+
+  markdownBold: {
+    fontWeight: '700',
+  },
+  markdownItalic: {
+    fontStyle: 'italic',
+  },
+  markdownUnderline: {
+    textDecorationLine: 'underline',
+  },
+  markdownStrike: {
+    textDecorationLine: 'line-through',
+  },
+  markdownLink: {
+    color: colors.brand.primary,
+    textDecorationLine: 'underline',
+  },
+  markdownHeading1: {
+    ...typography.titleXL,
+    fontWeight: '700',
+    marginBottom: spacing.md,
+  },
+  markdownHeading2: {
+    ...typography.titleL,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  markdownHeading3: {
+    ...typography.titleM,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  markdownCenter: {
+    textAlign: 'center',
+  },
+  markdownDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.semantic.divider.default,
+    marginVertical: spacing.lg,
+  },
+  markdownQuote: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.semantic.divider.default,
+    paddingLeft: spacing.md,
+    marginVertical: spacing.sm,
+  },
+  markdownList: {
+    gap: spacing.xs,
+    marginVertical: spacing.xs,
+  },
+  markdownListItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  markdownListMarker: {
+    width: 34,
+    color: colors.semantic.text.secondary,
+  },
+  markdownListText: {
+    flex: 1,
   },
 
   // 加密遮罩
