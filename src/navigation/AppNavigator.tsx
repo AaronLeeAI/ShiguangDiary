@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 导航容器
  *
  * 整个应用的路由结构：
@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
@@ -58,6 +58,8 @@ import {
   StickyNote,
 } from './stubs'
 
+const SPLASH_LOGO = require('../../assets/images/splash/logo.png')
+
 // Splash：自动跳转到 MainTabs（1.5s 后）
 const Splash = ({
   navigation,
@@ -74,9 +76,13 @@ const Splash = ({
   return (
     <Screen style={styles.splashScreen}>
       <View style={styles.splashLogo}>
-        <Icon name="doc" size={42} color={colors.neutral.white} />
+        {SPLASH_LOGO ? (
+          <Image source={SPLASH_LOGO} style={styles.splashLogoImage} resizeMode="contain" />
+        ) : (
+          <Icon name="doc" size={42} color={colors.neutral.white} />
+        )}
       </View>
-      <Text style={styles.splashTitle}>????</Text>
+      <Text style={styles.splashTitle}>拾光日记</Text>
     </Screen>
   )
 }
@@ -103,13 +109,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.semantic.bg.canvas,
   },
   splashLogo: {
-    width: 88,
-    height: 88,
+    width: 96,
+    height: 96,
     borderRadius: radius.xl,
-    backgroundColor: colors.brand.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.base,
+    overflow: 'hidden',
+  },
+  splashLogoImage: {
+    width: 96,
+    height: 96,
   },
   splashTitle: {
     fontSize: fontSize.titleM,

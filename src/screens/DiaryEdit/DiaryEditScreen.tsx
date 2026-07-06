@@ -14,6 +14,8 @@ import {
   Text,
   TextInput,
   View,
+  type NativeSyntheticEvent,
+  type TextInputSelectionChangeEventData,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -30,6 +32,10 @@ import type { DiaryEditScreenProps } from './types'
 const TITLE_MAX_LENGTH = 32
 const DEFAULT_LOCATION = '陕西省西安市长安区东三街268号靠近万科城润园'
 const DEFAULT_WEATHER = '多云 30°C'
+const DEFAULT_SELECTION = { start: 0, end: 0 }
+const INDENT_PREFIX = '\u3000\u3000'
+
+type TextSelection = { start: number; end: number }
 
 type DiaryTool =
   | 'image'
@@ -97,6 +103,15 @@ const formatInsertTime = (date: Date) =>
     date.getHours(),
   )}:${pad2(date.getMinutes())}`
 
+const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
+  const start = Math.max(0, Math.min(selection.start, max))
+  const end = Math.max(0, Math.min(selection.end, max))
+  return start <= end ? { start, end } : { start: end, end: start }
+}
+
+const getSelectedText = (text: string, selection: TextSelection) =>
+  text.slice(selection.start, selection.end)
+
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
   const { id } = route.params
@@ -105,7 +120,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const editor = useEditor(id ?? null)
   const { title, content, hydrated, saving, error, setTitle, setContent, save, exit } = editor
 
-  const [activeTools, setActiveTools] = useState<DiaryTool[]>([])
+  const [contentSelection, setContentSelection] = useState<TextSelection>(DEFAULT_SELECTION)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
 
   // 退出时统一走 editor.exit（处理草稿）
@@ -129,35 +144,171 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     }
   }, [save, isNew, error, navigation])
 
-  const toggleTool = useCallback((tool: DiaryTool) => {
-    setActiveTools(prev =>
-      prev.includes(tool) ? prev.filter(activeTool => activeTool !== tool) : [...prev, tool],
-    )
-  }, [])
+  const applyContentChange = useCallback(
+    (nextContent: string, nextSelection: TextSelection) => {
+      setContent(nextContent)
+      setContentSelection(normalizeSelection(nextSelection, nextContent.length))
+    },
+    [setContent],
+  )
+
+  const replaceRange = useCallback(
+    (start: number, end: number, replacement: string, nextSelection: TextSelection) => {
+      const normalized = normalizeSelection({ start, end }, content.length)
+      const nextContent = `${content.slice(0, normalized.start)}${replacement}${content.slice(
+        normalized.end,
+      )}`
+      applyContentChange(nextContent, nextSelection)
+    },
+    [applyContentChange, content],
+  )
+
+  const insertText = useCallback(
+    (text: string, selectedOffsetStart?: number, selectedOffsetEnd?: number) => {
+      const selection = normalizeSelection(contentSelection, content.length)
+      const cursor = selection.start + text.length
+      replaceRange(selection.start, selection.end, text, {
+        start: selectedOffsetStart === undefined ? cursor : selection.start + selectedOffsetStart,
+        end: selectedOffsetEnd === undefined ? cursor : selection.start + selectedOffsetEnd,
+      })
+    },
+    [content.length, contentSelection, replaceRange],
+  )
+
+  const wrapSelection = useCallback(
+    (before: string, after: string, placeholder: string) => {
+      const selection = normalizeSelection(contentSelection, content.length)
+      const selected = getSelectedText(content, selection) || placeholder
+      const replacement = `${before}${selected}${after}`
+      replaceRange(selection.start, selection.end, replacement, {
+        start: selection.start + before.length,
+        end: selection.start + before.length + selected.length,
+      })
+    },
+    [content, contentSelection, replaceRange],
+  )
+
+  const transformSelectedLines = useCallback(
+    (transform: (line: string, index: number) => string) => {
+      const selection = normalizeSelection(contentSelection, content.length)
+      const effectiveEnd = selection.end > selection.start ? selection.end - 1 : selection.end
+      const lineStart = content.lastIndexOf('\n', Math.max(0, selection.start - 1)) + 1
+      const nextBreak = content.indexOf('\n', effectiveEnd)
+      const lineEnd = nextBreak === -1 ? content.length : nextBreak
+      const block = content.slice(lineStart, lineEnd)
+      const replacement = block.split('\n').map(transform).join('\n')
+
+      replaceRange(lineStart, lineEnd, replacement, {
+        start: lineStart,
+        end: lineStart + replacement.length,
+      })
+    },
+    [content, contentSelection, replaceRange],
+  )
+
+  const handleContentSelectionChange = useCallback(
+    (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
+      setContentSelection(event.nativeEvent.selection)
+    },
+    [],
+  )
+
+  const handleContentChange = useCallback(
+    (nextContent: string) => {
+      setContent(nextContent)
+      setContentSelection(current => normalizeSelection(current, nextContent.length))
+    },
+    [setContent],
+  )
 
   const handleToolPress = useCallback(
     (tool: DiaryTool) => {
-      if (tool === 'image') {
-        toast.info('图片选择器待实现')
+      if (tool === 'bold') {
+        wrapSelection('**', '**', '加粗文字')
         return
       }
-      if (tool === 'mic') {
-        toast.info('语音转文本需要接入原生能力，当前未开启')
+      if (tool === 'italic') {
+        wrapSelection('*', '*', '斜体文字')
         return
       }
-      if (tool === 'link') {
-        toast.info('链接插入待实现')
+      if (tool === 'underline') {
+        wrapSelection('<u>', '</u>', '下划线文字')
+        return
+      }
+      if (tool === 'strikethrough') {
+        wrapSelection('~~', '~~', '删除线文字')
+        return
+      }
+      if (tool === 'fontIncrease') {
+        wrapSelection('<span style="font-size: 1.2em;">', '</span>', '放大文字')
+        return
+      }
+      if (tool === 'fontDecrease') {
+        wrapSelection('<span style="font-size: 0.9em;">', '</span>', '缩小文字')
+        return
+      }
+      if (tool === 'heading') {
+        transformSelectedLines(line =>
+          line.trim() ? `## ${line.replace(/^#{1,6}\s*/, '')}` : '## ',
+        )
+        return
+      }
+      if (tool === 'indent') {
+        transformSelectedLines(line => `${INDENT_PREFIX}${line}`)
+        return
+      }
+      if (tool === 'alignCenter') {
+        wrapSelection('<div align="center">\n', '\n</div>', '居中内容')
+        return
+      }
+      if (tool === 'orderedList') {
+        let order = 1
+        transformSelectedLines(line => (line.trim() ? `${order++}. ${line}` : line))
+        return
+      }
+      if (tool === 'unorderedList') {
+        transformSelectedLines(line => (line.trim() ? `- ${line}` : line))
+        return
+      }
+      if (tool === 'quote') {
+        transformSelectedLines(line => (line.trim() ? `> ${line}` : '> '))
+        return
+      }
+      if (tool === 'divider') {
+        insertText('\n\n---\n\n')
         return
       }
       if (tool === 'time') {
-        const timeText = formatInsertTime(new Date())
-        const separator = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
-        setContent(`${content}${separator}${timeText}`)
+        insertText(formatInsertTime(new Date()))
         return
       }
-      toggleTool(tool)
+      if (tool === 'image') {
+        const selection = normalizeSelection(contentSelection, content.length)
+        const altText = getSelectedText(content, selection) || '图片'
+        const replacement = `![${altText}](图片地址)`
+        const urlStart = `![${altText}](`.length
+        replaceRange(selection.start, selection.end, replacement, {
+          start: selection.start + urlStart,
+          end: selection.start + urlStart + '图片地址'.length,
+        })
+        return
+      }
+      if (tool === 'link') {
+        const selection = normalizeSelection(contentSelection, content.length)
+        const linkText = getSelectedText(content, selection) || '链接文字'
+        const replacement = `[${linkText}](https://)`
+        const urlStart = `[${linkText}](`.length
+        replaceRange(selection.start, selection.end, replacement, {
+          start: selection.start + urlStart,
+          end: selection.start + urlStart + 'https://'.length,
+        })
+        return
+      }
+      if (tool === 'mic') {
+        toast.info('语音转文本需要接入原生语音识别能力')
+      }
     },
-    [content, setContent, toggleTool],
+    [content, contentSelection, insertText, replaceRange, transformSelectedLines, wrapSelection],
   )
 
   const renderHeader = () => (
@@ -201,14 +352,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   )
 
   const renderToolbarItem = (item: ToolbarItem) => {
-    const active = activeTools.includes(item.key)
     const textDecorations = [
       styles.toolbarText,
       item.type === 'text' && item.textStyle === 'bold' && styles.toolbarTextBold,
       item.type === 'text' && item.textStyle === 'italic' && styles.toolbarTextItalic,
       item.type === 'text' && item.textStyle === 'underline' && styles.toolbarTextUnderline,
       item.type === 'text' && item.textStyle === 'strike' && styles.toolbarTextStrike,
-      active && styles.toolbarTextActive,
     ]
 
     return (
@@ -216,21 +365,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         key={item.key}
         accessibilityRole="button"
         accessibilityLabel={item.label}
-        accessibilityState={{ selected: active }}
         hitSlop={4}
         onPress={() => handleToolPress(item.key)}
-        style={({ pressed }) => [
-          styles.toolbarButton,
-          pressed && styles.toolbarButtonPressed,
-          active && styles.toolbarButtonActive,
-        ]}
+        style={({ pressed }) => [styles.toolbarButton, pressed && styles.toolbarButtonPressed]}
       >
         {item.type === 'icon' ? (
-          <Icon
-            name={item.icon}
-            size={20}
-            color={active ? colors.neutral.gray70 : colors.neutral.gray50}
-          />
+          <Icon name={item.icon} size={20} color={colors.neutral.gray50} />
         ) : (
           <Text style={textDecorations}>{item.text}</Text>
         )}
@@ -273,10 +413,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
           <TextInput
             value={content}
-            onChangeText={setContent}
+            onChangeText={handleContentChange}
             placeholder="请输入..."
             placeholderTextColor={colors.semantic.text.tertiary}
             multiline
+            selection={contentSelection}
+            onSelectionChange={handleContentSelectionChange}
             textAlignVertical="top"
             style={styles.contentInput}
             maxLength={EDITOR_LIMITS.CONTENT_MAX}
