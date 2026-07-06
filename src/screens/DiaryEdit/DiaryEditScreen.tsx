@@ -5,7 +5,7 @@
  * 页面只做展示与交互，编辑逻辑（dirty / 自动保存 / 校验 / 草稿）由编辑引擎负责。
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
   type NativeSyntheticEvent,
+  type TextInputScrollEventData,
   type TextInputSelectionChangeEventData,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -143,6 +144,197 @@ const normalizeLegacyToolbarMarkup = (value: string) => {
   return normalized
 }
 
+type InlineMarkdownRule = {
+  pattern: RegExp
+  style: object
+}
+
+const isMarkdownBlockStart = (line: string) =>
+  /^#{1,6}\s+/.test(line) ||
+  /^>\s?/.test(line) ||
+  /^\d+\.\s+/.test(line) ||
+  /^[-*]\s+/.test(line) ||
+  /^:::\s*center\s*$/.test(line.trim()) ||
+  /^---+$/.test(line.trim())
+
+const renderInlineMarkdown = (text: string, keyPrefix: string): ReactNode[] => {
+  const rules: InlineMarkdownRule[] = [
+    { pattern: /!\[([^\]]*)\]\([^)]+\)/, style: styles.liveMarkdownLink },
+    { pattern: /\*\*([^*]+)\*\*/, style: styles.liveMarkdownBold },
+    { pattern: /~~([^~]+)~~/, style: styles.liveMarkdownStrike },
+    { pattern: /\+\+([^+]+)\+\+/, style: styles.liveMarkdownUnderline },
+    { pattern: /\*([^*]+)\*/, style: styles.liveMarkdownItalic },
+    { pattern: /\[([^\]]+)\]\([^)]+\)/, style: styles.liveMarkdownLink },
+  ]
+
+  const nodes: ReactNode[] = []
+  let rest = text
+  let nodeIndex = 0
+
+  while (rest.length > 0) {
+    let bestMatch: RegExpExecArray | null = null
+    let bestRule: InlineMarkdownRule | null = null
+
+    for (const rule of rules) {
+      const match = rule.pattern.exec(rest)
+      if (match && (!bestMatch || match.index < bestMatch.index)) {
+        bestMatch = match
+        bestRule = rule
+      }
+    }
+
+    if (!bestMatch || !bestRule) {
+      nodes.push(rest)
+      break
+    }
+
+    if (bestMatch.index > 0) {
+      nodes.push(rest.slice(0, bestMatch.index))
+    }
+
+    const isImage = bestMatch[0].startsWith('![')
+    const displayText = isImage
+      ? `\u005b\u56fe\u7247\u005d ${bestMatch[1] || '\u56fe\u7247'}`
+      : bestMatch[1]
+    nodes.push(
+      <Text key={`${keyPrefix}-inline-${nodeIndex++}`} style={bestRule.style}>
+        {isImage ? displayText : renderInlineMarkdown(displayText, `${keyPrefix}-${nodeIndex}`)}
+      </Text>,
+    )
+    rest = rest.slice(bestMatch.index + bestMatch[0].length)
+  }
+
+  return nodes
+}
+
+const renderLiveMarkdownBlocks = (markdown: string) => {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n')
+  const blocks: ReactNode[] = []
+  let index = 0
+
+  while (index < lines.length) {
+    const line = lines[index]
+    const trimmed = line.trim()
+    const key = `edit-md-${index}`
+
+    if (!trimmed) {
+      blocks.push(
+        <Text key={key} style={styles.liveMarkdownParagraph}>
+          {'\n'}
+        </Text>,
+      )
+      index += 1
+      continue
+    }
+
+    if (/^---+$/.test(trimmed)) {
+      blocks.push(<View key={key} style={styles.liveMarkdownDivider} />)
+      index += 1
+      continue
+    }
+
+    if (/^:::\s*center\s*$/.test(trimmed)) {
+      const centeredLines: string[] = []
+      index += 1
+      while (index < lines.length && lines[index].trim() !== ':::') {
+        centeredLines.push(lines[index])
+        index += 1
+      }
+      blocks.push(
+        <Text key={key} style={[styles.liveMarkdownParagraph, styles.liveMarkdownCenter]}>
+          {renderInlineMarkdown(centeredLines.join('\n'), key)}
+        </Text>,
+      )
+      index += 1
+      continue
+    }
+
+    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line)
+    if (headingMatch) {
+      const headingStyle =
+        headingMatch[1].length === 1
+          ? styles.liveMarkdownHeading1
+          : headingMatch[1].length === 2
+          ? styles.liveMarkdownHeading2
+          : styles.liveMarkdownHeading3
+      blocks.push(
+        <Text key={key} style={[styles.liveMarkdownParagraph, headingStyle]}>
+          {renderInlineMarkdown(headingMatch[2], key)}
+        </Text>,
+      )
+      index += 1
+      continue
+    }
+
+    const quoteMatch = /^>\s?(.*)$/.exec(line)
+    if (quoteMatch) {
+      const quoteLines: string[] = [quoteMatch[1]]
+      index += 1
+      while (index < lines.length) {
+        const nextQuote = /^>\s?(.*)$/.exec(lines[index])
+        if (!nextQuote) {
+          break
+        }
+        quoteLines.push(nextQuote[1])
+        index += 1
+      }
+      blocks.push(
+        <View key={key} style={styles.liveMarkdownQuote}>
+          <Text style={styles.liveMarkdownParagraph}>
+            {renderInlineMarkdown(quoteLines.join('\n'), key)}
+          </Text>
+        </View>,
+      )
+      continue
+    }
+
+    const listMatch = /^(\d+\.|[-*])\s+(.*)$/.exec(line)
+    if (listMatch) {
+      const listItems: Array<{ marker: string; text: string }> = []
+      while (index < lines.length) {
+        const currentMatch = /^(\d+\.|[-*])\s+(.*)$/.exec(lines[index])
+        if (!currentMatch) {
+          break
+        }
+        listItems.push({
+          marker: currentMatch[1] === '-' || currentMatch[1] === '*' ? '\u2022' : currentMatch[1],
+          text: currentMatch[2],
+        })
+        index += 1
+      }
+      blocks.push(
+        <View key={key} style={styles.liveMarkdownList}>
+          {listItems.map((item, itemIndex) => (
+            <View key={`${key}-item-${itemIndex}`} style={styles.liveMarkdownListItem}>
+              <Text style={[styles.liveMarkdownParagraph, styles.liveMarkdownListMarker]}>
+                {item.marker}
+              </Text>
+              <Text style={[styles.liveMarkdownParagraph, styles.liveMarkdownListText]}>
+                {renderInlineMarkdown(item.text, `${key}-item-${itemIndex}`)}
+              </Text>
+            </View>
+          ))}
+        </View>,
+      )
+      continue
+    }
+
+    const paragraphLines = [line]
+    index += 1
+    while (index < lines.length && lines[index].trim() && !isMarkdownBlockStart(lines[index])) {
+      paragraphLines.push(lines[index])
+      index += 1
+    }
+    blocks.push(
+      <Text key={key} style={styles.liveMarkdownParagraph}>
+        {renderInlineMarkdown(paragraphLines.join('\n'), key)}
+      </Text>,
+    )
+  }
+
+  return blocks
+}
+
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
   const { id } = route.params
@@ -152,6 +344,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const { title, content, hydrated, saving, error, setTitle, setContent, save, exit } = editor
 
   const [contentSelection, setContentSelection] = useState<TextSelection>(DEFAULT_SELECTION)
+  const previewScrollRef = useRef<ScrollView>(null)
+  const contentInputRef = useRef<TextInput>(null)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
 
   useEffect(() => {
@@ -256,6 +450,16 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [],
   )
 
+  const handleContentScroll = useCallback(
+    (event: NativeSyntheticEvent<TextInputScrollEventData>) => {
+      previewScrollRef.current?.scrollTo({
+        y: event.nativeEvent.contentOffset.y,
+        animated: false,
+      })
+    },
+    [],
+  )
+
   const handleContentChange = useCallback(
     (nextContent: string) => {
       const normalized = normalizeLegacyToolbarMarkup(nextContent)
@@ -276,7 +480,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (tool === 'underline') {
-        wrapSelection('++', '++', '?????')
+        wrapSelection('++', '++', '\u4e0b\u5212\u7ebf\u6587\u5b57')
         return
       }
       if (tool === 'strikethrough') {
@@ -304,7 +508,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (tool === 'alignCenter') {
-        wrapSelection('::: center\n', '\n:::', '????')
+        wrapSelection('::: center\n', '\n:::', '\u5c45\u4e2d\u5185\u5bb9')
         return
       }
       if (tool === 'orderedList') {
@@ -457,18 +661,42 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             </Text>
           </View>
 
-          <TextInput
-            value={content}
-            onChangeText={handleContentChange}
-            placeholder="请输入..."
-            placeholderTextColor={colors.semantic.text.tertiary}
-            multiline
-            selection={contentSelection}
-            onSelectionChange={handleContentSelectionChange}
-            textAlignVertical="top"
-            style={styles.contentInput}
-            maxLength={EDITOR_LIMITS.CONTENT_MAX}
-          />
+          <Pressable
+            style={styles.liveEditor}
+            onPress={() => contentInputRef.current?.focus()}
+            accessible={false}
+          >
+            <ScrollView
+              ref={previewScrollRef}
+              pointerEvents="none"
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              style={styles.livePreviewScroller}
+              contentContainerStyle={styles.livePreviewContent}
+              importantForAccessibility="no-hide-descendants"
+            >
+              {content ? (
+                renderLiveMarkdownBlocks(content)
+              ) : (
+                <Text style={styles.livePlaceholder}>{'\u8bf7\u8f93\u5165...'}</Text>
+              )}
+            </ScrollView>
+            <TextInput
+              ref={contentInputRef}
+              value={content}
+              onChangeText={handleContentChange}
+              placeholder=""
+              multiline
+              selection={contentSelection}
+              onSelectionChange={handleContentSelectionChange}
+              onScroll={handleContentScroll}
+              textAlignVertical="top"
+              style={styles.contentInput}
+              maxLength={EDITOR_LIMITS.CONTENT_MAX}
+              selectionColor={colors.brand.primary}
+              cursorColor={colors.brand.primary}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.bottomSection}>

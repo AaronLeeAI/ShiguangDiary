@@ -61,14 +61,99 @@ export const styles = StyleSheet.create({
     color: colors.semantic.text.tertiary,
     marginLeft: spacing.sm,
   },
-  contentInput: {
+  liveEditor: {
     flex: 1,
+    position: 'relative',
+  },
+  livePreviewScroller: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  livePreviewContent: {
+    paddingTop: spacing.xs,
+    paddingHorizontal: 0,
+    paddingBottom: spacing.base,
+  },
+  livePlaceholder: {
     ...typography.bodyM,
-    color: colors.semantic.text.primary,
+    color: colors.semantic.text.tertiary,
+  },
+  contentInput: {
+    ...StyleSheet.absoluteFillObject,
+    ...typography.bodyM,
+    color: 'transparent',
     paddingTop: spacing.xs,
     paddingHorizontal: 0,
     paddingBottom: spacing.base,
     textAlignVertical: 'top',
+    backgroundColor: 'transparent',
+  },
+  liveMarkdownParagraph: {
+    ...typography.bodyM,
+    color: colors.semantic.text.primary,
+    marginBottom: spacing.xs,
+  },
+  liveMarkdownBold: {
+    fontWeight: '700',
+  },
+  liveMarkdownItalic: {
+    fontStyle: 'italic',
+  },
+  liveMarkdownUnderline: {
+    textDecorationLine: 'underline',
+  },
+  liveMarkdownStrike: {
+    textDecorationLine: 'line-through',
+  },
+  liveMarkdownLink: {
+    color: colors.brand.primary,
+    textDecorationLine: 'underline',
+  },
+  liveMarkdownHeading1: {
+    ...typography.titleL,
+    color: colors.semantic.text.primary,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  liveMarkdownHeading2: {
+    ...typography.titleM,
+    color: colors.semantic.text.primary,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  liveMarkdownHeading3: {
+    ...typography.titleS,
+    color: colors.semantic.text.primary,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  liveMarkdownCenter: {
+    textAlign: 'center',
+  },
+  liveMarkdownDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.semantic.divider.default,
+    marginVertical: spacing.md,
+  },
+  liveMarkdownQuote: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.semantic.divider.default,
+    paddingLeft: spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  liveMarkdownList: {
+    gap: spacing.xxs,
+    marginVertical: spacing.xs,
+  },
+  liveMarkdownListItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  liveMarkdownListMarker: {
+    width: 30,
+    color: colors.semantic.text.secondary,
+  },
+  liveMarkdownListText: {
+    flex: 1,
   },
   bottomSection: {
     backgroundColor: colors.semantic.bg.canvas,
