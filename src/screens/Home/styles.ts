@@ -126,6 +126,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  compactIconButtonSpaced: {
+    marginLeft: spacing.xs,
+  },
   staticCalendarIcon: {
     width: 26,
     height: 26,
@@ -191,17 +194,32 @@ export const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  fab: {
+  fabLayer: {
+    position: 'absolute',
+    right: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: colors.brand.primary,
     opacity: 1,
-    zIndex: 100,
-    elevation: 100,
+    zIndex: 1000,
+    elevation: 1000,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+  },
+  fabButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabButtonPressed: {
+    backgroundColor: colors.brand.primaryPressed,
   },
   fabPlus: {
     fontSize: fontSize.titleXL,

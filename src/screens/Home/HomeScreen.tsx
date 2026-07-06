@@ -23,7 +23,6 @@ import { ActionSheet } from '@/components/ActionSheet'
 import { BottomTabBar } from '@/components/BottomTabBar'
 import { DiaryCard } from '@/components/DiaryCard'
 import { EmptyState } from '@/components/EmptyState'
-import { FloatingActionButton } from '@/components/FloatingActionButton'
 import { Icon } from '@/components/Icon'
 import { Loading } from '@/components/Loading'
 import { TopBar } from '@/components/TopBar'
@@ -408,7 +407,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <Pressable
             hitSlop={10}
             onPress={handleOpenCalendar}
-            style={styles.compactIconButton}
+            style={[styles.compactIconButton, styles.compactIconButtonSpaced]}
             accessibilityRole="button"
             accessibilityLabel="打开日历"
           >
@@ -455,7 +454,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             initialNumToRender={8}
             maxToRenderPerBatch={8}
             windowSize={7}
-            removeClippedSubviews
             onScroll={handleHomeListScroll}
             scrollEventThrottle={16}
           />
@@ -463,13 +461,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       </View>
 
       {fabVisible ? (
-        <FloatingActionButton
-          onPress={handleNewDiary}
-          accessibilityLabel="新建日记"
-          style={[styles.fab, { bottom: 76 + insets.bottom }]}
-        >
-          <Text style={styles.fabPlus}>{'\uff0b'}</Text>
-        </FloatingActionButton>
+        <View style={[styles.fabLayer, { bottom: 76 + insets.bottom }]}>
+          <Pressable
+            onPress={handleNewDiary}
+            accessibilityRole="button"
+            accessibilityLabel="新建日记"
+            style={({ pressed }) => [styles.fabButton, pressed && styles.fabButtonPressed]}
+          >
+            <Text style={styles.fabPlus}>{'\uff0b'}</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       <BottomTabBar currentTab="Home" onTabPress={handleTabPress} />
