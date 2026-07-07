@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -43,6 +44,7 @@ type FormatTool = Exclude<DiaryTool, 'image' | 'divider' | 'time' | 'mic' | 'lin
 type FormatState = Partial<Record<FormatTool, boolean>>
 type FormatRange = { start: number; end: number; formats: FormatTool[] }
 type RichDocument = { text: string; ranges: FormatRange[] }
+type EditorSnapshot = RichDocument & { selection: TextSelection }
 
 type DiaryTool =
   | 'image'
@@ -188,6 +190,18 @@ const sameFormats = (left: FormatTool[], right: FormatTool[]) => {
   const r = uniqueFormats(right)
   return l.length === r.length && l.every((tool, index) => tool === r[index])
 }
+
+const sameRanges = (left: FormatRange[], right: FormatRange[]) =>
+  left.length === right.length &&
+  left.every(
+    (range, index) =>
+      range.start === right[index].start &&
+      range.end === right[index].end &&
+      sameFormats(range.formats, right[index].formats),
+  )
+
+const sameDocument = (left: RichDocument, right: RichDocument) =>
+  left.text === right.text && sameRanges(left.ranges, right.ranges)
 
 const mergeRanges = (ranges: FormatRange[]) => {
   const sorted = ranges
@@ -701,7 +715,31 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const previewScrollRef = useRef<ScrollView>(null)
   const contentInputRef = useRef<TextInput>(null)
   const lastSerializedContentRef = useRef<string | null>(null)
+  const latestSnapshotRef = useRef<EditorSnapshot>({
+    text: '',
+    ranges: [],
+    selection: DEFAULT_SELECTION,
+  })
+  const undoStackRef = useRef<EditorSnapshot[]>([])
+  const redoStackRef = useRef<EditorSnapshot[]>([])
+  const [historyStatus, setHistoryStatus] = useState({ undo: 0, redo: 0 })
+  const [keyboardVisible, setKeyboardVisible] = useState(false)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true))
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardVisible(false),
+    )
+    return () => {
+      showSubscription.remove()
+      hideSubscription.remove()
+    }
+  }, [])
+
+  const refreshHistoryStatus = useCallback(() => {
+    setHistoryStatus({ undo: undoStackRef.current.length, redo: redoStackRef.current.length })
+  }, [])
 
   useEffect(() => {
     if (!hydrated || lastSerializedContentRef.current === content) {
@@ -711,25 +749,45 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     const doc = parseMarkdownToRichDocument(content)
     const serialized = serializeRichDocumentToMarkdown(doc)
     lastSerializedContentRef.current = serialized
+    const selection = normalizeSelection(contentSelection, doc.text.length)
+    latestSnapshotRef.current = { text: doc.text, ranges: doc.ranges, selection }
+    undoStackRef.current = []
+    redoStackRef.current = []
+    refreshHistoryStatus()
     setPlainText(doc.text)
     setFormatRanges(doc.ranges)
-    setContentSelection(current => normalizeSelection(current, doc.text.length))
+    setContentSelection(selection)
     if (serialized !== content) {
       setContent(serialized)
     }
-  }, [content, hydrated, setContent])
+  }, [content, contentSelection, hydrated, refreshHistoryStatus, setContent])
 
   const syncRichDocument = useCallback(
-    (nextText: string, nextRanges: FormatRange[], nextSelection: TextSelection) => {
+    (
+      nextText: string,
+      nextRanges: FormatRange[],
+      nextSelection: TextSelection,
+      options?: { recordHistory?: boolean },
+    ) => {
       const doc = { text: nextText, ranges: clampRanges(nextRanges, nextText.length) }
+      const selection = normalizeSelection(nextSelection, nextText.length)
+      const previous = latestSnapshotRef.current
+
+      if (options?.recordHistory !== false && !sameDocument(previous, doc)) {
+        undoStackRef.current = [...undoStackRef.current.slice(-99), previous]
+        redoStackRef.current = []
+      }
+
       const serialized = serializeRichDocumentToMarkdown(doc)
+      latestSnapshotRef.current = { ...doc, selection }
       lastSerializedContentRef.current = serialized
       setPlainText(nextText)
       setFormatRanges(doc.ranges)
-      setContentSelection(normalizeSelection(nextSelection, nextText.length))
+      setContentSelection(selection)
+      refreshHistoryStatus()
       setContent(serialized)
     },
-    [setContent],
+    [refreshHistoryStatus, setContent],
   )
 
   const clearBlockFormatState = useCallback((format?: FormatTool) => {
@@ -784,6 +842,35 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     },
     [],
   )
+
+  const restoreSnapshot = useCallback(
+    (snapshot: EditorSnapshot) => {
+      syncRichDocument(snapshot.text, snapshot.ranges, snapshot.selection, { recordHistory: false })
+      requestAnimationFrame(() => {
+        contentInputRef.current?.focus()
+        contentInputRef.current?.setNativeProps({ selection: snapshot.selection })
+      })
+    },
+    [syncRichDocument],
+  )
+
+  const handleUndo = useCallback(() => {
+    const snapshot = undoStackRef.current.pop()
+    if (!snapshot) {
+      return
+    }
+    redoStackRef.current.push(latestSnapshotRef.current)
+    restoreSnapshot(snapshot)
+  }, [restoreSnapshot])
+
+  const handleRedo = useCallback(() => {
+    const snapshot = redoStackRef.current.pop()
+    if (!snapshot) {
+      return
+    }
+    undoStackRef.current.push(latestSnapshotRef.current)
+    restoreSnapshot(snapshot)
+  }, [restoreSnapshot])
 
   const insertPlainText = useCallback(
     (text: string, formats?: FormatTool[]) => {
@@ -999,7 +1086,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         tool === 'indent' ||
         tool === 'alignCenter' ||
         tool === 'orderedList' ||
-        tool === 'unorderedList'
+        tool === 'unorderedList' ||
+        tool === 'quote'
       ) {
         toggleCurrentLineFormat(tool)
         return
@@ -1089,6 +1177,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       styles.contentInput,
       activeFormats.includes('bold') && styles.contentInputBold,
       activeFormats.includes('italic') && styles.contentInputItalic,
+      activeFormats.includes('alignCenter') && styles.contentInputCenter,
       activeFormats.includes('quote') && styles.contentInputQuoteOffset,
       activeFormats.includes('indent') &&
         !activeFormats.includes('orderedList') &&
@@ -1169,7 +1258,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         const marker = isOrdered ? `${pad2(orderedIndex++)}.` : '\u2022'
         return (
           <View key={`rich-line-${index}`} style={styles.liveMarkdownListItem}>
-            <Text style={[styles.liveMarkdownParagraph, styles.liveMarkdownListMarker]}>
+            <Text
+              style={[
+                styles.liveMarkdownParagraph,
+                styles.liveMarkdownListMarker,
+                isUnordered && styles.liveMarkdownUnorderedMarker,
+              ]}
+            >
               {marker}
             </Text>
             <Text style={[lineStyles, styles.liveMarkdownListText]}>{contentNode}</Text>
@@ -1340,24 +1435,74 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         </View>
 
         <View style={styles.bottomSection}>
-          <View style={styles.infoBlock}>
-            <View style={styles.infoRow}>
-              <Icon name="location" size={15} color={colors.neutral.gray50} />
-              <Text style={styles.infoText} numberOfLines={1}>
-                {DEFAULT_LOCATION}
-              </Text>
+          {keyboardVisible ? (
+            <View style={[styles.infoBlock, styles.infoBlockCompact]}>
+              <Text style={styles.infoCompactText}>{contentCharCount}字</Text>
+              <View style={styles.historyActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="撤销"
+                  disabled={historyStatus.undo <= 0}
+                  onPress={handleUndo}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.historyButton,
+                    pressed && styles.historyButtonPressed,
+                    historyStatus.undo <= 0 && styles.historyButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.historyButtonText,
+                      historyStatus.undo <= 0 && styles.historyButtonTextDisabled,
+                    ]}
+                  >
+                    ↶
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="反撤销"
+                  disabled={historyStatus.redo <= 0}
+                  onPress={handleRedo}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.historyButton,
+                    pressed && styles.historyButtonPressed,
+                    historyStatus.redo <= 0 && styles.historyButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.historyButtonText,
+                      historyStatus.redo <= 0 && styles.historyButtonTextDisabled,
+                    ]}
+                  >
+                    ↷
+                  </Text>
+                </Pressable>
+              </View>
             </View>
-            <View style={styles.infoRow}>
-              <Icon name="weather" size={15} color={colors.neutral.gray50} />
-              <Text style={styles.infoText}>{DEFAULT_WEATHER}</Text>
+          ) : (
+            <View style={styles.infoBlock}>
+              <View style={styles.infoRow}>
+                <Icon name="location" size={15} color={colors.neutral.gray50} />
+                <Text style={styles.infoText} numberOfLines={1}>
+                  {DEFAULT_LOCATION}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Icon name="weather" size={15} color={colors.neutral.gray50} />
+                <Text style={styles.infoText}>{DEFAULT_WEATHER}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Icon name="chart" size={15} color={colors.neutral.gray50} />
+                <Text style={styles.infoText}>
+                  {contentCharCount > 0 ? `${contentCharCount} ?` : '????'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.infoRow}>
-              <Icon name="chart" size={15} color={colors.neutral.gray50} />
-              <Text style={styles.infoText}>
-                {contentCharCount > 0 ? `${contentCharCount} 字` : '字数统计'}
-              </Text>
-            </View>
-          </View>
+          )}
 
           <ScrollView
             horizontal

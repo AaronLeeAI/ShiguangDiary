@@ -158,6 +158,9 @@ export const styles = StyleSheet.create({
     width: 34,
     color: colors.semantic.text.secondary,
   },
+  liveMarkdownUnorderedMarker: {
+    textAlign: 'center',
+  },
   liveMarkdownListText: {
     flex: 1,
   },
@@ -170,6 +173,14 @@ export const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: spacing.xs,
   },
+  infoBlockCompact: {
+    minHeight: 38,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   infoRow: {
     minHeight: 22,
     flexDirection: 'row',
@@ -179,6 +190,36 @@ export const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     ...typography.bodyS,
+    color: colors.semantic.text.tertiary,
+  },
+  infoCompactText: {
+    ...typography.bodyS,
+    color: colors.semantic.text.tertiary,
+  },
+  historyActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  historyButton: {
+    minWidth: 28,
+    minHeight: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  historyButtonPressed: {
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  historyButtonDisabled: {
+    opacity: 0.45,
+  },
+  historyButtonText: {
+    ...typography.bodyM,
+    color: colors.neutral.gray50,
+    fontWeight: '600',
+  },
+  historyButtonTextDisabled: {
     color: colors.semantic.text.tertiary,
   },
   toolbar: {
