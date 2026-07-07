@@ -139,6 +139,18 @@ export const styles = StyleSheet.create({
     height: typography.bodyM.lineHeight,
     justifyContent: 'center',
   },
+  liveMarkdownImageBlock: {
+    width: '100%',
+    height: 168,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginVertical: spacing.xs,
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  liveMarkdownImage: {
+    width: '100%',
+    height: '100%',
+  },
   liveMarkdownDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.semantic.divider.default,
@@ -195,6 +207,11 @@ export const styles = StyleSheet.create({
     ...typography.bodyS,
     color: colors.semantic.text.tertiary,
   },
+  infoCompactLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   infoCompactText: {
     ...typography.bodyS,
     color: colors.semantic.text.tertiary,
@@ -236,16 +253,16 @@ export const styles = StyleSheet.create({
     elevation: 6,
   },
   toolbarContent: {
-    minHeight: 50,
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingVertical: 4,
     gap: spacing.xxs,
   },
   toolbarButton: {
     width: 34,
-    height: 38,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 6,

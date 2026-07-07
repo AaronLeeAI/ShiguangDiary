@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -21,7 +22,9 @@ import {
   type TextInputSelectionChangeEventData,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { launchImageLibrary, type Asset } from 'react-native-image-picker'
 
+import { ActionSheet } from '@/components/ActionSheet'
 import { Icon, type IconName } from '@/components/Icon'
 import { Loading } from '@/components/Loading'
 import { toast } from '@/components/Toast'
@@ -124,6 +127,7 @@ const EMPTY_LINE_CANCEL_FORMATS: FormatTool[] = [
 ]
 const CONTINUED_EMPTY_LINE_FORMATS: FormatTool[] = ['orderedList', 'unorderedList', 'indent']
 const DIVIDER_TEXT = '---'
+const IMAGE_MARKDOWN_LINE = /^!\[([^\]]*)\]\(([^)]+)\)$/
 
 const pad2 = (n: number) => `${n}`.padStart(2, '0')
 
@@ -136,6 +140,11 @@ const formatInsertTime = (date: Date) =>
   `${date.getFullYear()}年${pad2(date.getMonth() + 1)}月${pad2(date.getDate())}日 ${pad2(
     date.getHours(),
   )}:${pad2(date.getMinutes())}`
+
+const getImageUriFromMarkdownLine = (line: string) => IMAGE_MARKDOWN_LINE.exec(line.trim())?.[2]
+
+const createImageMarkdownLine = (asset: Asset, index: number) =>
+  `![\u56fe\u7247${index + 1}](${asset.uri})`
 
 const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
   const start = Math.max(0, Math.min(selection.start, max))
@@ -612,6 +621,14 @@ const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
     if (/^---+$/.test(trimmed)) {
       line = DIVIDER_TEXT
     }
+    const imageUri = getImageUriFromMarkdownLine(line)
+    if (imageUri) {
+      textParts.push(line)
+      if (lineIndex < lines.length - 1) {
+        textParts.push('\n')
+      }
+      continue
+    }
     if (line.startsWith(INDENT_PREFIX)) {
       blockFormats.push('indent')
       line = line.slice(INDENT_PREFIX.length)
@@ -703,8 +720,8 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
       const effectiveEnd = Math.max(lineEnd, lineStart + 1)
       offset = lineEnd + 1
       let output =
-        line === DIVIDER_TEXT
-          ? '---'
+        line === DIVIDER_TEXT || getImageUriFromMarkdownLine(line)
+          ? line
           : serializeInline(doc.text, doc.ranges, lineStart, lineEnd) || line
       if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'unorderedList')) {
         output = `- ${output}`
@@ -734,7 +751,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const isNew = !id
 
   const editor = useEditor(id ?? null)
-  const { title, content, hydrated, saving, error, setTitle, setContent, save, exit } = editor
+  const { title, content, hydrated, saving, error, setTitle, setContent, save, exit, discard } =
+    editor
 
   const [plainText, setPlainText] = useState('')
   const [formatRanges, setFormatRanges] = useState<FormatRange[]>([])
@@ -752,6 +770,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const redoStackRef = useRef<EditorSnapshot[]>([])
   const [historyStatus, setHistoryStatus] = useState({ undo: 0, redo: 0 })
   const [keyboardVisible, setKeyboardVisible] = useState(false)
+  const [exitSheetVisible, setExitSheetVisible] = useState(false)
+  const allowLeaveRef = useRef(false)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
 
   useEffect(() => {
@@ -764,6 +784,19 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       hideSubscription.remove()
     }
   }, [])
+
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', event => {
+        if (allowLeaveRef.current) {
+          return
+        }
+        event.preventDefault()
+        Keyboard.dismiss()
+        setExitSheetVisible(true)
+      }),
+    [navigation],
+  )
 
   const refreshHistoryStatus = useCallback(() => {
     setHistoryStatus({ undo: undoStackRef.current.length, redo: redoStackRef.current.length })
@@ -833,24 +866,40 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     })
   }, [])
 
-  // 退出时统一走 editor.exit（处理草稿）
   const handleBack = useCallback(() => {
+    Keyboard.dismiss()
+    setExitSheetVisible(true)
+  }, [])
+
+  const handleSaveToDraft = useCallback(() => {
+    allowLeaveRef.current = true
     exit()
-    navigation.goBack()
+    toast.success('\u5df2\u4fdd\u5b58\u5230\u8349\u7a3f\u7bb1')
+    requestAnimationFrame(() => navigation.goBack())
   }, [exit, navigation])
+
+  const handleDiscardAndBack = useCallback(() => {
+    allowLeaveRef.current = true
+    discard()
+    toast.info('\u5df2\u653e\u5f03\u4fdd\u5b58')
+    requestAnimationFrame(() => navigation.goBack())
+  }, [discard, navigation])
 
   const handleSave = useCallback(async () => {
     const ok = await save()
     if (ok) {
       haptic('saveSuccess')
-      toast.success(isNew ? '日记已创建' : '已保存')
-      setTimeout(() => navigation.goBack(), 300)
+      toast.success(isNew ? '\u65e5\u8bb0\u5df2\u521b\u5efa' : '\u5df2\u4fdd\u5b58')
+      setTimeout(() => {
+        allowLeaveRef.current = true
+        navigation.goBack()
+      }, 300)
     } else if (error) {
       haptic('error')
       toast.error(error)
     } else {
       haptic('error')
-      toast.error('内容不能为空')
+      toast.error('\u5185\u5bb9\u4e0d\u80fd\u4e3a\u7a7a')
     }
   }, [save, isNew, error, navigation])
 
@@ -932,6 +981,42 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     },
     [activeFormatState, contentSelection, formatRanges, plainText, syncRichDocument],
   )
+
+  const handleInsertImages = useCallback(async () => {
+    try {
+      const response = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 0,
+        includeBase64: false,
+      })
+
+      if (response.didCancel) {
+        requestAnimationFrame(() => contentInputRef.current?.focus())
+        return
+      }
+      if (response.errorCode) {
+        toast.error(response.errorMessage ?? '\u56fe\u7247\u9009\u62e9\u5931\u8d25')
+        requestAnimationFrame(() => contentInputRef.current?.focus())
+        return
+      }
+
+      const assets = (response.assets ?? []).filter(asset => !!asset.uri)
+      if (assets.length <= 0) {
+        toast.info('\u672a\u9009\u62e9\u56fe\u7247')
+        requestAnimationFrame(() => contentInputRef.current?.focus())
+        return
+      }
+
+      const selection = normalizeSelection(contentSelection, plainText.length)
+      const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
+      const suffix = '\n'
+      const markdown = assets.map(createImageMarkdownLine).join('\n')
+      insertPlainText(`${prefix}${markdown}${suffix}`, [])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '\u56fe\u7247\u9009\u62e9\u5931\u8d25')
+      requestAnimationFrame(() => contentInputRef.current?.focus())
+    }
+  }, [contentSelection, insertPlainText, plainText])
 
   const handleContentChange = useCallback(
     (nextText: string) => {
@@ -1178,8 +1263,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       }
 
       if (tool === 'image') {
-        toast.info('图片选择器待接入，当前不插入占位文本')
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        handleInsertImages()
         return
       }
 
@@ -1204,6 +1288,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       applyFormatToSelectedText,
       contentSelection,
       formatRanges,
+      handleInsertImages,
       insertPlainText,
       plainText,
       toggleCurrentLineFormat,
@@ -1311,6 +1396,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           styles.liveMarkdownIndented,
       ]
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
+      const imageUri = getImageUriFromMarkdownLine(line)
+
+      if (imageUri) {
+        return (
+          <View key={`rich-line-${index}`} style={styles.liveMarkdownImageBlock}>
+            <Image source={{ uri: imageUri }} style={styles.liveMarkdownImage} resizeMode="cover" />
+          </View>
+        )
+      }
 
       if (line === DIVIDER_TEXT) {
         return (
@@ -1502,7 +1596,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         <View style={styles.bottomSection}>
           {keyboardVisible ? (
             <View style={[styles.infoBlock, styles.infoBlockCompact]}>
-              <Text style={styles.infoCompactText}>{contentCharCount}字</Text>
+              <View style={styles.infoCompactLeft}>
+                <Icon name="chart" size={15} color={colors.neutral.gray50} />
+                <Text style={styles.infoCompactText}>{`${contentCharCount}\u5b57`}</Text>
+              </View>
               <View style={styles.historyActions}>
                 <Pressable
                   accessibilityRole="button"
@@ -1578,6 +1675,26 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+      <ActionSheet
+        visible={exitSheetVisible}
+        onClose={() => setExitSheetVisible(false)}
+        title="\u4fdd\u5b58\u9009\u9879"
+        items={[
+          {
+            key: 'draft',
+            label: '\u4fdd\u5b58\u5230\u8349\u7a3f\u7bb1',
+            onPress: handleSaveToDraft,
+          },
+          { key: 'save', label: '\u5b8c\u6210\u4fdd\u5b58', onPress: handleSave, disabled: saving },
+          {
+            key: 'discard',
+            label: '\u653e\u5f03\u4fdd\u5b58',
+            destructive: true,
+            onPress: handleDiscardAndBack,
+          },
+        ]}
+        cancelLabel="\u53d6\u6d88"
+      />
     </View>
   )
 }
