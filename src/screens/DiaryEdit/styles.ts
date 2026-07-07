@@ -87,6 +87,27 @@ export const styles = StyleSheet.create({
     textAlignVertical: 'top',
     backgroundColor: 'transparent',
   },
+  contentInputBold: {
+    fontWeight: '700',
+  },
+  contentInputItalic: {
+    fontStyle: 'italic',
+  },
+  contentInputCenter: {
+    textAlign: 'center',
+  },
+  contentInputQuoteOffset: {
+    paddingLeft: spacing.sm + 3,
+  },
+  contentInputIndentOffset: {
+    paddingLeft: spacing.xl,
+  },
+  contentInputListOffset: {
+    paddingLeft: 30,
+  },
+  contentInputListIndentOffset: {
+    paddingLeft: 30 + spacing.xl,
+  },
   liveMarkdownParagraph: {
     ...typography.bodyM,
     color: colors.semantic.text.primary,
@@ -97,6 +118,7 @@ export const styles = StyleSheet.create({
   },
   liveMarkdownItalic: {
     fontStyle: 'italic',
+    transform: [{ skewX: '-8deg' }],
   },
   liveMarkdownUnderline: {
     textDecorationLine: 'underline',
@@ -107,36 +129,6 @@ export const styles = StyleSheet.create({
   liveMarkdownLink: {
     color: colors.brand.primary,
     textDecorationLine: 'underline',
-  },
-  liveMarkdownHeading1: {
-    ...typography.titleL,
-    color: colors.semantic.text.primary,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  liveMarkdownHeading2: {
-    ...typography.titleM,
-    color: colors.semantic.text.primary,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  liveMarkdownHeading3: {
-    ...typography.titleS,
-    color: colors.semantic.text.primary,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  liveMarkdownFontIncrease: {
-    fontSize: typography.titleL.fontSize,
-    lineHeight: typography.titleL.lineHeight,
-    fontWeight: '700',
-  },
-  liveMarkdownFontDecrease: {
-    fontSize: typography.bodyS.fontSize,
-    lineHeight: typography.bodyS.lineHeight,
-  },
-  liveMarkdownInlineHeading: {
-    fontWeight: '700',
   },
   liveMarkdownIndented: {
     paddingLeft: spacing.xl,

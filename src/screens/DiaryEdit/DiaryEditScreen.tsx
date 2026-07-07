@@ -49,9 +49,6 @@ type DiaryTool =
   | 'italic'
   | 'underline'
   | 'strikethrough'
-  | 'fontIncrease'
-  | 'fontDecrease'
-  | 'heading'
   | 'indent'
   | 'alignCenter'
   | 'orderedList'
@@ -83,9 +80,7 @@ const TOOLBAR_ITEMS: ToolbarItem[] = [
   { key: 'italic', label: '斜体', type: 'text', text: 'I', textStyle: 'italic' },
   { key: 'underline', label: '下划线', type: 'text', text: 'U', textStyle: 'underline' },
   { key: 'strikethrough', label: '删除线', type: 'text', text: 'T', textStyle: 'strike' },
-  { key: 'fontIncrease', label: '字号增大', type: 'text', text: 'A+' },
-  { key: 'fontDecrease', label: '字号减小', type: 'text', text: 'A-' },
-  { key: 'heading', label: '整行变粗', type: 'text', text: 'H', textStyle: 'bold' },
+
   { key: 'indent', label: '缩进两字', type: 'text', text: '↦' },
   { key: 'alignCenter', label: '居中对齐', type: 'text', text: '☰' },
   { key: 'orderedList', label: '有序列表', type: 'text', text: '1.' },
@@ -102,9 +97,6 @@ const FORMAT_TOOLS: FormatTool[] = [
   'italic',
   'underline',
   'strikethrough',
-  'fontIncrease',
-  'fontDecrease',
-  'heading',
   'indent',
   'alignCenter',
   'orderedList',
@@ -243,6 +235,46 @@ const formatsAtPosition = (ranges: FormatRange[], position: number, textLength: 
 
 const lineHasFormat = (ranges: FormatRange[], start: number, end: number, format: FormatTool) =>
   ranges.some(range => range.start < end && range.end > start && range.formats.includes(format))
+
+const getCurrentLineRange = (text: string, position: number): TextSelection => {
+  const safePosition = Math.max(0, Math.min(position, text.length))
+  const lineStart = text.lastIndexOf('\n', Math.max(0, safePosition - 1)) + 1
+  const newlineIndex = text.indexOf('\n', safePosition)
+  const lineEnd = newlineIndex === -1 ? text.length : newlineIndex
+  return { start: lineStart, end: lineEnd }
+}
+
+const removeFormatFromSelection = (
+  ranges: FormatRange[],
+  selection: TextSelection,
+  format: FormatTool,
+  textLength: number,
+) => {
+  const normalized = normalizeSelection(selection, textLength)
+  if (normalized.end <= normalized.start) {
+    return ranges
+  }
+  const nextRanges: FormatRange[] = []
+  for (const range of ranges) {
+    if (range.end <= normalized.start || range.start >= normalized.end) {
+      nextRanges.push(range)
+      continue
+    }
+    if (range.start < normalized.start) {
+      nextRanges.push({ ...range, end: normalized.start })
+    }
+    const overlapStart = Math.max(range.start, normalized.start)
+    const overlapEnd = Math.min(range.end, normalized.end)
+    const formats = range.formats.filter(item => item !== format)
+    if (formats.length > 0) {
+      nextRanges.push({ start: overlapStart, end: overlapEnd, formats })
+    }
+    if (range.end > normalized.end) {
+      nextRanges.push({ ...range, start: normalized.end })
+    }
+  }
+  return clampRanges(nextRanges, textLength)
+}
 
 const toggleFormatForSelection = (
   ranges: FormatRange[],
@@ -423,17 +455,6 @@ const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
     if (/^---+$/.test(trimmed)) {
       line = DIVIDER_TEXT
     }
-    const headingMatch = /^(#{1,6})\s+(.*)$/.exec(line)
-    if (headingMatch) {
-      blockFormats.push(
-        headingMatch[1].length === 1
-          ? 'fontIncrease'
-          : headingMatch[1].length >= 6
-          ? 'fontDecrease'
-          : 'heading',
-      )
-      line = headingMatch[2]
-    }
     if (line.startsWith(INDENT_PREFIX)) {
       blockFormats.push('indent')
       line = line.slice(INDENT_PREFIX.length)
@@ -525,24 +546,17 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
         line === DIVIDER_TEXT
           ? '---'
           : serializeInline(doc.text, doc.ranges, lineStart, lineEnd) || line
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'indent')) {
-        output = `${INDENT_PREFIX}${output}`
-      }
       if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'unorderedList')) {
         output = `- ${output}`
       }
       if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'orderedList')) {
-        output = `${orderedIndex++}. ${output}`
+        output = `${pad2(orderedIndex++)}. ${output}`
       }
       if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'quote')) {
         output = `> ${output}`
       }
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'fontDecrease')) {
-        output = `###### ${output}`
-      } else if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'fontIncrease')) {
-        output = `# ${output}`
-      } else if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'heading')) {
-        output = `## ${output}`
+      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'indent')) {
+        output = `${INDENT_PREFIX}${output}`
       }
       if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'alignCenter')) {
         output = `::: center\n${output}\n:::`
@@ -708,8 +722,52 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     requestAnimationFrame(() => contentInputRef.current?.focus())
   }, [])
 
+  const toggleCurrentLineFormat = useCallback(
+    (format: FormatTool) => {
+      const selection = normalizeSelection(contentSelection, plainText.length)
+      const lineRange = getCurrentLineRange(plainText, selection.start)
+      if (lineRange.end <= lineRange.start) {
+        requestAnimationFrame(() => contentInputRef.current?.focus())
+        return
+      }
+
+      const currentlyApplied = lineHasFormat(formatRanges, lineRange.start, lineRange.end, format)
+      let nextRanges = currentlyApplied
+        ? removeFormatFromSelection(formatRanges, lineRange, format, plainText.length)
+        : formatRanges
+
+      if (!currentlyApplied) {
+        if (format === 'orderedList') {
+          nextRanges = removeFormatFromSelection(
+            nextRanges,
+            lineRange,
+            'unorderedList',
+            plainText.length,
+          )
+        } else if (format === 'unorderedList') {
+          nextRanges = removeFormatFromSelection(
+            nextRanges,
+            lineRange,
+            'orderedList',
+            plainText.length,
+          )
+        }
+        nextRanges = toggleFormatForSelection(nextRanges, lineRange, format, plainText.length)
+      }
+
+      syncRichDocument(plainText, nextRanges, selection)
+      requestAnimationFrame(() => contentInputRef.current?.focus())
+    },
+    [contentSelection, formatRanges, plainText, syncRichDocument],
+  )
+
   const handleToolPress = useCallback(
     (tool: DiaryTool) => {
+      if (tool === 'indent' || tool === 'orderedList' || tool === 'unorderedList') {
+        toggleCurrentLineFormat(tool)
+        return
+      }
+
       if (isFormatTool(tool)) {
         const selection = normalizeSelection(contentSelection, plainText.length)
         if (selection.end > selection.start) {
@@ -762,6 +820,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       formatRanges,
       insertPlainText,
       plainText,
+      toggleCurrentLineFormat,
       toggleFormatMode,
     ],
   )
@@ -776,6 +835,27 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       isFormatTool(tool) && (activeFormatState[tool] ?? selectionFormats.includes(tool)),
     [activeFormatState, selectionFormats],
   )
+
+  const contentInputStyles = useMemo(() => {
+    const activeFormats = FORMAT_TOOLS.filter(
+      tool => activeFormatState[tool] ?? selectionFormats.includes(tool),
+    )
+    return [
+      styles.contentInput,
+      activeFormats.includes('bold') && styles.contentInputBold,
+      activeFormats.includes('italic') && styles.contentInputItalic,
+      activeFormats.includes('alignCenter') && styles.contentInputCenter,
+      activeFormats.includes('quote') && styles.contentInputQuoteOffset,
+      activeFormats.includes('indent') &&
+        !activeFormats.includes('orderedList') &&
+        !activeFormats.includes('unorderedList') &&
+        styles.contentInputIndentOffset,
+      (activeFormats.includes('orderedList') || activeFormats.includes('unorderedList')) &&
+        (activeFormats.includes('indent')
+          ? styles.contentInputListIndentOffset
+          : styles.contentInputListOffset),
+    ]
+  }, [activeFormatState, selectionFormats])
 
   const contentCharCount = useMemo(() => countContentChars(plainText), [plainText])
 
@@ -807,9 +887,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               formats.includes('italic') && styles.liveMarkdownItalic,
               formats.includes('underline') && styles.liveMarkdownUnderline,
               formats.includes('strikethrough') && styles.liveMarkdownStrike,
-              formats.includes('fontIncrease') && styles.liveMarkdownFontIncrease,
-              formats.includes('fontDecrease') && styles.liveMarkdownFontDecrease,
-              formats.includes('heading') && styles.liveMarkdownInlineHeading,
             ]}
           >
             {segment}
@@ -838,12 +915,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         isCenter && styles.liveMarkdownCenter,
         lineHasFormat(formatRanges, lineStart, effectiveEnd, 'indent') &&
           styles.liveMarkdownIndented,
-        lineHasFormat(formatRanges, lineStart, effectiveEnd, 'fontIncrease') &&
-          styles.liveMarkdownHeading1,
-        lineHasFormat(formatRanges, lineStart, effectiveEnd, 'fontDecrease') &&
-          styles.liveMarkdownFontDecrease,
-        lineHasFormat(formatRanges, lineStart, effectiveEnd, 'heading') &&
-          styles.liveMarkdownHeading2,
       ]
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
 
@@ -851,7 +922,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return <View key={`rich-line-${index}`} style={styles.liveMarkdownDivider} />
       }
       if (isOrdered || isUnordered) {
-        const marker = isOrdered ? `${orderedIndex++}.` : '?'
+        const marker = isOrdered ? `${pad2(orderedIndex++)}.` : '\u2022'
         return (
           <View key={`rich-line-${index}`} style={styles.liveMarkdownListItem}>
             <Text style={[styles.liveMarkdownParagraph, styles.liveMarkdownListMarker]}>
@@ -1017,7 +1088,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               onSelectionChange={handleContentSelectionChange}
               onScroll={handleContentScroll}
               textAlignVertical="top"
-              style={styles.contentInput}
+              style={contentInputStyles}
               maxLength={EDITOR_LIMITS.CONTENT_MAX}
               selectionColor={colors.brand.primary}
               cursorColor={colors.brand.primary}
