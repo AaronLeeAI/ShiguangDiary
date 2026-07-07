@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
   type NativeSyntheticEvent,
+  type TextInputKeyPressEventData,
   type TextInputScrollEventData,
   type TextInputSelectionChangeEventData,
 } from 'react-native'
@@ -104,6 +105,14 @@ const FORMAT_TOOLS: FormatTool[] = [
   'quote',
 ]
 const INLINE_FORMAT_TOOLS: FormatTool[] = ['bold', 'italic', 'underline', 'strikethrough']
+const BLOCK_FORMAT_TOOLS: FormatTool[] = [
+  'indent',
+  'alignCenter',
+  'orderedList',
+  'unorderedList',
+  'quote',
+]
+const LIST_FORMAT_TOOLS: FormatTool[] = ['orderedList', 'unorderedList']
 const DIVIDER_TEXT = '---'
 
 const pad2 = (n: number) => `${n}`.padStart(2, '0')
@@ -160,6 +169,10 @@ const isFormatTool = (tool: DiaryTool): tool is FormatTool =>
 
 const isInlineFormatTool = (tool: FormatTool) => INLINE_FORMAT_TOOLS.includes(tool)
 
+const isBlockFormatTool = (tool: FormatTool) => BLOCK_FORMAT_TOOLS.includes(tool)
+
+const hasBlockFormat = (formats: FormatTool[]) => formats.some(isBlockFormatTool)
+
 const uniqueFormats = (formats: FormatTool[]) => FORMAT_TOOLS.filter(tool => formats.includes(tool))
 
 const sameFormats = (left: FormatTool[], right: FormatTool[]) => {
@@ -170,13 +183,22 @@ const sameFormats = (left: FormatTool[], right: FormatTool[]) => {
 
 const mergeRanges = (ranges: FormatRange[]) => {
   const sorted = ranges
-    .filter(range => range.end > range.start && range.formats.length > 0)
     .map(range => ({ ...range, formats: uniqueFormats(range.formats) }))
+    .filter(
+      range =>
+        range.formats.length > 0 && (range.end > range.start || hasBlockFormat(range.formats)),
+    )
     .sort((a, b) => a.start - b.start || a.end - b.end)
   const merged: FormatRange[] = []
   for (const range of sorted) {
     const previous = merged[merged.length - 1]
-    if (previous && previous.end === range.start && sameFormats(previous.formats, range.formats)) {
+    if (
+      previous &&
+      previous.end > previous.start &&
+      range.end > range.start &&
+      previous.end === range.start &&
+      sameFormats(previous.formats, range.formats)
+    ) {
       previous.end = range.end
     } else {
       merged.push({ ...range })
@@ -193,7 +215,7 @@ const clampRanges = (ranges: FormatRange[], max: number) =>
         end: Math.max(0, Math.min(range.end, max)),
         formats: range.formats,
       }))
-      .filter(range => range.end > range.start),
+      .filter(range => range.end > range.start || hasBlockFormat(range.formats)),
   )
 
 const rangeContainsFormat = (
@@ -225,16 +247,31 @@ const getFormatsForSpan = (ranges: FormatRange[], start: number, end: number) =>
     ranges.filter(range => range.start < end && range.end > start).flatMap(range => range.formats),
   )
 
+const zeroLengthFormatsAtPosition = (ranges: FormatRange[], position: number) =>
+  ranges
+    .filter(range => range.start === position && range.end === range.start)
+    .flatMap(range => range.formats)
+
 const formatsAtPosition = (ranges: FormatRange[], position: number, textLength: number) => {
+  const safePosition = Math.max(0, Math.min(position, textLength))
+  const zeroFormats = zeroLengthFormatsAtPosition(ranges, safePosition)
   if (textLength <= 0) {
-    return []
+    return uniqueFormats(zeroFormats)
   }
-  const index = Math.max(0, Math.min(textLength - 1, position > 0 ? position - 1 : 0))
-  return getFormatsForSpan(ranges, index, index + 1)
+  const index = Math.max(
+    0,
+    Math.min(textLength - 1, safePosition < textLength ? safePosition : safePosition - 1),
+  )
+  return uniqueFormats([...getFormatsForSpan(ranges, index, index + 1), ...zeroFormats])
 }
 
 const lineHasFormat = (ranges: FormatRange[], start: number, end: number, format: FormatTool) =>
-  ranges.some(range => range.start < end && range.end > start && range.formats.includes(format))
+  ranges.some(
+    range =>
+      range.formats.includes(format) &&
+      ((range.end > range.start && range.start < end && range.end > start) ||
+        (range.end === range.start && range.start === start)),
+  )
 
 const getCurrentLineRange = (text: string, position: number): TextSelection => {
   const safePosition = Math.max(0, Math.min(position, text.length))
@@ -244,6 +281,18 @@ const getCurrentLineRange = (text: string, position: number): TextSelection => {
   return { start: lineStart, end: lineEnd }
 }
 
+const getLineEffectiveEnd = (lineRange: TextSelection) =>
+  lineRange.end > lineRange.start ? lineRange.end : lineRange.start + 1
+
+const getLineListFormat = (ranges: FormatRange[], lineRange: TextSelection) =>
+  LIST_FORMAT_TOOLS.find(format =>
+    lineHasFormat(ranges, lineRange.start, getLineEffectiveEnd(lineRange), format),
+  )
+
+const hasRenderableRichContent = (text: string, ranges: FormatRange[]) =>
+  text.length > 0 ||
+  ranges.some(range => range.end === range.start && hasBlockFormat(range.formats))
+
 const removeFormatFromSelection = (
   ranges: FormatRange[],
   selection: TextSelection,
@@ -251,11 +300,23 @@ const removeFormatFromSelection = (
   textLength: number,
 ) => {
   const normalized = normalizeSelection(selection, textLength)
-  if (normalized.end <= normalized.start) {
-    return ranges
-  }
   const nextRanges: FormatRange[] = []
   for (const range of ranges) {
+    if (range.end === range.start) {
+      if (range.start === normalized.start) {
+        const formats = range.formats.filter(item => item !== format)
+        if (formats.length > 0) {
+          nextRanges.push({ ...range, formats })
+        }
+      } else {
+        nextRanges.push(range)
+      }
+      continue
+    }
+    if (normalized.end <= normalized.start) {
+      nextRanges.push(range)
+      continue
+    }
     if (range.end <= normalized.start || range.start >= normalized.end) {
       nextRanges.push(range)
       continue
@@ -351,7 +412,21 @@ const updateRangesForTextChange = (
   const delta = diff.insertedLength - (diff.previousEnd - diff.start)
   const nextRanges: FormatRange[] = []
   for (const range of ranges) {
-    if (range.end <= diff.start) {
+    if (range.end === range.start) {
+      if (
+        diff.previousEnd > diff.start &&
+        range.start > diff.start &&
+        range.start <= diff.previousEnd
+      ) {
+        continue
+      }
+      if (range.start > diff.start) {
+        const nextPosition = range.start + delta
+        nextRanges.push({ ...range, start: nextPosition, end: nextPosition })
+      } else {
+        nextRanges.push(range)
+      }
+    } else if (range.end <= diff.start) {
       nextRanges.push(range)
     } else if (range.start >= diff.previousEnd) {
       nextRanges.push({ ...range, start: range.start + delta, end: range.end + delta })
@@ -483,6 +558,9 @@ const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
         formats: range.formats,
       })),
     )
+    if (parsed.text.length === 0 && blockFormats.length > 0) {
+      ranges.push({ start: lineStart, end: lineStart, formats: blockFormats })
+    }
     if (lineIndex < lines.length - 1) {
       textParts.push('\n')
     }
@@ -688,21 +766,96 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const handleContentChange = useCallback(
     (nextText: string) => {
       const diff = getTextDiff(plainText, nextText)
+      const deletedText = plainText.slice(diff.start, diff.previousEnd)
+      const deletedOnlyPreviousNewline = diff.insertedLength === 0 && deletedText === '\n'
+
+      if (deletedOnlyPreviousNewline) {
+        const emptyLineRange = getCurrentLineRange(plainText, diff.previousEnd)
+        const isEmptyListLine =
+          emptyLineRange.start === diff.previousEnd && emptyLineRange.end === emptyLineRange.start
+        const listFormat = isEmptyListLine ? getLineListFormat(formatRanges, emptyLineRange) : null
+        if (listFormat) {
+          const nextRanges = removeFormatFromSelection(
+            formatRanges,
+            emptyLineRange,
+            listFormat,
+            plainText.length,
+          )
+          syncRichDocument(plainText, nextRanges, emptyLineRange)
+          return
+        }
+      }
+
       const insertionFormats = insertionFormatsFromState(
         activeFormatState,
         formatRanges,
         diff.start,
         plainText.length,
       )
-      const nextRanges = updateRangesForTextChange(
+      let nextRanges = updateRangesForTextChange(
         formatRanges,
         diff,
         insertionFormats,
         nextText.length,
       )
+      const insertedText = nextText.slice(diff.start, diff.nextEnd)
+
+      if (insertedText === '\n') {
+        const previousLineRange = getCurrentLineRange(plainText, diff.start)
+        const listFormat = getLineListFormat(formatRanges, previousLineRange)
+        if (listFormat) {
+          const newLineStart = diff.start + 1
+          nextRanges = clampRanges(
+            [...nextRanges, { start: newLineStart, end: newLineStart, formats: [listFormat] }],
+            nextText.length,
+          )
+        }
+      } else if (diff.insertedLength === 0 && diff.previousEnd > diff.start) {
+        const previousLineRange = getCurrentLineRange(plainText, diff.start)
+        const listFormat = getLineListFormat(formatRanges, previousLineRange)
+        const nextLineRange = getCurrentLineRange(nextText, diff.start)
+        if (listFormat && nextLineRange.end <= nextLineRange.start) {
+          nextRanges = clampRanges(
+            [
+              ...nextRanges,
+              { start: nextLineRange.start, end: nextLineRange.start, formats: [listFormat] },
+            ],
+            nextText.length,
+          )
+        }
+      }
+
       syncRichDocument(nextText, nextRanges, { start: diff.nextEnd, end: diff.nextEnd })
     },
     [activeFormatState, formatRanges, plainText, syncRichDocument],
+  )
+
+  const handleContentKeyPress = useCallback(
+    (event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+      if (event.nativeEvent.key !== 'Backspace') {
+        return
+      }
+      const selection = normalizeSelection(contentSelection, plainText.length)
+      if (selection.start !== selection.end) {
+        return
+      }
+      const lineRange = getCurrentLineRange(plainText, selection.start)
+      if (lineRange.start !== 0 || lineRange.end > lineRange.start) {
+        return
+      }
+      const listFormat = getLineListFormat(formatRanges, lineRange)
+      if (!listFormat) {
+        return
+      }
+      const nextRanges = removeFormatFromSelection(
+        formatRanges,
+        lineRange,
+        listFormat,
+        plainText.length,
+      )
+      syncRichDocument(plainText, nextRanges, selection)
+    },
+    [contentSelection, formatRanges, plainText, syncRichDocument],
   )
 
   const applyFormatToSelectedText = useCallback(
@@ -726,12 +879,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     (format: FormatTool) => {
       const selection = normalizeSelection(contentSelection, plainText.length)
       const lineRange = getCurrentLineRange(plainText, selection.start)
-      if (lineRange.end <= lineRange.start) {
-        requestAnimationFrame(() => contentInputRef.current?.focus())
-        return
-      }
-
-      const currentlyApplied = lineHasFormat(formatRanges, lineRange.start, lineRange.end, format)
+      const effectiveEnd = getLineEffectiveEnd(lineRange)
+      const currentlyApplied = lineHasFormat(formatRanges, lineRange.start, effectiveEnd, format)
       let nextRanges = currentlyApplied
         ? removeFormatFromSelection(formatRanges, lineRange, format, plainText.length)
         : formatRanges
@@ -752,7 +901,17 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             plainText.length,
           )
         }
-        nextRanges = toggleFormatForSelection(nextRanges, lineRange, format, plainText.length)
+
+        nextRanges =
+          lineRange.end > lineRange.start
+            ? toggleFormatForSelection(nextRanges, lineRange, format, plainText.length)
+            : clampRanges(
+                [
+                  ...nextRanges,
+                  { start: lineRange.start, end: lineRange.start, formats: [format] },
+                ],
+                plainText.length,
+              )
       }
 
       syncRichDocument(plainText, nextRanges, selection)
@@ -1072,7 +1231,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               contentContainerStyle={styles.livePreviewContent}
               importantForAccessibility="no-hide-descendants"
             >
-              {plainText ? (
+              {hasRenderableRichContent(plainText, formatRanges) ? (
                 renderRichTextBlocks()
               ) : (
                 <Text style={styles.livePlaceholder}>请输入...</Text>
@@ -1086,6 +1245,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               multiline
               selection={contentSelection}
               onSelectionChange={handleContentSelectionChange}
+              onKeyPress={handleContentKeyPress}
               onScroll={handleContentScroll}
               textAlignVertical="top"
               style={contentInputStyles}
