@@ -141,6 +141,7 @@ export const styles = StyleSheet.create({
   },
   liveMarkdownImageBlock: {
     width: '100%',
+    alignSelf: 'stretch',
     height: 168,
     borderRadius: 12,
     overflow: 'hidden',
@@ -150,6 +151,16 @@ export const styles = StyleSheet.create({
   liveMarkdownImage: {
     width: '100%',
     height: '100%',
+  },
+  liveMarkdownImageCaretLine: {
+    minHeight: typography.bodyM.lineHeight,
+    justifyContent: 'center',
+  },
+  liveMarkdownFakeCaret: {
+    width: 2,
+    height: typography.bodyM.lineHeight - 4,
+    borderRadius: 1,
+    backgroundColor: colors.neutral.black,
   },
   liveMarkdownDivider: {
     height: StyleSheet.hairlineWidth,

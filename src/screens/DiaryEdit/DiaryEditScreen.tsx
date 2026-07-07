@@ -23,7 +23,11 @@ import {
   type TextInputSelectionChangeEventData,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Geolocation from '@react-native-community/geolocation'
+import Geolocation, {
+  type GeolocationError,
+  type GeolocationOptions,
+  type GeolocationResponse,
+} from '@react-native-community/geolocation'
 import { launchImageLibrary, type Asset } from 'react-native-image-picker'
 
 import { ActionSheet } from '@/components/ActionSheet'
@@ -131,6 +135,12 @@ const EMPTY_LINE_CANCEL_FORMATS: FormatTool[] = [
 const CONTINUED_EMPTY_LINE_FORMATS: FormatTool[] = ['orderedList', 'unorderedList', 'indent']
 const DIVIDER_TEXT = '---'
 const IMAGE_MARKDOWN_LINE = /^!\[([^\]]*)\]\(([^)]+)\)$/
+const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
+const IMAGE_LAYOUT_SPACER_LINES = 7
+const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
+  { length: IMAGE_LAYOUT_SPACER_LINES },
+  () => IMAGE_LAYOUT_SPACER_LINE,
+).join('\n')
 
 const pad2 = (n: number) => `${n}`.padStart(2, '0')
 
@@ -147,6 +157,11 @@ const formatInsertTime = (date: Date) =>
 const getImageUriFromMarkdownLine = (line: string) => IMAGE_MARKDOWN_LINE.exec(line.trim())?.[2]
 
 const createImageMarkdownLine = (asset: Asset, index: number) => `![图片${index + 1}](${asset.uri})`
+
+const createImageEditorBlock = (asset: Asset, index: number) =>
+  `${createImageMarkdownLine(asset, index)}\n${IMAGE_LAYOUT_SPACER_BLOCK}`
+
+const isImageLayoutSpacerLine = (line: string) => line === IMAGE_LAYOUT_SPACER_LINE
 
 const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
   const start = Math.max(0, Math.min(selection.start, max))
@@ -339,6 +354,88 @@ const getContinuedEmptyLineFormats = (ranges: FormatRange[], lineRange: TextSele
 
 const getLineText = (text: string, lineRange: TextSelection) =>
   text.slice(lineRange.start, lineRange.end)
+
+const getNextLineRange = (text: string, lineRange: TextSelection): TextSelection | null => {
+  if (lineRange.end >= text.length || text[lineRange.end] !== '\n') {
+    return null
+  }
+  const nextStart = lineRange.end + 1
+  const nextNewline = text.indexOf('\n', nextStart)
+  return { start: nextStart, end: nextNewline === -1 ? text.length : nextNewline }
+}
+
+const getPreviousLineRange = (text: string, lineRange: TextSelection): TextSelection | null => {
+  if (lineRange.start <= 0 || text[lineRange.start - 1] !== '\n') {
+    return null
+  }
+  const previousEnd = lineRange.start - 1
+  const previousStart = text.lastIndexOf('\n', Math.max(0, previousEnd - 1)) + 1
+  return { start: previousStart, end: previousEnd }
+}
+
+const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) => {
+  const lineText = getLineText(text, lineRange)
+  if (getImageUriFromMarkdownLine(lineText)) {
+    return lineRange
+  }
+  if (!isImageLayoutSpacerLine(lineText)) {
+    return null
+  }
+
+  let current: TextSelection | null = lineRange
+  while (current) {
+    const previous = getPreviousLineRange(text, current)
+    if (!previous) {
+      return null
+    }
+    const previousText = getLineText(text, previous)
+    if (getImageUriFromMarkdownLine(previousText)) {
+      return previous
+    }
+    if (!isImageLayoutSpacerLine(previousText)) {
+      return null
+    }
+    current = previous
+  }
+  return null
+}
+
+const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelection) => {
+  let current = imageLineRange
+  let next = getNextLineRange(text, current)
+  while (next && isImageLayoutSpacerLine(getLineText(text, next))) {
+    current = next
+    next = getNextLineRange(text, current)
+  }
+  return next ? next.start : current.end
+}
+
+const snapSelectionAwayFromImageLayout = (selection: TextSelection, text: string) => {
+  const normalized = normalizeSelection(selection, text.length)
+  if (normalized.start !== normalized.end) {
+    return normalized
+  }
+  const lineRange = getCurrentLineRange(text, normalized.start)
+  const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
+  if (!imageLineRange) {
+    return normalized
+  }
+  const cursor = getCursorAfterImageLayoutBlock(text, imageLineRange)
+  return { start: cursor, end: cursor }
+}
+
+const shouldRenderImageSafeCaret = (text: string, selection: TextSelection) => {
+  const normalized = normalizeSelection(selection, text.length)
+  if (normalized.start !== normalized.end) {
+    return false
+  }
+  const lineRange = getCurrentLineRange(text, normalized.start)
+  if (lineRange.start !== lineRange.end || lineRange.start !== normalized.start) {
+    return false
+  }
+  const previous = getPreviousLineRange(text, lineRange)
+  return !!previous && isImageLayoutSpacerLine(getLineText(text, previous))
+}
 
 const findDividerLineForDeletion = (
   text: string,
@@ -626,9 +723,15 @@ const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
     const imageUri = getImageUriFromMarkdownLine(line)
     if (imageUri) {
       textParts.push(line)
+      if (IMAGE_LAYOUT_SPACER_BLOCK) {
+        textParts.push('\n', IMAGE_LAYOUT_SPACER_BLOCK)
+      }
       if (lineIndex < lines.length - 1) {
         textParts.push('\n')
       }
+      continue
+    }
+    if (isImageLayoutSpacerLine(line)) {
       continue
     }
     if (line.startsWith(INDENT_PREFIX)) {
@@ -713,39 +816,76 @@ const serializeInline = (text: string, ranges: FormatRange[], start: number, end
 
 const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
   const lines = doc.text.split('\n')
+  const outputLines: string[] = []
   let offset = 0
   let orderedIndex = 1
-  return lines
-    .map(line => {
-      const lineStart = offset
-      const lineEnd = lineStart + line.length
-      const effectiveEnd = Math.max(lineEnd, lineStart + 1)
-      offset = lineEnd + 1
-      let output =
-        line === DIVIDER_TEXT || getImageUriFromMarkdownLine(line)
-          ? line
-          : serializeInline(doc.text, doc.ranges, lineStart, lineEnd) || line
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'unorderedList')) {
-        output = `- ${output}`
-      }
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'orderedList')) {
-        output = `${pad2(orderedIndex++)}. ${output}`
-      }
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'quote')) {
-        output = `> ${output}`
-      }
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'indent')) {
-        output = `${INDENT_PREFIX}${output}`
-      }
-      if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'alignCenter')) {
-        output = `::: center\n${output}\n:::`
-      }
-      return output
-    })
-    .join('\n')
+
+  lines.forEach(line => {
+    const lineStart = offset
+    const lineEnd = lineStart + line.length
+    const effectiveEnd = Math.max(lineEnd, lineStart + 1)
+    offset = lineEnd + 1
+
+    if (isImageLayoutSpacerLine(line)) {
+      return
+    }
+
+    let output =
+      line === DIVIDER_TEXT || getImageUriFromMarkdownLine(line)
+        ? line
+        : serializeInline(doc.text, doc.ranges, lineStart, lineEnd) || line
+    if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'unorderedList')) {
+      output = `- ${output}`
+    }
+    if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'orderedList')) {
+      output = `${pad2(orderedIndex++)}. ${output}`
+    }
+    if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'quote')) {
+      output = `> ${output}`
+    }
+    if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'indent')) {
+      output = `${INDENT_PREFIX}${output}`
+    }
+    if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'alignCenter')) {
+      output = `::: center\n${output}\n:::`
+    }
+    outputLines.push(output)
+  })
+
+  return outputLines.join('\n')
 }
 
-const countContentChars = (text: string) => text.replace(/\s/g, '').length
+const countContentChars = (text: string) =>
+  text.replace(new RegExp(IMAGE_LAYOUT_SPACER_LINE, 'g'), '').replace(/\s/g, '').length
+
+const getCurrentPositionAsync = (options: GeolocationOptions) =>
+  new Promise<GeolocationResponse>((resolve, reject) => {
+    Geolocation.getCurrentPosition(resolve, reject, options)
+  })
+
+const isGeolocationError = (error: unknown): error is GeolocationError =>
+  typeof error === 'object' && error !== null && 'code' in error && 'message' in error
+
+const isPermissionDeniedLocationError = (error: unknown) =>
+  isGeolocationError(error) && error.code === error.PERMISSION_DENIED
+
+const getLocationErrorMessage = (error: unknown) => {
+  if (isPermissionDeniedLocationError(error)) {
+    return '定位权限未开启，请在系统设置中允许定位'
+  }
+  if (isGeolocationError(error)) {
+    if (error.code === error.TIMEOUT) {
+      return '定位超时，请确认 GPS 或网络定位已开启后重试'
+    }
+    if (error.code === error.POSITION_UNAVAILABLE) {
+      return '暂时无法获取当前位置，请检查 GPS 或网络定位'
+    }
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+  return '定位失败，请检查定位权限、GPS 或网络定位'
+}
 
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
@@ -777,6 +917,16 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [locating, setLocating] = useState(false)
   const allowLeaveRef = useRef(false)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
+  const hasEditableContent = useCallback(() => {
+    if (!hydrated) {
+      return true
+    }
+    const textWithoutLayoutSpacers = plainText.replace(
+      new RegExp(IMAGE_LAYOUT_SPACER_LINE, 'g'),
+      '',
+    )
+    return title.trim().length > 0 || textWithoutLayoutSpacers.trim().length > 0
+  }, [hydrated, plainText, title])
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true))
@@ -789,17 +939,30 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     }
   }, [])
 
+  useEffect(() => {
+    Geolocation.setRNConfiguration({
+      skipPermissionRequests: false,
+      authorizationLevel: 'whenInUse',
+      locationProvider: 'auto',
+    })
+  }, [])
+
   useEffect(
     () =>
       navigation.addListener('beforeRemove', event => {
         if (allowLeaveRef.current) {
           return
         }
+        if (!hasEditableContent()) {
+          allowLeaveRef.current = true
+          discard()
+          return
+        }
         event.preventDefault()
         Keyboard.dismiss()
         setExitSheetVisible(true)
       }),
-    [navigation],
+    [discard, hasEditableContent, navigation],
   )
 
   const refreshHistoryStatus = useCallback(() => {
@@ -872,8 +1035,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handleBack = useCallback(() => {
     Keyboard.dismiss()
+    if (!hasEditableContent()) {
+      allowLeaveRef.current = true
+      discard()
+      navigation.goBack()
+      return
+    }
     setExitSheetVisible(true)
-  }, [])
+  }, [discard, hasEditableContent, navigation])
 
   const handleSaveToDraft = useCallback(() => {
     allowLeaveRef.current = true
@@ -912,16 +1081,16 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       return true
     }
 
-    const granted = await PermissionsAndroid.request(
+    const granted = await PermissionsAndroid.requestMultiple([
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: '定位权限',
-        message: '需要获取当前位置用于日记定位',
-        buttonPositive: '允许',
-        buttonNegative: '取消',
-      },
+      PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+    ])
+    return (
+      granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] ===
+        PermissionsAndroid.RESULTS.GRANTED ||
+      granted[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] ===
+        PermissionsAndroid.RESULTS.GRANTED
     )
-    return granted === PermissionsAndroid.RESULTS.GRANTED
   }, [])
 
   const handleFetchLocation = useCallback(async () => {
@@ -937,41 +1106,54 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       if (!hasPermission) {
         setLocationLabel(DEFAULT_LOCATION)
         toast.info('未授予定位权限')
-        setLocating(false)
         return
       }
 
-      Geolocation.getCurrentPosition(
-        position => {
-          const { latitude, longitude, accuracy } = position.coords
-          const accuracyText = Number.isFinite(accuracy) ? ` · ±${Math.round(accuracy)}m` : ''
-          setLocationLabel(`GPS ${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracyText}`)
-          toast.success('已获取当前位置')
-          setLocating(false)
-        },
-        errorInfo => {
-          setLocationLabel(DEFAULT_LOCATION)
-          toast.error(errorInfo.message || '定位失败，请检查定位权限或 GPS')
-          setLocating(false)
-        },
-        {
+      let position: GeolocationResponse
+      try {
+        position = await getCurrentPositionAsync({
           enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 10000,
-        },
-      )
+          timeout: 30000,
+          maximumAge: 60000,
+        })
+      } catch (primaryError) {
+        if (isPermissionDeniedLocationError(primaryError)) {
+          throw primaryError
+        }
+        toast.info('GPS 定位较慢，正在尝试网络定位')
+        position = await getCurrentPositionAsync({
+          enableHighAccuracy: false,
+          timeout: 20000,
+          maximumAge: 300000,
+        })
+      }
+
+      const { latitude, longitude, accuracy } = position.coords
+      const accuracyText = Number.isFinite(accuracy) ? ` \u00B7 \u00B1${Math.round(accuracy)}m` : ''
+      setLocationLabel(`GPS ${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracyText}`)
+      toast.success('已获取当前位置')
     } catch (err) {
       setLocationLabel(DEFAULT_LOCATION)
-      toast.error(err instanceof Error ? err.message : '定位失败，请检查定位权限或 GPS')
+      toast.error(getLocationErrorMessage(err))
+    } finally {
       setLocating(false)
     }
   }, [locating, requestLocationPermission])
 
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
-      setContentSelection(event.nativeEvent.selection)
+      const selection = snapSelectionAwayFromImageLayout(event.nativeEvent.selection, plainText)
+      setContentSelection(selection)
+      if (
+        selection.start !== event.nativeEvent.selection.start ||
+        selection.end !== event.nativeEvent.selection.end
+      ) {
+        requestAnimationFrame(() => {
+          contentInputRef.current?.setNativeProps({ selection })
+        })
+      }
     },
-    [],
+    [plainText],
   )
 
   const handleContentScroll = useCallback(
@@ -1074,7 +1256,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const selection = normalizeSelection(contentSelection, plainText.length)
       const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
       const suffix = '\n'
-      const markdown = assets.map(createImageMarkdownLine).join('\n')
+      const markdown = assets.map(createImageEditorBlock).join('\n')
       insertPlainText(`${prefix}${markdown}${suffix}`, [])
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '图片选择失败')
@@ -1401,6 +1583,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   }, [activeFormatState, selectionFormats])
 
   const contentCharCount = useMemo(() => countContentChars(plainText), [plainText])
+  const imageSafeCaretVisible = useMemo(
+    () => shouldRenderImageSafeCaret(plainText, contentSelection),
+    [contentSelection, plainText],
+  )
 
   const renderRichInline = useCallback(
     (line: string, lineStart: number) => {
@@ -1462,6 +1648,28 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
       const imageUri = getImageUriFromMarkdownLine(line)
 
+      if (isImageLayoutSpacerLine(line)) {
+        return null
+      }
+
+      const previousLineRange = getPreviousLineRange(plainText, {
+        start: lineStart,
+        end: lineEnd,
+      })
+      if (
+        imageSafeCaretVisible &&
+        !line &&
+        contentSelection.start === lineStart &&
+        previousLineRange &&
+        isImageLayoutSpacerLine(getLineText(plainText, previousLineRange))
+      ) {
+        return (
+          <View key={`rich-line-${index}`} style={styles.liveMarkdownImageCaretLine}>
+            <View style={styles.liveMarkdownFakeCaret} />
+          </View>
+        )
+      }
+
       if (imageUri) {
         return (
           <View key={`rich-line-${index}`} style={styles.liveMarkdownImageBlock}>
@@ -1507,7 +1715,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         </Text>
       )
     })
-  }, [formatRanges, plainText, renderRichInline])
+  }, [contentSelection.start, formatRanges, imageSafeCaretVisible, plainText, renderRichInline])
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -1647,6 +1855,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               placeholder=""
               multiline
               selection={contentSelection}
+              caretHidden={imageSafeCaretVisible}
               onSelectionChange={handleContentSelectionChange}
               onKeyPress={handleContentKeyPress}
               onScroll={handleContentScroll}
