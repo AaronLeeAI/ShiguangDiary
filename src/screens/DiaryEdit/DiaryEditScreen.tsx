@@ -32,8 +32,8 @@ import { styles } from './styles'
 import type { DiaryEditScreenProps } from './types'
 
 const TITLE_MAX_LENGTH = 32
-const DEFAULT_LOCATION = '陕西省西安市长安区东三街268号靠近万科城润园'
-const DEFAULT_WEATHER = '多云 30°C'
+const DEFAULT_LOCATION = '\u672a\u83b7\u53d6\u5f53\u524d\u4f4d\u7f6e'
+const DEFAULT_WEATHER = '\u672a\u83b7\u53d6\u5f53\u524d\u5929\u6c14'
 const DEFAULT_SELECTION = { start: 0, end: 0 }
 const INDENT_PREFIX = '\u3000\u3000'
 
@@ -781,7 +781,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             listFormat,
             plainText.length,
           )
+          setActiveFormatState(current => ({
+            ...current,
+            orderedList: false,
+            unorderedList: false,
+          }))
           syncRichDocument(plainText, nextRanges, emptyLineRange)
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection: emptyLineRange })
+          })
           return
         }
       }
@@ -853,7 +861,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         listFormat,
         plainText.length,
       )
+      setActiveFormatState(current => ({
+        ...current,
+        orderedList: false,
+        unorderedList: false,
+      }))
       syncRichDocument(plainText, nextRanges, selection)
+      requestAnimationFrame(() => {
+        contentInputRef.current?.setNativeProps({ selection })
+      })
     },
     [contentSelection, formatRanges, plainText, syncRichDocument],
   )
@@ -1250,8 +1266,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               textAlignVertical="top"
               style={contentInputStyles}
               maxLength={EDITOR_LIMITS.CONTENT_MAX}
-              selectionColor={colors.brand.primary}
-              cursorColor={colors.brand.primary}
             />
           </Pressable>
         </View>

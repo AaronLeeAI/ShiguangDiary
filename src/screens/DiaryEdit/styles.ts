@@ -111,7 +111,6 @@ export const styles = StyleSheet.create({
   liveMarkdownParagraph: {
     ...typography.bodyM,
     color: colors.semantic.text.primary,
-    marginBottom: spacing.xs,
   },
   liveMarkdownBold: {
     fontWeight: '700',
