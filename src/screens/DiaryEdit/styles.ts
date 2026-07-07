@@ -126,6 +126,21 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: spacing.xs,
   },
+  liveMarkdownFontIncrease: {
+    fontSize: typography.titleL.fontSize,
+    lineHeight: typography.titleL.lineHeight,
+    fontWeight: '700',
+  },
+  liveMarkdownFontDecrease: {
+    fontSize: typography.bodyS.fontSize,
+    lineHeight: typography.bodyS.lineHeight,
+  },
+  liveMarkdownInlineHeading: {
+    fontWeight: '700',
+  },
+  liveMarkdownIndented: {
+    paddingLeft: spacing.xl,
+  },
   liveMarkdownCenter: {
     textAlign: 'center',
   },
@@ -196,7 +211,7 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
   },
   toolbarButtonActive: {
-    backgroundColor: colors.semantic.bg.subtle,
+    backgroundColor: colors.brand.primary + '1A',
   },
   toolbarButtonPressed: {
     backgroundColor: colors.semantic.bg.subtle,
@@ -219,7 +234,7 @@ export const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   toolbarTextActive: {
-    color: colors.neutral.gray70,
+    color: colors.brand.primary,
   },
 })
 
