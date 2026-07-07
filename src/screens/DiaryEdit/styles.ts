@@ -103,10 +103,10 @@ export const styles = StyleSheet.create({
     paddingLeft: spacing.xl,
   },
   contentInputListOffset: {
-    paddingLeft: 30,
+    paddingLeft: 34,
   },
   contentInputListIndentOffset: {
-    paddingLeft: 30 + spacing.xl,
+    paddingLeft: 34 + spacing.xl,
   },
   liveMarkdownParagraph: {
     ...typography.bodyM,
@@ -155,7 +155,7 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   liveMarkdownListMarker: {
-    width: 30,
+    width: 34,
     color: colors.semantic.text.secondary,
   },
   liveMarkdownListText: {

@@ -113,6 +113,14 @@ const BLOCK_FORMAT_TOOLS: FormatTool[] = [
   'quote',
 ]
 const LIST_FORMAT_TOOLS: FormatTool[] = ['orderedList', 'unorderedList']
+const EMPTY_LINE_CANCEL_FORMATS: FormatTool[] = [
+  'orderedList',
+  'unorderedList',
+  'indent',
+  'alignCenter',
+  'quote',
+]
+const CONTINUED_EMPTY_LINE_FORMATS: FormatTool[] = ['orderedList', 'unorderedList', 'indent']
 const DIVIDER_TEXT = '---'
 
 const pad2 = (n: number) => `${n}`.padStart(2, '0')
@@ -284,10 +292,40 @@ const getCurrentLineRange = (text: string, position: number): TextSelection => {
 const getLineEffectiveEnd = (lineRange: TextSelection) =>
   lineRange.end > lineRange.start ? lineRange.end : lineRange.start + 1
 
-const getLineListFormat = (ranges: FormatRange[], lineRange: TextSelection) =>
-  LIST_FORMAT_TOOLS.find(format =>
+const getFirstLineFormat = (
+  ranges: FormatRange[],
+  lineRange: TextSelection,
+  formats: FormatTool[],
+) =>
+  formats.find(format =>
     lineHasFormat(ranges, lineRange.start, getLineEffectiveEnd(lineRange), format),
   )
+
+const getLineFormats = (ranges: FormatRange[], lineRange: TextSelection, formats: FormatTool[]) =>
+  formats.filter(format =>
+    lineHasFormat(ranges, lineRange.start, getLineEffectiveEnd(lineRange), format),
+  )
+
+const getLineCancelableFormat = (ranges: FormatRange[], lineRange: TextSelection) =>
+  getFirstLineFormat(ranges, lineRange, EMPTY_LINE_CANCEL_FORMATS)
+
+const getContinuedEmptyLineFormats = (ranges: FormatRange[], lineRange: TextSelection) =>
+  getLineFormats(ranges, lineRange, CONTINUED_EMPTY_LINE_FORMATS)
+
+const removeFormatFromPreviousLineBreak = (
+  ranges: FormatRange[],
+  lineRange: TextSelection,
+  format: FormatTool,
+  textLength: number,
+) =>
+  lineRange.start > 0
+    ? removeFormatFromSelection(
+        ranges,
+        { start: lineRange.start - 1, end: lineRange.start },
+        format,
+        textLength,
+      )
+    : ranges
 
 const hasRenderableRichContent = (text: string, ranges: FormatRange[]) =>
   text.length > 0 ||
@@ -400,7 +438,9 @@ const insertionFormatsFromState = (
   textLength: number,
 ) => {
   const inherited = formatsAtPosition(ranges, position, textLength)
-  return FORMAT_TOOLS.filter(tool => state[tool] ?? inherited.includes(tool))
+  return FORMAT_TOOLS.filter(tool =>
+    isBlockFormatTool(tool) ? inherited.includes(tool) : state[tool] ?? inherited.includes(tool),
+  )
 }
 
 const updateRangesForTextChange = (
@@ -692,6 +732,21 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [setContent],
   )
 
+  const clearBlockFormatState = useCallback((format?: FormatTool) => {
+    setActiveFormatState(current => {
+      const next: FormatState = { ...current }
+      const formats = format
+        ? LIST_FORMAT_TOOLS.includes(format)
+          ? LIST_FORMAT_TOOLS
+          : [format]
+        : BLOCK_FORMAT_TOOLS
+      formats.forEach(item => {
+        delete next[item]
+      })
+      return next
+    })
+  }, [])
+
   // 退出时统一走 editor.exit（处理草稿）
   const handleBack = useCallback(() => {
     exit()
@@ -771,21 +826,19 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       if (deletedOnlyPreviousNewline) {
         const emptyLineRange = getCurrentLineRange(plainText, diff.previousEnd)
-        const isEmptyListLine =
+        const isEmptyFormattedLine =
           emptyLineRange.start === diff.previousEnd && emptyLineRange.end === emptyLineRange.start
-        const listFormat = isEmptyListLine ? getLineListFormat(formatRanges, emptyLineRange) : null
-        if (listFormat) {
-          const nextRanges = removeFormatFromSelection(
-            formatRanges,
+        const cancelFormat = isEmptyFormattedLine
+          ? getLineCancelableFormat(formatRanges, emptyLineRange)
+          : null
+        if (cancelFormat) {
+          const nextRanges = removeFormatFromPreviousLineBreak(
+            removeFormatFromSelection(formatRanges, emptyLineRange, cancelFormat, plainText.length),
             emptyLineRange,
-            listFormat,
+            cancelFormat,
             plainText.length,
           )
-          setActiveFormatState(current => ({
-            ...current,
-            orderedList: false,
-            unorderedList: false,
-          }))
+          clearBlockFormatState(cancelFormat)
           syncRichDocument(plainText, nextRanges, emptyLineRange)
           requestAnimationFrame(() => {
             contentInputRef.current?.setNativeProps({ selection: emptyLineRange })
@@ -794,39 +847,41 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         }
       }
 
+      const insertedText = nextText.slice(diff.start, diff.nextEnd)
       const insertionFormats = insertionFormatsFromState(
         activeFormatState,
         formatRanges,
         diff.start,
         plainText.length,
       )
+      const appliedInsertionFormats =
+        insertedText === '\n' ? insertionFormats.filter(isInlineFormatTool) : insertionFormats
       let nextRanges = updateRangesForTextChange(
         formatRanges,
         diff,
-        insertionFormats,
+        appliedInsertionFormats,
         nextText.length,
       )
-      const insertedText = nextText.slice(diff.start, diff.nextEnd)
 
       if (insertedText === '\n') {
         const previousLineRange = getCurrentLineRange(plainText, diff.start)
-        const listFormat = getLineListFormat(formatRanges, previousLineRange)
-        if (listFormat) {
+        const continuedFormats = getContinuedEmptyLineFormats(formatRanges, previousLineRange)
+        if (continuedFormats.length > 0) {
           const newLineStart = diff.start + 1
           nextRanges = clampRanges(
-            [...nextRanges, { start: newLineStart, end: newLineStart, formats: [listFormat] }],
+            [...nextRanges, { start: newLineStart, end: newLineStart, formats: continuedFormats }],
             nextText.length,
           )
         }
       } else if (diff.insertedLength === 0 && diff.previousEnd > diff.start) {
         const previousLineRange = getCurrentLineRange(plainText, diff.start)
-        const listFormat = getLineListFormat(formatRanges, previousLineRange)
+        const continuedFormats = getContinuedEmptyLineFormats(formatRanges, previousLineRange)
         const nextLineRange = getCurrentLineRange(nextText, diff.start)
-        if (listFormat && nextLineRange.end <= nextLineRange.start) {
+        if (continuedFormats.length > 0 && nextLineRange.end <= nextLineRange.start) {
           nextRanges = clampRanges(
             [
               ...nextRanges,
-              { start: nextLineRange.start, end: nextLineRange.start, formats: [listFormat] },
+              { start: nextLineRange.start, end: nextLineRange.start, formats: continuedFormats },
             ],
             nextText.length,
           )
@@ -835,7 +890,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       syncRichDocument(nextText, nextRanges, { start: diff.nextEnd, end: diff.nextEnd })
     },
-    [activeFormatState, formatRanges, plainText, syncRichDocument],
+    [activeFormatState, clearBlockFormatState, formatRanges, plainText, syncRichDocument],
   )
 
   const handleContentKeyPress = useCallback(
@@ -851,27 +906,23 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       if (lineRange.start !== 0 || lineRange.end > lineRange.start) {
         return
       }
-      const listFormat = getLineListFormat(formatRanges, lineRange)
-      if (!listFormat) {
+      const cancelFormat = getLineCancelableFormat(formatRanges, lineRange)
+      if (!cancelFormat) {
         return
       }
       const nextRanges = removeFormatFromSelection(
         formatRanges,
         lineRange,
-        listFormat,
+        cancelFormat,
         plainText.length,
       )
-      setActiveFormatState(current => ({
-        ...current,
-        orderedList: false,
-        unorderedList: false,
-      }))
+      clearBlockFormatState(cancelFormat)
       syncRichDocument(plainText, nextRanges, selection)
       requestAnimationFrame(() => {
         contentInputRef.current?.setNativeProps({ selection })
       })
     },
-    [contentSelection, formatRanges, plainText, syncRichDocument],
+    [clearBlockFormatState, contentSelection, formatRanges, plainText, syncRichDocument],
   )
 
   const applyFormatToSelectedText = useCallback(
@@ -930,15 +981,26 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               )
       }
 
+      clearBlockFormatState(format)
       syncRichDocument(plainText, nextRanges, selection)
-      requestAnimationFrame(() => contentInputRef.current?.focus())
+      requestAnimationFrame(() => {
+        contentInputRef.current?.focus()
+        requestAnimationFrame(() => {
+          contentInputRef.current?.setNativeProps({ selection })
+        })
+      })
     },
-    [contentSelection, formatRanges, plainText, syncRichDocument],
+    [clearBlockFormatState, contentSelection, formatRanges, plainText, syncRichDocument],
   )
 
   const handleToolPress = useCallback(
     (tool: DiaryTool) => {
-      if (tool === 'indent' || tool === 'orderedList' || tool === 'unorderedList') {
+      if (
+        tool === 'indent' ||
+        tool === 'alignCenter' ||
+        tool === 'orderedList' ||
+        tool === 'unorderedList'
+      ) {
         toggleCurrentLineFormat(tool)
         return
       }
@@ -1006,20 +1068,27 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   )
 
   const isToolbarActive = useCallback(
-    (tool: DiaryTool) =>
-      isFormatTool(tool) && (activeFormatState[tool] ?? selectionFormats.includes(tool)),
+    (tool: DiaryTool) => {
+      if (!isFormatTool(tool)) {
+        return false
+      }
+      return isBlockFormatTool(tool)
+        ? selectionFormats.includes(tool)
+        : activeFormatState[tool] ?? selectionFormats.includes(tool)
+    },
     [activeFormatState, selectionFormats],
   )
 
   const contentInputStyles = useMemo(() => {
-    const activeFormats = FORMAT_TOOLS.filter(
-      tool => activeFormatState[tool] ?? selectionFormats.includes(tool),
+    const activeFormats = FORMAT_TOOLS.filter(tool =>
+      isBlockFormatTool(tool)
+        ? selectionFormats.includes(tool)
+        : activeFormatState[tool] ?? selectionFormats.includes(tool),
     )
     return [
       styles.contentInput,
       activeFormats.includes('bold') && styles.contentInputBold,
       activeFormats.includes('italic') && styles.contentInputItalic,
-      activeFormats.includes('alignCenter') && styles.contentInputCenter,
       activeFormats.includes('quote') && styles.contentInputQuoteOffset,
       activeFormats.includes('indent') &&
         !activeFormats.includes('orderedList') &&
