@@ -326,6 +326,34 @@ const getLineCancelableFormat = (ranges: FormatRange[], lineRange: TextSelection
 const getContinuedEmptyLineFormats = (ranges: FormatRange[], lineRange: TextSelection) =>
   getLineFormats(ranges, lineRange, CONTINUED_EMPTY_LINE_FORMATS)
 
+const getLineText = (text: string, lineRange: TextSelection) =>
+  text.slice(lineRange.start, lineRange.end)
+
+const findDividerLineForDeletion = (
+  text: string,
+  start: number,
+  end: number,
+): TextSelection | null => {
+  const positions = [start, end, Math.max(0, start - 1), Math.max(0, end - 1)]
+  for (const position of positions) {
+    const lineRange = getCurrentLineRange(text, position)
+    if (getLineText(text, lineRange) === DIVIDER_TEXT) {
+      return lineRange
+    }
+  }
+  return null
+}
+
+const getWholeLineRemovalRange = (text: string, lineRange: TextSelection) => {
+  if (lineRange.end < text.length && text[lineRange.end] === '\n') {
+    return { start: lineRange.start, end: lineRange.end + 1, cursor: lineRange.start }
+  }
+  if (lineRange.start > 0 && text[lineRange.start - 1] === '\n') {
+    return { start: lineRange.start - 1, end: lineRange.end, cursor: lineRange.start - 1 }
+  }
+  return { start: lineRange.start, end: lineRange.end, cursor: lineRange.start }
+}
+
 const removeFormatFromPreviousLineBreak = (
   ranges: FormatRange[],
   lineRange: TextSelection,
@@ -909,7 +937,40 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     (nextText: string) => {
       const diff = getTextDiff(plainText, nextText)
       const deletedText = plainText.slice(diff.start, diff.previousEnd)
+      const deletedLength = diff.previousEnd - diff.start
       const deletedOnlyPreviousNewline = diff.insertedLength === 0 && deletedText === '\n'
+
+      if (
+        diff.insertedLength === 0 &&
+        deletedLength > 0 &&
+        deletedLength <= DIVIDER_TEXT.length + 2
+      ) {
+        const dividerLineRange = findDividerLineForDeletion(plainText, diff.start, diff.previousEnd)
+        if (dividerLineRange) {
+          const removalRange = getWholeLineRemovalRange(plainText, dividerLineRange)
+          const dividerDiff = {
+            start: removalRange.start,
+            previousEnd: removalRange.end,
+            nextEnd: removalRange.start,
+            insertedLength: 0,
+          }
+          const textWithoutDivider = `${plainText.slice(0, removalRange.start)}${plainText.slice(
+            removalRange.end,
+          )}`
+          const nextRanges = updateRangesForTextChange(
+            formatRanges,
+            dividerDiff,
+            [],
+            textWithoutDivider.length,
+          )
+          const selection = { start: removalRange.cursor, end: removalRange.cursor }
+          syncRichDocument(textWithoutDivider, nextRanges, selection)
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection })
+          })
+          return
+        }
+      }
 
       if (deletedOnlyPreviousNewline) {
         const emptyLineRange = getCurrentLineRange(plainText, diff.previousEnd)
@@ -1252,7 +1313,11 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
 
       if (line === DIVIDER_TEXT) {
-        return <View key={`rich-line-${index}`} style={styles.liveMarkdownDivider} />
+        return (
+          <View key={`rich-line-${index}`} style={styles.liveMarkdownDividerRow}>
+            <View style={styles.liveMarkdownDivider} />
+          </View>
+        )
       }
       if (isOrdered || isUnordered) {
         const marker = isOrdered ? `${pad2(orderedIndex++)}.` : '\u2022'
@@ -1497,9 +1562,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               </View>
               <View style={styles.infoRow}>
                 <Icon name="chart" size={15} color={colors.neutral.gray50} />
-                <Text style={styles.infoText}>
-                  {contentCharCount > 0 ? `${contentCharCount} ?` : '????'}
-                </Text>
+                <Text style={styles.infoText}>{`${contentCharCount}\u5b57`}</Text>
               </View>
             </View>
           )}

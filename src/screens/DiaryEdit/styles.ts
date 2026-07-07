@@ -103,10 +103,10 @@ export const styles = StyleSheet.create({
     paddingLeft: spacing.xl,
   },
   contentInputListOffset: {
-    paddingLeft: 34,
+    paddingLeft: 30,
   },
   contentInputListIndentOffset: {
-    paddingLeft: 34 + spacing.xl,
+    paddingLeft: 30 + spacing.xl,
   },
   liveMarkdownParagraph: {
     ...typography.bodyM,
@@ -135,16 +135,19 @@ export const styles = StyleSheet.create({
   liveMarkdownCenter: {
     textAlign: 'center',
   },
+  liveMarkdownDividerRow: {
+    height: typography.bodyM.lineHeight,
+    justifyContent: 'center',
+  },
   liveMarkdownDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.semantic.divider.default,
-    marginVertical: spacing.md,
   },
   liveMarkdownQuote: {
     borderLeftWidth: 3,
     borderLeftColor: colors.semantic.divider.default,
     paddingLeft: spacing.sm,
-    marginVertical: spacing.xs,
+    marginVertical: 0,
   },
   liveMarkdownList: {
     gap: spacing.xxs,
@@ -155,7 +158,7 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   liveMarkdownListMarker: {
-    width: 34,
+    width: 30,
     color: colors.semantic.text.secondary,
   },
   liveMarkdownUnorderedMarker: {
@@ -226,6 +229,11 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.semantic.bg.canvas,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.semantic.divider.subtle,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 6,
   },
   toolbarContent: {
     minHeight: 50,
