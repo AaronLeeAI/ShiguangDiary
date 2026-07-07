@@ -201,6 +201,13 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    borderRadius: 6,
+  },
+  infoRowPressed: {
+    backgroundColor: colors.semantic.bg.subtle,
+  },
+  infoRowDisabled: {
+    opacity: 0.72,
   },
   infoText: {
     flex: 1,

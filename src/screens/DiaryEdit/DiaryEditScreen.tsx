@@ -10,6 +10,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  PermissionsAndroid,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +23,7 @@ import {
   type TextInputSelectionChangeEventData,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Geolocation from '@react-native-community/geolocation'
 import { launchImageLibrary, type Asset } from 'react-native-image-picker'
 
 import { ActionSheet } from '@/components/ActionSheet'
@@ -36,8 +38,9 @@ import { styles } from './styles'
 import type { DiaryEditScreenProps } from './types'
 
 const TITLE_MAX_LENGTH = 32
-const DEFAULT_LOCATION = '\u672a\u83b7\u53d6\u5f53\u524d\u4f4d\u7f6e'
-const DEFAULT_WEATHER = '\u672a\u83b7\u53d6\u5f53\u524d\u5929\u6c14'
+const DEFAULT_LOCATION = '未获取当前位置'
+const DEFAULT_WEATHER = '未获取当前天气'
+const LOCATING_LOCATION = '正在获取当前位置...'
 const DEFAULT_SELECTION = { start: 0, end: 0 }
 const INDENT_PREFIX = '\u3000\u3000'
 
@@ -143,8 +146,7 @@ const formatInsertTime = (date: Date) =>
 
 const getImageUriFromMarkdownLine = (line: string) => IMAGE_MARKDOWN_LINE.exec(line.trim())?.[2]
 
-const createImageMarkdownLine = (asset: Asset, index: number) =>
-  `![\u56fe\u7247${index + 1}](${asset.uri})`
+const createImageMarkdownLine = (asset: Asset, index: number) => `![图片${index + 1}](${asset.uri})`
 
 const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
   const start = Math.max(0, Math.min(selection.start, max))
@@ -771,6 +773,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [historyStatus, setHistoryStatus] = useState({ undo: 0, redo: 0 })
   const [keyboardVisible, setKeyboardVisible] = useState(false)
   const [exitSheetVisible, setExitSheetVisible] = useState(false)
+  const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
+  const [locating, setLocating] = useState(false)
   const allowLeaveRef = useRef(false)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
 
@@ -874,14 +878,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const handleSaveToDraft = useCallback(() => {
     allowLeaveRef.current = true
     exit()
-    toast.success('\u5df2\u4fdd\u5b58\u5230\u8349\u7a3f\u7bb1')
+    toast.success('已保存到草稿箱')
     requestAnimationFrame(() => navigation.goBack())
   }, [exit, navigation])
 
   const handleDiscardAndBack = useCallback(() => {
     allowLeaveRef.current = true
     discard()
-    toast.info('\u5df2\u653e\u5f03\u4fdd\u5b58')
+    toast.info('已放弃保存')
     requestAnimationFrame(() => navigation.goBack())
   }, [discard, navigation])
 
@@ -889,7 +893,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     const ok = await save()
     if (ok) {
       haptic('saveSuccess')
-      toast.success(isNew ? '\u65e5\u8bb0\u5df2\u521b\u5efa' : '\u5df2\u4fdd\u5b58')
+      toast.success(isNew ? '日记已创建' : '已保存')
       setTimeout(() => {
         allowLeaveRef.current = true
         navigation.goBack()
@@ -899,9 +903,69 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       toast.error(error)
     } else {
       haptic('error')
-      toast.error('\u5185\u5bb9\u4e0d\u80fd\u4e3a\u7a7a')
+      toast.error('内容不能为空')
     }
   }, [save, isNew, error, navigation])
+
+  const requestLocationPermission = useCallback(async () => {
+    if (Platform.OS !== 'android') {
+      return true
+    }
+
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: '定位权限',
+        message: '需要获取当前位置用于日记定位',
+        buttonPositive: '允许',
+        buttonNegative: '取消',
+      },
+    )
+    return granted === PermissionsAndroid.RESULTS.GRANTED
+  }, [])
+
+  const handleFetchLocation = useCallback(async () => {
+    if (locating) {
+      return
+    }
+
+    setLocating(true)
+    setLocationLabel(LOCATING_LOCATION)
+
+    try {
+      const hasPermission = await requestLocationPermission()
+      if (!hasPermission) {
+        setLocationLabel(DEFAULT_LOCATION)
+        toast.info('未授予定位权限')
+        setLocating(false)
+        return
+      }
+
+      Geolocation.getCurrentPosition(
+        position => {
+          const { latitude, longitude, accuracy } = position.coords
+          const accuracyText = Number.isFinite(accuracy) ? ` · ±${Math.round(accuracy)}m` : ''
+          setLocationLabel(`GPS ${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracyText}`)
+          toast.success('已获取当前位置')
+          setLocating(false)
+        },
+        errorInfo => {
+          setLocationLabel(DEFAULT_LOCATION)
+          toast.error(errorInfo.message || '定位失败，请检查定位权限或 GPS')
+          setLocating(false)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        },
+      )
+    } catch (err) {
+      setLocationLabel(DEFAULT_LOCATION)
+      toast.error(err instanceof Error ? err.message : '定位失败，请检查定位权限或 GPS')
+      setLocating(false)
+    }
+  }, [locating, requestLocationPermission])
 
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
@@ -995,14 +1059,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       if (response.errorCode) {
-        toast.error(response.errorMessage ?? '\u56fe\u7247\u9009\u62e9\u5931\u8d25')
+        toast.error(response.errorMessage ?? '图片选择失败')
         requestAnimationFrame(() => contentInputRef.current?.focus())
         return
       }
 
       const assets = (response.assets ?? []).filter(asset => !!asset.uri)
       if (assets.length <= 0) {
-        toast.info('\u672a\u9009\u62e9\u56fe\u7247')
+        toast.info('未选择图片')
         requestAnimationFrame(() => contentInputRef.current?.focus())
         return
       }
@@ -1013,7 +1077,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const markdown = assets.map(createImageMarkdownLine).join('\n')
       insertPlainText(`${prefix}${markdown}${suffix}`, [])
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '\u56fe\u7247\u9009\u62e9\u5931\u8d25')
+      toast.error(err instanceof Error ? err.message : '图片选择失败')
       requestAnimationFrame(() => contentInputRef.current?.focus())
     }
   }, [contentSelection, insertPlainText, plainText])
@@ -1598,7 +1662,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             <View style={[styles.infoBlock, styles.infoBlockCompact]}>
               <View style={styles.infoCompactLeft}>
                 <Icon name="chart" size={15} color={colors.neutral.gray50} />
-                <Text style={styles.infoCompactText}>{`${contentCharCount}\u5b57`}</Text>
+                <Text style={styles.infoCompactText}>{`${contentCharCount}字`}</Text>
               </View>
               <View style={styles.historyActions}>
                 <Pressable
@@ -1647,19 +1711,29 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             </View>
           ) : (
             <View style={styles.infoBlock}>
-              <View style={styles.infoRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="获取当前位置"
+                disabled={locating}
+                onPress={handleFetchLocation}
+                style={({ pressed }) => [
+                  styles.infoRow,
+                  pressed && styles.infoRowPressed,
+                  locating && styles.infoRowDisabled,
+                ]}
+              >
                 <Icon name="location" size={15} color={colors.neutral.gray50} />
                 <Text style={styles.infoText} numberOfLines={1}>
-                  {DEFAULT_LOCATION}
+                  {locationLabel}
                 </Text>
-              </View>
+              </Pressable>
               <View style={styles.infoRow}>
                 <Icon name="weather" size={15} color={colors.neutral.gray50} />
                 <Text style={styles.infoText}>{DEFAULT_WEATHER}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Icon name="chart" size={15} color={colors.neutral.gray50} />
-                <Text style={styles.infoText}>{`${contentCharCount}\u5b57`}</Text>
+                <Text style={styles.infoText}>{`${contentCharCount}字`}</Text>
               </View>
             </View>
           )}
@@ -1678,22 +1752,22 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       <ActionSheet
         visible={exitSheetVisible}
         onClose={() => setExitSheetVisible(false)}
-        title="\u4fdd\u5b58\u9009\u9879"
+        title="保存选项"
         items={[
           {
             key: 'draft',
-            label: '\u4fdd\u5b58\u5230\u8349\u7a3f\u7bb1',
+            label: '保存到草稿箱',
             onPress: handleSaveToDraft,
           },
-          { key: 'save', label: '\u5b8c\u6210\u4fdd\u5b58', onPress: handleSave, disabled: saving },
+          { key: 'save', label: '完成保存', onPress: handleSave, disabled: saving },
           {
             key: 'discard',
-            label: '\u653e\u5f03\u4fdd\u5b58',
+            label: '放弃保存',
             destructive: true,
             onPress: handleDiscardAndBack,
           },
         ]}
-        cancelLabel="\u53d6\u6d88"
+        cancelLabel="取消"
       />
     </View>
   )
