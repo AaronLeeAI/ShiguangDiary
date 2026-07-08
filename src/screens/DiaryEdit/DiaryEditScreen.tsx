@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Image,
   Keyboard,
+  Modal,
   KeyboardAvoidingView,
   PermissionsAndroid,
   Platform,
@@ -29,6 +30,7 @@ import Geolocation, {
   type GeolocationResponse,
 } from '@react-native-community/geolocation'
 import { launchImageLibrary, type Asset } from 'react-native-image-picker'
+import ImageViewer from 'react-native-image-zoom-viewer'
 
 import { ActionSheet } from '@/components/ActionSheet'
 import { Icon, type IconName } from '@/components/Icon'
@@ -55,6 +57,7 @@ type FormatState = Partial<Record<FormatTool, boolean>>
 type FormatRange = { start: number; end: number; formats: FormatTool[] }
 type RichDocument = { text: string; ranges: FormatRange[] }
 type EditorSnapshot = RichDocument & { selection: TextSelection }
+type ImagePreviewState = { uris: string[]; index: number }
 
 type DiaryTool =
   | 'image'
@@ -569,6 +572,29 @@ const getImageLayoutBlockRemovalRange = (text: string, imageLineRange: TextSelec
   return { start: imageLineRange.start, end: blockEndLine.end, cursor: imageLineRange.start }
 }
 
+const getImagePreviewStateForLine = (text: string, targetImageLine: TextSelection) => {
+  const imageUris: string[] = []
+  let targetIndex = -1
+  let offset = 0
+
+  text.split('\n').forEach(line => {
+    const imageUri = getImageUriFromEditorLine(line)
+    if (imageUri) {
+      if (offset === targetImageLine.start) {
+        targetIndex = imageUris.length
+      }
+      imageUris.push(imageUri)
+    }
+    offset += line.length + 1
+  })
+
+  if (targetIndex < 0 || imageUris.length <= 0) {
+    return null
+  }
+
+  return { uris: imageUris, index: targetIndex }
+}
+
 const findDividerLineInDeletedRange = (
   text: string,
   start: number,
@@ -1052,6 +1078,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [formatRanges, setFormatRanges] = useState<FormatRange[]>([])
   const [activeFormatState, setActiveFormatState] = useState<FormatState>({})
   const [contentSelection, setContentSelection] = useState<TextSelection>(DEFAULT_SELECTION)
+  const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(null)
   const previewScrollRef = useRef<ScrollView>(null)
   const contentInputRef = useRef<TextInput>(null)
   const lastSerializedContentRef = useRef<string | null>(null)
@@ -1068,6 +1095,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
   const [locating, setLocating] = useState(false)
   const allowLeaveRef = useRef(false)
+  const contentPressInAtRef = useRef(0)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
   const hasEditableContent = useCallback(() => {
     if (!hydrated) {
@@ -1296,14 +1324,33 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     }
   }, [locating, requestLocationPermission])
 
+  const handleContentPressIn = useCallback(() => {
+    contentPressInAtRef.current = Date.now()
+  }, [])
+
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
-      const selection = snapSelectionAwayFromProtectedLayout(event.nativeEvent.selection, plainText)
+      const rawSelection = normalizeSelection(event.nativeEvent.selection, plainText.length)
+      const imageLineRange =
+        rawSelection.start === rawSelection.end && Date.now() - contentPressInAtRef.current < 800
+          ? getImageLayoutBlockStartLine(
+              plainText,
+              getCurrentLineRange(plainText, rawSelection.start),
+            )
+          : null
+
+      if (imageLineRange) {
+        const previewState = getImagePreviewStateForLine(plainText, imageLineRange)
+        if (previewState) {
+          contentPressInAtRef.current = 0
+          Keyboard.dismiss()
+          setImagePreview(previewState)
+        }
+      }
+
+      const selection = snapSelectionAwayFromProtectedLayout(rawSelection, plainText)
       setContentSelection(selection)
-      if (
-        selection.start !== event.nativeEvent.selection.start ||
-        selection.end !== event.nativeEvent.selection.end
-      ) {
+      if (selection.start !== rawSelection.start || selection.end !== rawSelection.end) {
         requestAnimationFrame(() => {
           contentInputRef.current?.setNativeProps({ selection })
         })
@@ -1950,6 +1997,35 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     renderRichInline,
   ])
 
+  const imagePreviewUrls = useMemo(
+    () => imagePreview?.uris.map(uri => ({ url: uri })) ?? [],
+    [imagePreview],
+  )
+
+  const closeImagePreview = useCallback(() => {
+    setImagePreview(null)
+  }, [])
+
+  const renderImagePreviewHeader = useCallback(
+    (currentIndex?: number) => (
+      <View style={[styles.imagePreviewHeader, { paddingTop: insets.top + 12 }]}>
+        <Text style={styles.imagePreviewIndicator}>
+          {`${(currentIndex ?? imagePreview?.index ?? 0) + 1}/${imagePreview?.uris.length ?? 1}`}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close image preview"
+          hitSlop={12}
+          onPress={closeImagePreview}
+          style={styles.imagePreviewCloseButton}
+        >
+          <Text style={styles.imagePreviewCloseText}>{'\u00D7'}</Text>
+        </Pressable>
+      </View>
+    ),
+    [closeImagePreview, imagePreview?.index, imagePreview?.uris.length, insets.top],
+  )
+
   const renderHeader = () => (
     <View style={styles.header}>
       <Pressable accessibilityRole="button" onPress={handleBack} hitSlop={12}>
@@ -2041,6 +2117,27 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {renderHeader()}
 
+      <Modal
+        visible={!!imagePreview}
+        transparent
+        animationType="fade"
+        onRequestClose={closeImagePreview}
+      >
+        {imagePreview ? (
+          <ImageViewer
+            imageUrls={imagePreviewUrls}
+            index={imagePreview.index}
+            enableSwipeDown
+            enableImageZoom
+            onSwipeDown={closeImagePreview}
+            onCancel={closeImagePreview}
+            saveToLocalByLongPress={false}
+            backgroundColor={colors.neutral.black}
+            renderHeader={renderImagePreviewHeader}
+          />
+        ) : null}
+      </Modal>
+
       <KeyboardAvoidingView
         style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -2090,6 +2187,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               selection={contentSelection}
               caretHidden={protectedLayoutSafeCaretVisible}
               onSelectionChange={handleContentSelectionChange}
+              onPressIn={handleContentPressIn}
               onKeyPress={handleContentKeyPress}
               onScroll={handleContentScroll}
               textAlignVertical="top"
