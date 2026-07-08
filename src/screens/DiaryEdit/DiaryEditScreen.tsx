@@ -2492,6 +2492,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handleContentChange = useCallback(
     (nextText: string) => {
+      if (nextText !== plainText) {
+        programmaticContentSelectionRef.current = null
+        pendingContentFocusRef.current = null
+      }
       const diff = getTextDiff(plainText, nextText)
       const deletedText = plainText.slice(diff.start, diff.previousEnd)
       const deletedLength = diff.previousEnd - diff.start
