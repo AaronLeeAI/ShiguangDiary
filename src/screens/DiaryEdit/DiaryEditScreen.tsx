@@ -2845,10 +2845,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handlePreviewImagePress = useCallback(
     (lineStart: number) => {
-      const imageLineRange = getImageLayoutBlockStartLine(plainText, {
-        start: lineStart,
-        end: lineStart,
-      })
+      const imageLineRange = getImageLayoutBlockStartLine(
+        plainText,
+        getCurrentLineRange(plainText, lineStart),
+      )
       if (!imageLineRange) {
         return
       }
