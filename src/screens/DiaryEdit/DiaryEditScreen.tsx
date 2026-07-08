@@ -45,12 +45,21 @@ import type { DiaryEditScreenProps } from './types'
 
 const TITLE_MAX_LENGTH = 32
 const DEFAULT_LOCATION = '未获取当前位置'
-const DEFAULT_WEATHER = '未获取当前天气'
+const DEFAULT_WEATHER = '获取当前天气'
 const LOCATING_LOCATION = '正在获取当前位置...'
+const FETCHING_WEATHER = '正在获取当前天气...'
+const CAIYUN_TOKEN = '4cqwCAHZQHmYFrzy'
+const CAIYUN_API_BASE = `https://api.caiyunapp.com/v2.6/${CAIYUN_TOKEN}`
+const IP_LOCATION_TIMEOUT_MS = 6000
+const REVERSE_GEOCODE_TIMEOUT_MS = 8000
+const WEATHER_TIMEOUT_MS = 10000
 const DEFAULT_SELECTION = { start: 0, end: 0 }
 const INDENT_PREFIX = '\u3000\u3000'
 
 type TextSelection = { start: number; end: number }
+type Coordinates = { latitude: number; longitude: number; accuracy?: number | null }
+type LocationSource = 'gps' | 'network' | 'ip'
+type ResolvedLocation = { coords: Coordinates; label: string; source: LocationSource }
 
 type FormatTool = Exclude<DiaryTool, 'image' | 'divider' | 'time' | 'mic' | 'link'>
 type FormatState = Partial<Record<FormatTool, boolean>>
@@ -1037,6 +1046,346 @@ const countContentChars = (text: string) =>
     .join('\n')
     .replace(/\s/g, '').length
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const getRecord = (value: unknown, key: string) => {
+  if (!isRecord(value)) {
+    return null
+  }
+  const nested = value[key]
+  return isRecord(nested) ? nested : null
+}
+
+const getString = (value: unknown, key: string) => {
+  if (!isRecord(value)) {
+    return ''
+  }
+  const nested = value[key]
+  return typeof nested === 'string' ? nested.trim() : ''
+}
+
+const getNumber = (value: unknown, key: string) => {
+  if (!isRecord(value)) {
+    return null
+  }
+  const nested = value[key]
+  if (typeof nested === 'number' && Number.isFinite(nested)) {
+    return nested
+  }
+  if (typeof nested === 'string') {
+    const parsed = Number(nested)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+const buildQuery = (params: Record<string, string | number>) =>
+  Object.entries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&')
+
+const fetchJsonWithTimeout = async (url: string, timeoutMs: number, init?: RequestInit) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('请求超时，请稍后重试')), timeoutMs)
+  })
+
+  try {
+    const response = await Promise.race([fetch(url, init), timeoutPromise])
+    if (!response.ok) {
+      throw new Error(`请求失败：${response.status}`)
+    }
+    return (await response.json()) as unknown
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+  }
+}
+
+const normalizeLocationPart = (part: string) => {
+  const trimmed = part.trim()
+  if (trimmed === '中国') {
+    return ''
+  }
+  return trimmed.startsWith('中国') ? trimmed.slice(2) : trimmed
+}
+
+const uniqueLocationParts = (parts: string[]) => {
+  const result: string[] = []
+  parts.forEach(part => {
+    const trimmed = normalizeLocationPart(part)
+    if (!trimmed || result.includes(trimmed)) {
+      return
+    }
+    result.push(trimmed)
+  })
+  return result
+}
+
+const formatAddressLabel = (parts: string[], nearbyParts: string[] = []) => {
+  const core = uniqueLocationParts(parts).join('')
+  const nearby = uniqueLocationParts(nearbyParts).join('')
+  if (core && nearby && !core.includes(nearby)) {
+    return `${core} 靠近${nearby}`
+  }
+  return core || nearby
+}
+
+const transformLatitude = (x: number, y: number) => {
+  let ret = -100 + 2 * x + 3 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x))
+  ret += ((20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2) / 3
+  ret += ((20 * Math.sin(y * Math.PI) + 40 * Math.sin((y / 3) * Math.PI)) * 2) / 3
+  ret += ((160 * Math.sin((y / 12) * Math.PI) + 320 * Math.sin((y * Math.PI) / 30)) * 2) / 3
+  return ret
+}
+
+const transformLongitude = (x: number, y: number) => {
+  let ret = 300 + x + 2 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x))
+  ret += ((20 * Math.sin(6 * x * Math.PI) + 20 * Math.sin(2 * x * Math.PI)) * 2) / 3
+  ret += ((20 * Math.sin(x * Math.PI) + 40 * Math.sin((x / 3) * Math.PI)) * 2) / 3
+  ret += ((150 * Math.sin((x / 12) * Math.PI) + 300 * Math.sin((x / 30) * Math.PI)) * 2) / 3
+  return ret
+}
+
+const isInMainlandChina = ({ latitude, longitude }: Coordinates) =>
+  longitude >= 72.004 && longitude <= 137.8347 && latitude >= 0.8293 && latitude <= 55.8271
+
+const toCaiyunCoordinates = (coords: Coordinates): Coordinates => {
+  if (!isInMainlandChina(coords)) {
+    return coords
+  }
+
+  const x = coords.longitude - 105
+  const y = coords.latitude - 35
+  const a = 6378245.0
+  const ee = 0.006693421622965943
+  let dLat = transformLatitude(x, y)
+  let dLon = transformLongitude(x, y)
+  const radLat = (coords.latitude / 180) * Math.PI
+  let magic = Math.sin(radLat)
+  magic = 1 - ee * magic * magic
+  const sqrtMagic = Math.sqrt(magic)
+  dLat = (dLat * 180) / (((a * (1 - ee)) / (magic * sqrtMagic)) * Math.PI)
+  dLon = (dLon * 180) / ((a / sqrtMagic) * Math.cos(radLat) * Math.PI)
+  return {
+    ...coords,
+    latitude: coords.latitude + dLat,
+    longitude: coords.longitude + dLon,
+  }
+}
+
+const parseBigDataCloudAddress = (payload: unknown) => {
+  const label = formatAddressLabel(
+    [
+      getString(payload, 'principalSubdivision'),
+      getString(payload, 'city'),
+      getString(payload, 'locality'),
+    ],
+    [getString(payload, 'localityName')],
+  )
+  if (label) {
+    return label
+  }
+
+  const localityInfo = getRecord(payload, 'localityInfo')
+  const administrative = isRecord(localityInfo) ? localityInfo.administrative : null
+  if (!Array.isArray(administrative)) {
+    return ''
+  }
+
+  return formatAddressLabel(
+    administrative
+      .map(item => getString(item, 'name'))
+      .filter(Boolean)
+      .slice(-4),
+  )
+}
+
+const parseNominatimAddress = (payload: unknown) => {
+  const address = getRecord(payload, 'address')
+  if (address) {
+    const label = formatAddressLabel(
+      [
+        getString(address, 'state'),
+        getString(address, 'city') || getString(address, 'town') || getString(address, 'county'),
+        getString(address, 'city_district') || getString(address, 'district'),
+        getString(address, 'suburb') || getString(address, 'neighbourhood'),
+        getString(address, 'road'),
+      ],
+      [
+        getString(address, 'amenity'),
+        getString(address, 'building'),
+        getString(address, 'house_number'),
+      ],
+    )
+    if (label) {
+      return label
+    }
+  }
+  return getString(payload, 'display_name')
+}
+
+const reverseGeocodeAddress = async (coords: Coordinates) => {
+  const providers = [
+    async () => {
+      const payload = await fetchJsonWithTimeout(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?${buildQuery({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          localityLanguage: 'zh',
+        })}`,
+        REVERSE_GEOCODE_TIMEOUT_MS,
+      )
+      return parseBigDataCloudAddress(payload)
+    },
+    async () => {
+      const payload = await fetchJsonWithTimeout(
+        `https://nominatim.openstreetmap.org/reverse?${buildQuery({
+          format: 'jsonv2',
+          lat: coords.latitude,
+          lon: coords.longitude,
+          'accept-language': 'zh-CN',
+        })}`,
+        REVERSE_GEOCODE_TIMEOUT_MS,
+        {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'ShiguangDiary/1.0',
+          },
+        },
+      )
+      return parseNominatimAddress(payload)
+    },
+  ]
+
+  for (const provider of providers) {
+    try {
+      const label = await provider()
+      if (label) {
+        return label
+      }
+    } catch (_err) {}
+  }
+
+  return '当前位置已获取，地址解析失败'
+}
+
+const getIpLocation = async (): Promise<ResolvedLocation> => {
+  const providers = [
+    async () => {
+      const payload = await fetchJsonWithTimeout(
+        'https://ipwho.is/?lang=zh-CN',
+        IP_LOCATION_TIMEOUT_MS,
+      )
+      if (isRecord(payload) && payload.success === false) {
+        throw new Error(getString(payload, 'message') || 'IP 定位失败')
+      }
+      const latitude = getNumber(payload, 'latitude')
+      const longitude = getNumber(payload, 'longitude')
+      if (latitude === null || longitude === null) {
+        throw new Error('IP 定位结果无效')
+      }
+      return {
+        coords: { latitude, longitude },
+        label: formatAddressLabel([
+          getString(payload, 'country'),
+          getString(payload, 'region'),
+          getString(payload, 'city'),
+        ]),
+      }
+    },
+    async () => {
+      const payload = await fetchJsonWithTimeout('https://ipapi.co/json/', IP_LOCATION_TIMEOUT_MS)
+      const latitude = getNumber(payload, 'latitude')
+      const longitude = getNumber(payload, 'longitude')
+      if (latitude === null || longitude === null) {
+        throw new Error('IP 定位结果无效')
+      }
+      return {
+        coords: { latitude, longitude },
+        label: formatAddressLabel([
+          getString(payload, 'country_name'),
+          getString(payload, 'region'),
+          getString(payload, 'city'),
+        ]),
+      }
+    },
+  ]
+
+  let lastError: unknown = null
+  for (const provider of providers) {
+    try {
+      const result = await provider()
+      const reverseLabel = await reverseGeocodeAddress(result.coords)
+      return {
+        coords: result.coords,
+        label: reverseLabel || result.label || '网络位置已获取',
+        source: 'ip',
+      }
+    } catch (err) {
+      lastError = err
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('IP 定位失败')
+}
+
+const SKYCON_LABELS: Record<string, string> = {
+  CLEAR_DAY: '晴',
+  CLEAR_NIGHT: '晴',
+  PARTLY_CLOUDY_DAY: '多云',
+  PARTLY_CLOUDY_NIGHT: '多云',
+  CLOUDY: '阴',
+  LIGHT_HAZE: '轻度雾霾',
+  MODERATE_HAZE: '中度雾霾',
+  HEAVY_HAZE: '重度雾霾',
+  LIGHT_RAIN: '小雨',
+  MODERATE_RAIN: '中雨',
+  HEAVY_RAIN: '大雨',
+  STORM_RAIN: '暴雨',
+  FOG: '雾',
+  LIGHT_SNOW: '小雪',
+  MODERATE_SNOW: '中雪',
+  HEAVY_SNOW: '大雪',
+  STORM_SNOW: '暴雪',
+  DUST: '浮尘',
+  SAND: '沙尘',
+  WIND: '大风',
+}
+
+const formatCaiyunRealtimeWeather = (payload: unknown) => {
+  const status = getString(payload, 'status').toLowerCase()
+  if (status && status !== 'ok') {
+    throw new Error('天气接口返回异常')
+  }
+  const result = getRecord(payload, 'result')
+  const realtime = getRecord(result, 'realtime')
+  if (!realtime) {
+    throw new Error('天气数据为空')
+  }
+
+  const skycon = getString(realtime, 'skycon')
+  const skyconLabel = SKYCON_LABELS[skycon] ?? '天气'
+  const temperature = getNumber(realtime, 'temperature')
+  const airQuality = getRecord(realtime, 'air_quality')
+  const aqi = getRecord(airQuality, 'aqi')
+  const aqiChn = getNumber(aqi, 'chn')
+  const weatherText =
+    temperature === null ? skyconLabel : `${skyconLabel} ${Math.round(temperature)}℃`
+  return aqiChn === null ? weatherText : `${weatherText} AQI ${Math.round(aqiChn)}`
+}
+
+const fetchCaiyunRealtimeWeather = async (coords: Coordinates) => {
+  const caiyunCoords = toCaiyunCoordinates(coords)
+  const payload = await fetchJsonWithTimeout(
+    `${CAIYUN_API_BASE}/${caiyunCoords.longitude},${caiyunCoords.latitude}/realtime`,
+    WEATHER_TIMEOUT_MS,
+  )
+  return formatCaiyunRealtimeWeather(payload)
+}
+
 const getCurrentPositionAsync = (options: GeolocationOptions) =>
   new Promise<GeolocationResponse>((resolve, reject) => {
     Geolocation.getCurrentPosition(resolve, reject, options)
@@ -1094,7 +1443,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [keyboardVisible, setKeyboardVisible] = useState(false)
   const [exitSheetVisible, setExitSheetVisible] = useState(false)
   const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
+  const [weatherLabel, setWeatherLabel] = useState(DEFAULT_WEATHER)
   const [locating, setLocating] = useState(false)
+  const [weatherLoading, setWeatherLoading] = useState(false)
+  const lastLocationRef = useRef<Coordinates | null>(null)
   const allowLeaveRef = useRef(false)
   const contentPressInAtRef = useRef(0)
   const imagePreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -1290,6 +1642,66 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     )
   }, [])
 
+  const resolveCurrentLocation = useCallback(async (): Promise<ResolvedLocation> => {
+    let nativeLocationError: unknown = null
+    const hasPermission = await requestLocationPermission()
+
+    if (hasPermission) {
+      try {
+        const position = await getCurrentPositionAsync({
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 60000,
+        })
+        const coords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        }
+        return {
+          coords,
+          label: await reverseGeocodeAddress(coords),
+          source: 'gps',
+        }
+      } catch (primaryError) {
+        nativeLocationError = primaryError
+        if (!isPermissionDeniedLocationError(primaryError)) {
+          try {
+            const position = await getCurrentPositionAsync({
+              enableHighAccuracy: false,
+              timeout: 20000,
+              maximumAge: 300000,
+            })
+            const coords = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            }
+            return {
+              coords,
+              label: await reverseGeocodeAddress(coords),
+              source: 'network',
+            }
+          } catch (secondaryError) {
+            nativeLocationError = secondaryError
+          }
+        }
+      }
+    }
+
+    try {
+      return await getIpLocation()
+    } catch (ipError) {
+      if (nativeLocationError) {
+        throw nativeLocationError
+      }
+      if (!hasPermission) {
+        throw new Error('未授予定位权限，且暂时无法通过 IP 获取位置')
+      }
+      throw ipError
+    }
+  }, [requestLocationPermission])
+
   const handleFetchLocation = useCallback(async () => {
     if (locating) {
       return
@@ -1299,43 +1711,50 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     setLocationLabel(LOCATING_LOCATION)
 
     try {
-      const hasPermission = await requestLocationPermission()
-      if (!hasPermission) {
-        setLocationLabel(DEFAULT_LOCATION)
-        toast.info('未授予定位权限')
-        return
-      }
-
-      let position: GeolocationResponse
-      try {
-        position = await getCurrentPositionAsync({
-          enableHighAccuracy: true,
-          timeout: 30000,
-          maximumAge: 60000,
-        })
-      } catch (primaryError) {
-        if (isPermissionDeniedLocationError(primaryError)) {
-          throw primaryError
-        }
-        toast.info('GPS 定位较慢，正在尝试网络定位')
-        position = await getCurrentPositionAsync({
-          enableHighAccuracy: false,
-          timeout: 20000,
-          maximumAge: 300000,
-        })
-      }
-
-      const { latitude, longitude, accuracy } = position.coords
-      const accuracyText = Number.isFinite(accuracy) ? ` \u00B7 \u00B1${Math.round(accuracy)}m` : ''
-      setLocationLabel(`GPS ${latitude.toFixed(6)}, ${longitude.toFixed(6)}${accuracyText}`)
-      toast.success('已获取当前位置')
+      const location = await resolveCurrentLocation()
+      lastLocationRef.current = location.coords
+      setLocationLabel(location.label)
+      toast.success(location.source === 'ip' ? '已通过网络获取当前位置' : '已获取当前位置')
     } catch (err) {
       setLocationLabel(DEFAULT_LOCATION)
       toast.error(getLocationErrorMessage(err))
     } finally {
       setLocating(false)
     }
-  }, [locating, requestLocationPermission])
+  }, [locating, resolveCurrentLocation])
+
+  const handleFetchWeather = useCallback(async () => {
+    if (weatherLoading || locating) {
+      return
+    }
+
+    setWeatherLoading(true)
+    setWeatherLabel(FETCHING_WEATHER)
+
+    try {
+      let coords = lastLocationRef.current
+      if (!coords) {
+        setLocating(true)
+        setLocationLabel(LOCATING_LOCATION)
+        const location = await resolveCurrentLocation()
+        coords = location.coords
+        lastLocationRef.current = location.coords
+        setLocationLabel(location.label)
+      }
+
+      const weather = await fetchCaiyunRealtimeWeather(coords)
+      setWeatherLabel(weather)
+      toast.success('已获取当前天气')
+    } catch (err) {
+      setWeatherLabel(current => (current === FETCHING_WEATHER ? DEFAULT_WEATHER : current))
+      toast.error(
+        err instanceof Error && err.message.trim() ? err.message : '获取天气失败，请稍后重试',
+      )
+    } finally {
+      setLocating(false)
+      setWeatherLoading(false)
+    }
+  }, [locating, resolveCurrentLocation, weatherLoading])
 
   const handleContentPressIn = useCallback(() => {
     contentPressInAtRef.current = Date.now()
@@ -2323,10 +2742,22 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
                   {locationLabel}
                 </Text>
               </Pressable>
-              <View style={styles.infoRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="获取当前天气"
+                disabled={weatherLoading || locating}
+                onPress={handleFetchWeather}
+                style={({ pressed }) => [
+                  styles.infoRow,
+                  pressed && styles.infoRowPressed,
+                  (weatherLoading || locating) && styles.infoRowDisabled,
+                ]}
+              >
                 <Icon name="weather" size={15} color={colors.neutral.gray50} />
-                <Text style={styles.infoText}>{DEFAULT_WEATHER}</Text>
-              </View>
+                <Text style={styles.infoText} numberOfLines={1}>
+                  {weatherLabel}
+                </Text>
+              </Pressable>
               <View style={styles.infoRow}>
                 <Icon name="chart" size={15} color={colors.neutral.gray50} />
                 <Text style={styles.infoText}>{`${contentCharCount}字`}</Text>
