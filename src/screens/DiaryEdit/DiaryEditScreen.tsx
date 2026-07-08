@@ -135,6 +135,7 @@ const EMPTY_LINE_CANCEL_FORMATS: FormatTool[] = [
 const CONTINUED_EMPTY_LINE_FORMATS: FormatTool[] = ['orderedList', 'unorderedList', 'indent']
 const DIVIDER_TEXT = '---'
 const IMAGE_MARKDOWN_LINE = /^!\[([^\]]*)\]\(([^)]+)\)$/
+const IMAGE_EDITOR_LINE = /^@@image:([a-z0-9-]+)@@$/
 const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
@@ -156,10 +157,42 @@ const formatInsertTime = (date: Date) =>
 
 const getImageUriFromMarkdownLine = (line: string) => IMAGE_MARKDOWN_LINE.exec(line.trim())?.[2]
 
-const createImageMarkdownLine = (asset: Asset, index: number) => `![图片${index + 1}](${asset.uri})`
+const editorImageUriMap = new Map<string, string>()
 
-const createImageEditorBlock = (asset: Asset, index: number) =>
-  `${createImageMarkdownLine(asset, index)}\n${IMAGE_LAYOUT_SPACER_BLOCK}`
+const createImageId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+
+const registerEditorImageUri = (uri: string) => {
+  const imageId = createImageId()
+  editorImageUriMap.set(imageId, uri)
+  return imageId
+}
+
+const createImageEditorLineFromUri = (uri: string) => `@@image:${registerEditorImageUri(uri)}@@`
+
+const getImageUriFromEditorLine = (line: string) => {
+  const markdownUri = getImageUriFromMarkdownLine(line)
+  if (markdownUri) {
+    return markdownUri
+  }
+  const imageId = IMAGE_EDITOR_LINE.exec(line.trim())?.[1]
+  return imageId ? editorImageUriMap.get(imageId) : undefined
+}
+
+const createImageEditorBlock = (asset: Asset) => {
+  if (!asset.uri) {
+    return ''
+  }
+  return `${createImageEditorLineFromUri(asset.uri)}\n${IMAGE_LAYOUT_SPACER_BLOCK}`
+}
+
+const serializeEditorImageLine = (line: string) => {
+  const imageUri = getImageUriFromEditorLine(line)
+  if (!imageUri) {
+    return line
+  }
+  const markdownLine = getImageUriFromMarkdownLine(line) ? line : `![图片](${imageUri})`
+  return markdownLine
+}
 
 const isImageLayoutSpacerLine = (line: string) => line === IMAGE_LAYOUT_SPACER_LINE
 
@@ -375,7 +408,7 @@ const getPreviousLineRange = (text: string, lineRange: TextSelection): TextSelec
 
 const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) => {
   const lineText = getLineText(text, lineRange)
-  if (getImageUriFromMarkdownLine(lineText)) {
+  if (getImageUriFromEditorLine(lineText)) {
     return lineRange
   }
   if (!isImageLayoutSpacerLine(lineText)) {
@@ -389,7 +422,7 @@ const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) =>
       return null
     }
     const previousText = getLineText(text, previous)
-    if (getImageUriFromMarkdownLine(previousText)) {
+    if (getImageUriFromEditorLine(previousText)) {
       return previous
     }
     if (!isImageLayoutSpacerLine(previousText)) {
@@ -400,14 +433,20 @@ const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) =>
   return null
 }
 
-const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelection) => {
+const getImageLayoutBlockEndLine = (text: string, imageLineRange: TextSelection) => {
   let current = imageLineRange
   let next = getNextLineRange(text, current)
   while (next && isImageLayoutSpacerLine(getLineText(text, next))) {
     current = next
     next = getNextLineRange(text, current)
   }
-  return next ? next.start : current.end
+  return current
+}
+
+const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelection) => {
+  const blockEndLine = getImageLayoutBlockEndLine(text, imageLineRange)
+  const next = getNextLineRange(text, blockEndLine)
+  return next ? next.start : blockEndLine.end
 }
 
 const snapSelectionAwayFromImageLayout = (selection: TextSelection, text: string) => {
@@ -435,6 +474,37 @@ const shouldRenderImageSafeCaret = (text: string, selection: TextSelection) => {
   }
   const previous = getPreviousLineRange(text, lineRange)
   return !!previous && isImageLayoutSpacerLine(getLineText(text, previous))
+}
+
+const findImageLineAtPositions = (text: string, positions: number[]): TextSelection | null => {
+  for (const position of positions) {
+    const lineRange = getCurrentLineRange(text, position)
+    const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
+    if (imageLineRange) {
+      return imageLineRange
+    }
+  }
+  return null
+}
+
+const getPreviousImageLineAtLineStart = (text: string, lineRange: TextSelection) => {
+  const previous = getPreviousLineRange(text, lineRange)
+  return previous ? getImageLayoutBlockStartLine(text, previous) : null
+}
+
+const getImageLayoutBlockRemovalRange = (text: string, imageLineRange: TextSelection) => {
+  const blockEndLine = getImageLayoutBlockEndLine(text, imageLineRange)
+  if (blockEndLine.end < text.length && text[blockEndLine.end] === '\n') {
+    return { start: imageLineRange.start, end: blockEndLine.end + 1, cursor: imageLineRange.start }
+  }
+  if (imageLineRange.start > 0 && text[imageLineRange.start - 1] === '\n') {
+    return {
+      start: imageLineRange.start - 1,
+      end: blockEndLine.end,
+      cursor: imageLineRange.start - 1,
+    }
+  }
+  return { start: imageLineRange.start, end: blockEndLine.end, cursor: imageLineRange.start }
 }
 
 const findDividerLineForDeletion = (
@@ -720,9 +790,9 @@ const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
     if (/^---+$/.test(trimmed)) {
       line = DIVIDER_TEXT
     }
-    const imageUri = getImageUriFromMarkdownLine(line)
+    const imageUri = getImageUriFromEditorLine(line)
     if (imageUri) {
-      textParts.push(line)
+      textParts.push(createImageEditorLineFromUri(imageUri))
       if (IMAGE_LAYOUT_SPACER_BLOCK) {
         textParts.push('\n', IMAGE_LAYOUT_SPACER_BLOCK)
       }
@@ -830,8 +900,14 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
       return
     }
 
+    const imageUri = getImageUriFromEditorLine(line)
+    if (imageUri) {
+      outputLines.push(serializeEditorImageLine(line))
+      return
+    }
+
     let output =
-      line === DIVIDER_TEXT || getImageUriFromMarkdownLine(line)
+      line === DIVIDER_TEXT
         ? line
         : serializeInline(doc.text, doc.ranges, lineStart, lineEnd) || line
     if (lineHasFormat(doc.ranges, lineStart, effectiveEnd, 'unorderedList')) {
@@ -856,7 +932,11 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
 }
 
 const countContentChars = (text: string) =>
-  text.replace(new RegExp(IMAGE_LAYOUT_SPACER_LINE, 'g'), '').replace(/\s/g, '').length
+  text
+    .split('\n')
+    .filter(line => !isImageLayoutSpacerLine(line) && !getImageUriFromEditorLine(line))
+    .join('\n')
+    .replace(/\s/g, '').length
 
 const getCurrentPositionAsync = (options: GeolocationOptions) =>
   new Promise<GeolocationResponse>((resolve, reject) => {
@@ -921,10 +1001,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     if (!hydrated) {
       return true
     }
-    const textWithoutLayoutSpacers = plainText.replace(
-      new RegExp(IMAGE_LAYOUT_SPACER_LINE, 'g'),
-      '',
-    )
+    const textWithoutLayoutSpacers = plainText
+      .split('\n')
+      .filter(line => !isImageLayoutSpacerLine(line))
+      .join('\n')
     return title.trim().length > 0 || textWithoutLayoutSpacers.trim().length > 0
   }, [hydrated, plainText, title])
 
@@ -1271,6 +1351,34 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const deletedLength = diff.previousEnd - diff.start
       const deletedOnlyPreviousNewline = diff.insertedLength === 0 && deletedText === '\n'
 
+      if (diff.insertedLength === 0 && deletedLength > 0) {
+        const imageLineRange = findImageLineAtPositions(plainText, [diff.start, diff.previousEnd])
+        if (imageLineRange) {
+          const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
+          const imageDiff = {
+            start: removalRange.start,
+            previousEnd: removalRange.end,
+            nextEnd: removalRange.start,
+            insertedLength: 0,
+          }
+          const textWithoutImage = `${plainText.slice(0, removalRange.start)}${plainText.slice(
+            removalRange.end,
+          )}`
+          const nextRanges = updateRangesForTextChange(
+            formatRanges,
+            imageDiff,
+            [],
+            textWithoutImage.length,
+          )
+          const selection = { start: removalRange.cursor, end: removalRange.cursor }
+          syncRichDocument(textWithoutImage, nextRanges, selection)
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection })
+          })
+          return
+        }
+      }
+
       if (
         diff.insertedLength === 0 &&
         deletedLength > 0 &&
@@ -1382,6 +1490,35 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       const lineRange = getCurrentLineRange(plainText, selection.start)
+      const imageLineRange =
+        findImageLineAtPositions(plainText, [selection.start]) ??
+        (lineRange.start === selection.start
+          ? getPreviousImageLineAtLineStart(plainText, lineRange)
+          : null)
+      if (imageLineRange) {
+        const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
+        const imageDiff = {
+          start: removalRange.start,
+          previousEnd: removalRange.end,
+          nextEnd: removalRange.start,
+          insertedLength: 0,
+        }
+        const textWithoutImage = `${plainText.slice(0, removalRange.start)}${plainText.slice(
+          removalRange.end,
+        )}`
+        const nextRanges = updateRangesForTextChange(
+          formatRanges,
+          imageDiff,
+          [],
+          textWithoutImage.length,
+        )
+        const nextSelection = { start: removalRange.cursor, end: removalRange.cursor }
+        syncRichDocument(textWithoutImage, nextRanges, nextSelection)
+        requestAnimationFrame(() => {
+          contentInputRef.current?.setNativeProps({ selection: nextSelection })
+        })
+        return
+      }
       if (lineRange.start !== 0 || lineRange.end > lineRange.start) {
         return
       }
@@ -1646,7 +1783,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           styles.liveMarkdownIndented,
       ]
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
-      const imageUri = getImageUriFromMarkdownLine(line)
+      const imageUri = getImageUriFromEditorLine(line)
 
       if (isImageLayoutSpacerLine(line)) {
         return null
