@@ -163,6 +163,7 @@ const IMAGE_EDITOR_TOKEN_LIKE_LINE = /^@@image:[a-z0-9-]*@*$/
 const IMAGE_EDITOR_RECOVERABLE_LINE = /^@@image:([a-z0-9-]+)@*$/
 const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
+const PROTECTED_SELECTION_SHIELD_MS = 240
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
   { length: IMAGE_LAYOUT_SPACER_LINES },
   () => IMAGE_LAYOUT_SPACER_LINE,
@@ -493,6 +494,106 @@ const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelect
   return next ? next.start : blockEndLine.end
 }
 
+const getProtectedLayoutRange = (text: string, lineRange: TextSelection) => {
+  const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
+  if (imageLineRange) {
+    return {
+      start: imageLineRange.start,
+      end: getCursorAfterImageLayoutBlock(text, imageLineRange),
+    }
+  }
+
+  if (getLineText(text, lineRange) === DIVIDER_TEXT) {
+    return {
+      start: lineRange.start,
+      end:
+        lineRange.end < text.length && text[lineRange.end] === '\n'
+          ? lineRange.end + 1
+          : lineRange.end,
+    }
+  }
+
+  return null
+}
+
+const findProtectedLayoutRangeInSelection = (text: string, selection: TextSelection) => {
+  if (selection.start === selection.end) {
+    return null
+  }
+
+  let position = 0
+  while (position <= text.length) {
+    const lineRange = getCurrentLineRange(text, position)
+    const protectedRange = getProtectedLayoutRange(text, lineRange)
+    if (
+      protectedRange &&
+      protectedRange.end > selection.start &&
+      protectedRange.start < selection.end
+    ) {
+      return protectedRange
+    }
+
+    const nextPosition = protectedRange
+      ? protectedRange.end
+      : lineRange.end < text.length && text[lineRange.end] === '\n'
+      ? lineRange.end + 1
+      : text.length + 1
+    if (nextPosition <= position) {
+      position += 1
+    } else {
+      position = nextPosition
+    }
+  }
+
+  return null
+}
+
+const snapExpandedSelectionAwayFromProtectedLayout = (selection: TextSelection, text: string) => {
+  let snapped = selection
+
+  for (let guard = 0; guard < 16; guard += 1) {
+    const protectedRange = findProtectedLayoutRangeInSelection(text, snapped)
+    if (!protectedRange) {
+      return snapped
+    }
+
+    const hasEditableTextBefore = snapped.start < protectedRange.start
+    const hasEditableTextAfter = snapped.end > protectedRange.end
+    let nextSelection: TextSelection
+
+    if (hasEditableTextBefore && !hasEditableTextAfter) {
+      nextSelection = { start: snapped.start, end: protectedRange.start }
+    } else if (!hasEditableTextBefore && hasEditableTextAfter) {
+      nextSelection = { start: protectedRange.end, end: snapped.end }
+    } else if (hasEditableTextBefore && hasEditableTextAfter) {
+      const beforeLength = protectedRange.start - snapped.start
+      const afterLength = snapped.end - protectedRange.end
+      nextSelection =
+        beforeLength >= afterLength
+          ? { start: snapped.start, end: protectedRange.start }
+          : { start: protectedRange.end, end: snapped.end }
+    } else {
+      nextSelection = { start: protectedRange.end, end: protectedRange.end }
+    }
+
+    if (nextSelection.start === snapped.start && nextSelection.end === snapped.end) {
+      return nextSelection
+    }
+    snapped = nextSelection
+  }
+
+  return { start: snapped.start, end: snapped.start }
+}
+
+const isSelectionTouchingProtectedLayout = (text: string, selection: TextSelection) => {
+  const normalized = normalizeSelection(selection, text.length)
+  if (normalized.start !== normalized.end) {
+    return !!findProtectedLayoutRangeInSelection(text, normalized)
+  }
+
+  return !!getProtectedLayoutRange(text, getCurrentLineRange(text, normalized.start))
+}
+
 const isProtectedLayoutBoundaryLine = (line: string) =>
   isImageLayoutSpacerLine(line) ||
   !!getImageUriFromEditorLine(line) ||
@@ -528,7 +629,7 @@ const snapSelectionAwayFromProtectedLayout = (
 ) => {
   const normalized = normalizeSelection(selection, text.length)
   if (normalized.start !== normalized.end) {
-    return normalized
+    return snapExpandedSelectionAwayFromProtectedLayout(normalized, text)
   }
   const lineRange = getCurrentLineRange(text, normalized.start)
   const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
@@ -937,7 +1038,7 @@ const parseInlineMarkdownToRich = (line: string, inheritedFormats: FormatTool[])
 }
 
 const parseMarkdownToRichDocument = (markdown: string): RichDocument => {
-  const lines = normalizeLegacyToolbarMarkup(markdown).replace(/\r\n/g, '\n').split('\n')
+  const lines = normalizeLegacyToolbarMarkup(markdown).replace(/\n/g, '\n').split('\n')
   const textParts: string[] = []
   const ranges: FormatRange[] = []
   let centerMode = false
@@ -1499,7 +1600,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(null)
   const [imageActionTarget, setImageActionTarget] = useState<ImageActionTarget | null>(null)
   const [imageActionSheetVisible, setImageActionSheetVisible] = useState(false)
+  const [contentSelectionShielded, setContentSelectionShielded] = useState(false)
   const previewScrollRef = useRef<ScrollView>(null)
+  const imageOverlayScrollRef = useRef<ScrollView>(null)
   const contentInputRef = useRef<TextInput>(null)
   const lastSerializedContentRef = useRef<string | null>(null)
   const latestSnapshotRef = useRef<EditorSnapshot>({
@@ -1521,6 +1624,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const allowLeaveRef = useRef(false)
   const contentPressInAtRef = useRef(0)
   const suppressNextEditorFocusRef = useRef(false)
+  const contentSelectionShieldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imagePreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imagePreviewKeyboardHideRef = useRef<ReturnType<typeof Keyboard.addListener> | null>(null)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
@@ -1568,6 +1672,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         clearTimeout(imagePreviewTimerRef.current)
       }
       imagePreviewKeyboardHideRef.current?.remove()
+      if (contentSelectionShieldTimerRef.current) {
+        clearTimeout(contentSelectionShieldTimerRef.current)
+      }
     },
     [],
   )
@@ -1836,6 +1943,25 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     contentPressInAtRef.current = Date.now()
   }, [])
 
+  const shieldContentSelectionHighlight = useCallback(() => {
+    if (contentSelectionShieldTimerRef.current) {
+      clearTimeout(contentSelectionShieldTimerRef.current)
+    }
+    setContentSelectionShielded(true)
+    contentSelectionShieldTimerRef.current = setTimeout(() => {
+      contentSelectionShieldTimerRef.current = null
+      setContentSelectionShielded(false)
+    }, PROTECTED_SELECTION_SHIELD_MS)
+  }, [])
+
+  const revealContentSelectionHighlight = useCallback(() => {
+    if (contentSelectionShieldTimerRef.current) {
+      clearTimeout(contentSelectionShieldTimerRef.current)
+      contentSelectionShieldTimerRef.current = null
+    }
+    setContentSelectionShielded(false)
+  }, [])
+
   const openImagePreview = useCallback((previewState: ImagePreviewRequest) => {
     if (imagePreviewTimerRef.current) {
       clearTimeout(imagePreviewTimerRef.current)
@@ -1896,6 +2022,11 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
       const rawSelection = normalizeSelection(event.nativeEvent.selection, plainText.length)
+      if (isSelectionTouchingProtectedLayout(plainText, rawSelection)) {
+        shieldContentSelectionHighlight()
+      } else {
+        revealContentSelectionHighlight()
+      }
       const imageLineRange =
         rawSelection.start === rawSelection.end && Date.now() - contentPressInAtRef.current < 800
           ? getImageLayoutBlockStartLine(
@@ -1909,6 +2040,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         const selection = snapSelectionAwayFromProtectedLayout(rawSelection, plainText, {
           forceProtectedSnap: true,
         })
+        contentInputRef.current?.setNativeProps({ selection })
         setContentSelection(selection)
         requestAnimationFrame(() => {
           contentInputRef.current?.setNativeProps({ selection })
@@ -1917,20 +2049,32 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       }
 
       const selection = snapSelectionAwayFromProtectedLayout(rawSelection, plainText)
+      const snapped = selection.start !== rawSelection.start || selection.end !== rawSelection.end
+      if (snapped) {
+        contentInputRef.current?.setNativeProps({ selection })
+      }
       setContentSelection(selection)
-      if (selection.start !== rawSelection.start || selection.end !== rawSelection.end) {
+      if (snapped) {
         requestAnimationFrame(() => {
           contentInputRef.current?.setNativeProps({ selection })
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection })
+          })
         })
       }
     },
-    [openImageActions, plainText],
+    [openImageActions, plainText, revealContentSelectionHighlight, shieldContentSelectionHighlight],
   )
 
   const handleContentScroll = useCallback(
     (event: NativeSyntheticEvent<TextInputScrollEventData>) => {
+      const y = event.nativeEvent.contentOffset.y
       previewScrollRef.current?.scrollTo({
-        y: event.nativeEvent.contentOffset.y,
+        y,
+        animated: false,
+      })
+      imageOverlayScrollRef.current?.scrollTo({
+        y,
         animated: false,
       })
     },
@@ -2699,6 +2843,21 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [formatRanges, plainText],
   )
 
+  const handlePreviewImagePress = useCallback(
+    (lineStart: number) => {
+      const imageLineRange = getImageLayoutBlockStartLine(plainText, {
+        start: lineStart,
+        end: lineStart,
+      })
+      if (!imageLineRange) {
+        return
+      }
+
+      openImageActions(imageLineRange)
+    },
+    [openImageActions, plainText],
+  )
+
   const renderRichTextBlocks = useCallback(() => {
     const lines = plainText.split('\n')
     let offset = 0
@@ -2745,7 +2904,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       if (imageUri) {
         const imageKey = IMAGE_EDITOR_RECOVERABLE_LINE.exec(line.trim())?.[1] ?? imageUri
-        return <LiveMarkdownImageBlock key={`rich-image-${imageKey}`} uri={imageUri} />
+        return (
+          <View
+            key={`rich-image-placeholder-${imageKey}`}
+            pointerEvents="none"
+            style={[styles.liveMarkdownImageBlock, styles.liveMarkdownImagePreviewPlaceholder]}
+          />
+        )
       }
 
       if (line === DIVIDER_TEXT) {
@@ -2792,6 +2957,113 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     plainText,
     renderRichInline,
   ])
+
+  const renderImageInteractionBlocks = useCallback(() => {
+    const lines = plainText.split('\n')
+    let offset = 0
+    let orderedIndex = 1
+    return lines.map((line, index) => {
+      const lineStart = offset
+      const lineEnd = lineStart + line.length
+      const effectiveEnd = Math.max(lineEnd, lineStart + 1)
+      offset = lineEnd + 1
+      const imageUri = getImageUriFromEditorLine(line)
+
+      if (isImageLayoutSpacerLine(line) || (isImageEditorTokenLikeLine(line) && !imageUri)) {
+        return null
+      }
+
+      if (imageUri) {
+        const imageKey = IMAGE_EDITOR_RECOVERABLE_LINE.exec(line.trim())?.[1] ?? imageUri
+        return (
+          <Pressable
+            key={`image-touch-${imageKey}`}
+            accessibilityRole="button"
+            accessibilityLabel="打开图片操作"
+            onPressIn={() => {
+              suppressNextEditorFocusRef.current = true
+              contentPressInAtRef.current = 0
+              contentInputRef.current?.blur()
+              Keyboard.dismiss()
+            }}
+            onPress={() => handlePreviewImagePress(lineStart)}
+            onLongPress={() => handlePreviewImagePress(lineStart)}
+            style={({ pressed }) => [
+              styles.liveMarkdownImageTouchBlock,
+              pressed && styles.liveMarkdownImageTouchBlockPressed,
+            ]}
+          >
+            <LiveMarkdownImageBlock uri={imageUri} />
+          </Pressable>
+        )
+      }
+
+      const isQuote = lineHasFormat(formatRanges, lineStart, effectiveEnd, 'quote')
+      const isOrdered = lineHasFormat(formatRanges, lineStart, effectiveEnd, 'orderedList')
+      const isUnordered = lineHasFormat(formatRanges, lineStart, effectiveEnd, 'unorderedList')
+      const isCenter = lineHasFormat(formatRanges, lineStart, effectiveEnd, 'alignCenter')
+      const lineStyles = [
+        styles.liveMarkdownParagraph,
+        styles.liveMarkdownInteractionPlaceholder,
+        isCenter && styles.liveMarkdownCenter,
+        lineHasFormat(formatRanges, lineStart, effectiveEnd, 'indent') &&
+          styles.liveMarkdownIndented,
+      ]
+      const contentNode = line ? renderRichInline(line, lineStart) : '\n'
+
+      if (line === DIVIDER_TEXT) {
+        return (
+          <View
+            key={`image-touch-placeholder-${index}`}
+            pointerEvents="none"
+            style={[styles.liveMarkdownDividerRow, styles.liveMarkdownInteractionPlaceholder]}
+          >
+            <View style={styles.liveMarkdownDivider} />
+          </View>
+        )
+      }
+
+      if (isOrdered || isUnordered) {
+        const marker = isOrdered ? `${pad2(orderedIndex++)}.` : '\u2022'
+        return (
+          <View
+            key={`image-touch-placeholder-${index}`}
+            pointerEvents="none"
+            style={[styles.liveMarkdownListItem, styles.liveMarkdownInteractionPlaceholder]}
+          >
+            <Text
+              style={[
+                styles.liveMarkdownParagraph,
+                styles.liveMarkdownListMarker,
+                isUnordered && styles.liveMarkdownUnorderedMarker,
+              ]}
+            >
+              {marker}
+            </Text>
+            <Text style={[lineStyles, styles.liveMarkdownListText]}>{contentNode}</Text>
+          </View>
+        )
+      }
+
+      if (isQuote) {
+        return (
+          <View
+            key={`image-touch-placeholder-${index}`}
+            pointerEvents="none"
+            style={[styles.liveMarkdownQuote, styles.liveMarkdownInteractionPlaceholder]}
+          >
+            <Text style={lineStyles}>{contentNode}</Text>
+          </View>
+        )
+      }
+
+      return (
+        <View key={`image-touch-placeholder-${index}`} pointerEvents="none">
+          <Text style={lineStyles}>{contentNode}</Text>
+        </View>
+      )
+    })
+  }, [formatRanges, handlePreviewImagePress, plainText, renderRichInline])
 
   const imagePreviewUrls = useMemo(
     () => imagePreview?.uris.map(uri => ({ url: uri })) ?? [],
@@ -3020,6 +3292,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               placeholder=""
               multiline
               selection={contentSelection}
+              selectionColor={contentSelectionShielded ? 'transparent' : colors.brand.primary}
+              selectionHandleColor={contentSelectionShielded ? 'transparent' : colors.brand.primary}
+              cursorColor={colors.brand.primary}
               caretHidden={protectedLayoutSafeCaretVisible}
               onSelectionChange={handleContentSelectionChange}
               onPressIn={handleContentPressIn}
@@ -3029,6 +3304,17 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               style={contentInputStyles}
               maxLength={EDITOR_LIMITS.CONTENT_MAX}
             />
+            <ScrollView
+              ref={imageOverlayScrollRef}
+              pointerEvents="box-none"
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              style={styles.liveImageInteractionScroller}
+              contentContainerStyle={styles.livePreviewContent}
+              importantForAccessibility="no-hide-descendants"
+            >
+              {renderImageInteractionBlocks()}
+            </ScrollView>
           </Pressable>
         </View>
 

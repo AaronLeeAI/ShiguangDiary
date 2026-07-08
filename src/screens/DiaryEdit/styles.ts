@@ -67,6 +67,12 @@ export const styles = StyleSheet.create({
   },
   livePreviewScroller: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  liveImageInteractionScroller: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+    elevation: 10,
   },
   livePreviewContent: {
     paddingTop: spacing.xs,
@@ -80,6 +86,7 @@ export const styles = StyleSheet.create({
   contentInput: {
     ...StyleSheet.absoluteFillObject,
     ...typography.bodyM,
+    zIndex: 1,
     color: 'transparent',
     paddingTop: spacing.xs,
     paddingHorizontal: 0,
@@ -150,6 +157,18 @@ export const styles = StyleSheet.create({
   liveMarkdownImage: {
     width: '100%',
     height: '100%',
+  },
+  liveMarkdownImagePreviewPlaceholder: {
+    opacity: 0,
+  },
+  liveMarkdownImageTouchBlock: {
+    width: '100%',
+  },
+  liveMarkdownImageTouchBlockPressed: {
+    opacity: 0.92,
+  },
+  liveMarkdownInteractionPlaceholder: {
+    opacity: 0,
   },
   liveMarkdownImageCaretLine: {
     minHeight: typography.bodyM.lineHeight,
