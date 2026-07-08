@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Dimensions,
   Image,
   Keyboard,
   Modal,
@@ -17,6 +18,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   type NativeSyntheticEvent,
   type TextInputKeyPressEventData,
@@ -68,6 +70,14 @@ type RichDocument = { text: string; ranges: FormatRange[] }
 type EditorSnapshot = RichDocument & { selection: TextSelection }
 type ImagePreviewRequest = { uris: string[]; index: number }
 type ImagePreviewState = ImagePreviewRequest & { openedAt: number }
+type ImageActionTarget = { lineStart: number; previewState: ImagePreviewRequest }
+type ImageActionItem = {
+  key: string
+  label: string
+  icon?: IconName
+  destructive?: boolean
+  onPress: () => void | Promise<void>
+}
 
 type DiaryTool =
   | 'image'
@@ -218,6 +228,17 @@ const isCompleteImageEditorLine = (line: string) => IMAGE_EDITOR_LINE.test(line.
 const isUnsafeImageEditorLine = (line: string) =>
   isImageEditorTokenLikeLine(line) &&
   (!isCompleteImageEditorLine(line) || !getImageUriFromEditorLine(line))
+
+const LiveMarkdownImageBlock = React.memo(({ uri }: { uri: string }) => {
+  const source = useMemo(() => ({ uri }), [uri])
+
+  return (
+    <View style={styles.liveMarkdownImageBlock} collapsable={false}>
+      <Image source={source} style={styles.liveMarkdownImage} resizeMode="cover" fadeDuration={0} />
+    </View>
+  )
+})
+LiveMarkdownImageBlock.displayName = 'LiveMarkdownImageBlock'
 
 const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
   const start = Math.max(0, Math.min(selection.start, max))
@@ -472,7 +493,35 @@ const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelect
   return next ? next.start : blockEndLine.end
 }
 
-const snapSelectionAwayFromProtectedLayout = (selection: TextSelection, text: string) => {
+const isProtectedLayoutBoundaryLine = (line: string) =>
+  isImageLayoutSpacerLine(line) ||
+  !!getImageUriFromEditorLine(line) ||
+  isImageEditorTokenLikeLine(line) ||
+  line === DIVIDER_TEXT
+
+const getEditableBoundaryBeforeProtectedLine = (text: string, lineRange: TextSelection) => {
+  if (lineRange.start <= 0) {
+    return null
+  }
+
+  const previousLineRange = getPreviousLineRange(text, lineRange)
+  if (!previousLineRange) {
+    return null
+  }
+
+  const previousLine = getLineText(text, previousLineRange)
+  if (isProtectedLayoutBoundaryLine(previousLine)) {
+    return null
+  }
+
+  return { start: lineRange.start, end: lineRange.start }
+}
+
+const snapSelectionAwayFromProtectedLayout = (
+  selection: TextSelection,
+  text: string,
+  options?: { forceProtectedSnap?: boolean },
+) => {
   const normalized = normalizeSelection(selection, text.length)
   if (normalized.start !== normalized.end) {
     return normalized
@@ -480,10 +529,24 @@ const snapSelectionAwayFromProtectedLayout = (selection: TextSelection, text: st
   const lineRange = getCurrentLineRange(text, normalized.start)
   const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
   if (imageLineRange) {
+    if (!options?.forceProtectedSnap && normalized.start === lineRange.start) {
+      const boundarySelection = getEditableBoundaryBeforeProtectedLine(text, lineRange)
+      if (boundarySelection) {
+        return boundarySelection
+      }
+    }
+
     const cursor = getCursorAfterImageLayoutBlock(text, imageLineRange)
     return { start: cursor, end: cursor }
   }
   if (getLineText(text, lineRange) === DIVIDER_TEXT) {
+    if (!options?.forceProtectedSnap && normalized.start === lineRange.start) {
+      const boundarySelection = getEditableBoundaryBeforeProtectedLine(text, lineRange)
+      if (boundarySelection) {
+        return boundarySelection
+      }
+    }
+
     const cursor =
       lineRange.end < text.length && text[lineRange.end] === '\n'
         ? lineRange.end + 1
@@ -1417,6 +1480,7 @@ const getLocationErrorMessage = (error: unknown) => {
 
 export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets()
+  const windowDimensions = useWindowDimensions()
   const { id } = route.params
   const isNew = !id
 
@@ -1429,6 +1493,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [activeFormatState, setActiveFormatState] = useState<FormatState>({})
   const [contentSelection, setContentSelection] = useState<TextSelection>(DEFAULT_SELECTION)
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(null)
+  const [imageActionTarget, setImageActionTarget] = useState<ImageActionTarget | null>(null)
+  const [imageActionSheetVisible, setImageActionSheetVisible] = useState(false)
   const previewScrollRef = useRef<ScrollView>(null)
   const contentInputRef = useRef<TextInput>(null)
   const lastSerializedContentRef = useRef<string | null>(null)
@@ -1441,6 +1507,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const redoStackRef = useRef<EditorSnapshot[]>([])
   const [historyStatus, setHistoryStatus] = useState({ undo: 0, redo: 0 })
   const [keyboardVisible, setKeyboardVisible] = useState(false)
+  const keyboardVisibleRef = useRef(false)
   const [exitSheetVisible, setExitSheetVisible] = useState(false)
   const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
   const [weatherLabel, setWeatherLabel] = useState(DEFAULT_WEATHER)
@@ -1449,6 +1516,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const lastLocationRef = useRef<Coordinates | null>(null)
   const allowLeaveRef = useRef(false)
   const contentPressInAtRef = useRef(0)
+  const suppressNextEditorFocusRef = useRef(false)
   const imagePreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imagePreviewKeyboardHideRef = useRef<ReturnType<typeof Keyboard.addListener> | null>(null)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
@@ -1468,10 +1536,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   }, [hydrated, plainText, title])
 
   useEffect(() => {
-    const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true))
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () =>
-      setKeyboardVisible(false),
-    )
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      keyboardVisibleRef.current = true
+      setKeyboardVisible(true)
+    })
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardVisibleRef.current = false
+      setKeyboardVisible(false)
+    })
     return () => {
       showSubscription.remove()
       hideSubscription.remove()
@@ -1760,37 +1832,61 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     contentPressInAtRef.current = Date.now()
   }, [])
 
-  const openImagePreview = useCallback(
-    (previewState: ImagePreviewRequest) => {
+  const openImagePreview = useCallback((previewState: ImagePreviewRequest) => {
+    if (imagePreviewTimerRef.current) {
+      clearTimeout(imagePreviewTimerRef.current)
+      imagePreviewTimerRef.current = null
+    }
+    imagePreviewKeyboardHideRef.current?.remove()
+    imagePreviewKeyboardHideRef.current = null
+
+    const wasKeyboardVisible = keyboardVisibleRef.current
+    contentInputRef.current?.blur()
+    Keyboard.dismiss()
+
+    const showPreview = () => {
       if (imagePreviewTimerRef.current) {
         clearTimeout(imagePreviewTimerRef.current)
         imagePreviewTimerRef.current = null
       }
       imagePreviewKeyboardHideRef.current?.remove()
       imagePreviewKeyboardHideRef.current = null
+      requestAnimationFrame(() => {
+        setImagePreview({ ...previewState, openedAt: Date.now() })
+      })
+    }
 
-      contentInputRef.current?.blur()
-      Keyboard.dismiss()
-
-      const showPreview = () => {
+    if (wasKeyboardVisible) {
+      imagePreviewKeyboardHideRef.current = Keyboard.addListener('keyboardDidHide', () => {
+        keyboardVisibleRef.current = false
+        setKeyboardVisible(false)
         if (imagePreviewTimerRef.current) {
           clearTimeout(imagePreviewTimerRef.current)
-          imagePreviewTimerRef.current = null
         }
-        imagePreviewKeyboardHideRef.current?.remove()
-        imagePreviewKeyboardHideRef.current = null
-        setImagePreview({ ...previewState, openedAt: Date.now() })
-      }
+        imagePreviewTimerRef.current = setTimeout(showPreview, 80)
+      })
+      imagePreviewTimerRef.current = setTimeout(showPreview, 1100)
+      return
+    }
 
-      if (keyboardVisible) {
-        imagePreviewKeyboardHideRef.current = Keyboard.addListener('keyboardDidHide', showPreview)
-        imagePreviewTimerRef.current = setTimeout(showPreview, 900)
+    imagePreviewTimerRef.current = setTimeout(showPreview, 120)
+  }, [])
+
+  const openImageActions = useCallback(
+    (imageLineRange: TextSelection) => {
+      const previewState = getImagePreviewStateForLine(plainText, imageLineRange)
+      if (!previewState) {
         return
       }
 
-      requestAnimationFrame(showPreview)
+      suppressNextEditorFocusRef.current = true
+      contentPressInAtRef.current = 0
+      contentInputRef.current?.blur()
+      Keyboard.dismiss()
+      setImageActionTarget({ lineStart: imageLineRange.start, previewState })
+      setImageActionSheetVisible(true)
     },
-    [keyboardVisible],
+    [plainText],
   )
 
   const handleContentSelectionChange = useCallback(
@@ -1805,11 +1901,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           : null
 
       if (imageLineRange) {
-        const previewState = getImagePreviewStateForLine(plainText, imageLineRange)
-        if (previewState) {
-          contentPressInAtRef.current = 0
-          openImagePreview(previewState)
-        }
+        openImageActions(imageLineRange)
+        const selection = snapSelectionAwayFromProtectedLayout(rawSelection, plainText, {
+          forceProtectedSnap: true,
+        })
+        setContentSelection(selection)
+        requestAnimationFrame(() => {
+          contentInputRef.current?.setNativeProps({ selection })
+        })
+        return
       }
 
       const selection = snapSelectionAwayFromProtectedLayout(rawSelection, plainText)
@@ -1820,7 +1920,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         })
       }
     },
-    [openImagePreview, plainText],
+    [openImageActions, plainText],
   )
 
   const handleContentScroll = useCallback(
@@ -1901,6 +2001,189 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [activeFormatState, contentSelection, formatRanges, plainText, syncRichDocument],
   )
 
+  const applyPlainTextEdit = useCallback(
+    (start: number, end: number, insertedText: string, cursor: number, shouldFocus = true) => {
+      const safeStart = Math.max(0, Math.min(start, plainText.length))
+      const safeEnd = Math.max(safeStart, Math.min(end, plainText.length))
+      const nextText = `${plainText.slice(0, safeStart)}${insertedText}${plainText.slice(safeEnd)}`
+      const diff = {
+        start: safeStart,
+        previousEnd: safeEnd,
+        nextEnd: safeStart + insertedText.length,
+        insertedLength: insertedText.length,
+      }
+      const nextRanges = updateRangesForTextChange(formatRanges, diff, [], nextText.length)
+      const safeCursor = Math.max(0, Math.min(cursor, nextText.length))
+      const nextSelection = { start: safeCursor, end: safeCursor }
+      syncRichDocument(nextText, nextRanges, nextSelection)
+
+      if (shouldFocus) {
+        requestAnimationFrame(() => {
+          contentInputRef.current?.focus()
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection: nextSelection })
+          })
+        })
+      }
+    },
+    [formatRanges, plainText, syncRichDocument],
+  )
+
+  const getCurrentImageActionLine = useCallback(() => {
+    if (!imageActionTarget) {
+      return null
+    }
+    const lineRange = getCurrentLineRange(
+      plainText,
+      Math.max(0, Math.min(imageActionTarget.lineStart, plainText.length)),
+    )
+    const imageLineRange = getImageLayoutBlockStartLine(plainText, lineRange)
+    if (!imageLineRange || imageLineRange.start !== imageActionTarget.lineStart) {
+      return null
+    }
+    return getImageUriFromEditorLine(getLineText(plainText, imageLineRange)) ? imageLineRange : null
+  }, [imageActionTarget, plainText])
+
+  const handleCloseImageActions = useCallback(() => {
+    setImageActionSheetVisible(false)
+    setImageActionTarget(null)
+  }, [])
+
+  const handleViewActionImage = useCallback(() => {
+    if (imageActionTarget) {
+      openImagePreview(imageActionTarget.previewState)
+    }
+  }, [imageActionTarget, openImagePreview])
+
+  const handleReplaceActionImage = useCallback(async () => {
+    const imageLineRange = getCurrentImageActionLine()
+    if (!imageLineRange) {
+      toast.error('图片不存在或已被删除')
+      return
+    }
+
+    try {
+      const response = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        includeBase64: false,
+      })
+      if (response.didCancel) {
+        return
+      }
+      if (response.errorCode) {
+        toast.error(response.errorMessage ?? '图片选择失败')
+        return
+      }
+
+      const asset = response.assets?.find(item => !!item.uri)
+      if (!asset?.uri) {
+        toast.info('未选择图片')
+        return
+      }
+
+      const blockEndLine = getImageLayoutBlockEndLine(plainText, imageLineRange)
+      const hasFollowingNewline =
+        blockEndLine.end < plainText.length && plainText[blockEndLine.end] === '\n'
+      const replacement = createImageEditorBlock(asset)
+      const replacementText = hasFollowingNewline ? replacement : `${replacement}\n`
+      const cursor = imageLineRange.start + replacement.length + 1
+      applyPlainTextEdit(imageLineRange.start, blockEndLine.end, replacementText, cursor)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '图片选择失败')
+    }
+  }, [applyPlainTextEdit, getCurrentImageActionLine, plainText])
+
+  const handleDeleteActionImage = useCallback(() => {
+    const imageLineRange = getCurrentImageActionLine()
+    if (!imageLineRange) {
+      toast.error('图片不存在或已被删除')
+      return
+    }
+
+    const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
+    applyPlainTextEdit(removalRange.start, removalRange.end, '', removalRange.cursor)
+  }, [applyPlainTextEdit, getCurrentImageActionLine, plainText])
+
+  const handleInsertParagraphBeforeImage = useCallback(() => {
+    const imageLineRange = getCurrentImageActionLine()
+    if (!imageLineRange) {
+      toast.error('图片不存在或已被删除')
+      return
+    }
+
+    applyPlainTextEdit(imageLineRange.start, imageLineRange.start, '\n', imageLineRange.start)
+  }, [applyPlainTextEdit, getCurrentImageActionLine])
+
+  const handleInsertParagraphAfterImage = useCallback(() => {
+    const imageLineRange = getCurrentImageActionLine()
+    if (!imageLineRange) {
+      toast.error('图片不存在或已被删除')
+      return
+    }
+
+    const blockEndLine = getImageLayoutBlockEndLine(plainText, imageLineRange)
+    const nextLine = getNextLineRange(plainText, blockEndLine)
+    if (nextLine && nextLine.start === nextLine.end) {
+      const selection = { start: nextLine.start, end: nextLine.start }
+      setContentSelection(selection)
+      requestAnimationFrame(() => {
+        contentInputRef.current?.focus()
+        contentInputRef.current?.setNativeProps({ selection })
+      })
+      return
+    }
+
+    const hasFollowingNewline =
+      blockEndLine.end < plainText.length && plainText[blockEndLine.end] === '\n'
+    const insertAt = hasFollowingNewline ? blockEndLine.end + 1 : blockEndLine.end
+    applyPlainTextEdit(insertAt, insertAt, '\n', hasFollowingNewline ? insertAt : insertAt + 1)
+  }, [applyPlainTextEdit, getCurrentImageActionLine, plainText])
+
+  const imageActionItems = useMemo<ImageActionItem[]>(
+    () => [
+      { key: 'view', label: '查看图片', icon: 'image', onPress: handleViewActionImage },
+      { key: 'replace', label: '替换图片', icon: 'image', onPress: handleReplaceActionImage },
+      {
+        key: 'delete',
+        label: '删除图片',
+        destructive: true,
+        onPress: handleDeleteActionImage,
+      },
+      {
+        key: 'insert-before',
+        label: '图片前插入段落',
+        onPress: handleInsertParagraphBeforeImage,
+      },
+      {
+        key: 'insert-after',
+        label: '图片后插入段落',
+        onPress: handleInsertParagraphAfterImage,
+      },
+    ],
+    [
+      handleDeleteActionImage,
+      handleInsertParagraphAfterImage,
+      handleInsertParagraphBeforeImage,
+      handleReplaceActionImage,
+      handleViewActionImage,
+    ],
+  )
+
+  const handleImageActionItemPress = useCallback(
+    (item: ImageActionItem) => {
+      haptic(item.destructive ? 'delete' : 'tap')
+      item.onPress()
+      handleCloseImageActions()
+    },
+    [handleCloseImageActions],
+  )
+
+  const handleImageActionBackdropPress = useCallback(() => {
+    haptic('tap')
+    handleCloseImageActions()
+  }, [handleCloseImageActions])
+
   const handleInsertImages = useCallback(async () => {
     try {
       const response = await launchImageLibrary({
@@ -1943,6 +2226,49 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const deletedText = plainText.slice(diff.start, diff.previousEnd)
       const deletedLength = diff.previousEnd - diff.start
       const deletedOnlyPreviousNewline = diff.insertedLength === 0 && deletedText === '\n'
+      const insertedText = nextText.slice(diff.start, diff.nextEnd)
+
+      if (diff.insertedLength > 0 && diff.previousEnd === diff.start && insertedText !== '\n') {
+        const insertionLineRange = getCurrentLineRange(plainText, diff.start)
+        const insertionImageLineRange = getImageLayoutBlockStartLine(plainText, insertionLineRange)
+        const shouldInsertBeforeProtectedLine =
+          insertionImageLineRange?.start === insertionLineRange.start &&
+          insertionLineRange.start === diff.start &&
+          !!getEditableBoundaryBeforeProtectedLine(plainText, insertionLineRange)
+
+        if (shouldInsertBeforeProtectedLine) {
+          const boundaryText = insertedText.endsWith('\n') ? insertedText : `${insertedText}\n`
+          const redirectedText = `${plainText.slice(0, diff.start)}${boundaryText}${plainText.slice(
+            diff.start,
+          )}`
+          const redirectedDiff = {
+            start: diff.start,
+            previousEnd: diff.start,
+            nextEnd: diff.start + boundaryText.length,
+            insertedLength: boundaryText.length,
+          }
+          const insertionFormats = insertionFormatsFromState(
+            activeFormatState,
+            formatRanges,
+            diff.start,
+            plainText.length,
+          )
+          const appliedInsertionFormats = insertionFormats.filter(isInlineFormatTool)
+          const nextRanges = updateRangesForTextChange(
+            formatRanges,
+            redirectedDiff,
+            appliedInsertionFormats,
+            redirectedText.length,
+          )
+          const cursor = diff.start + insertedText.length
+          const selection = { start: cursor, end: cursor }
+          syncRichDocument(redirectedText, nextRanges, selection)
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection })
+          })
+          return
+        }
+      }
 
       if (diff.insertedLength === 0 && deletedLength > 0) {
         const imageLineRange =
@@ -2055,7 +2381,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         }
       }
 
-      const insertedText = nextText.slice(diff.start, diff.nextEnd)
       const insertionFormats = insertionFormatsFromState(
         activeFormatState,
         formatRanges,
@@ -2409,11 +2734,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       }
 
       if (imageUri) {
-        return (
-          <View key={`rich-line-${index}`} style={styles.liveMarkdownImageBlock}>
-            <Image source={{ uri: imageUri }} style={styles.liveMarkdownImage} resizeMode="cover" />
-          </View>
-        )
+        const imageKey = IMAGE_EDITOR_RECOVERABLE_LINE.exec(line.trim())?.[1] ?? imageUri
+        return <LiveMarkdownImageBlock key={`rich-image-${imageKey}`} uri={imageUri} />
       }
 
       if (line === DIVIDER_TEXT) {
@@ -2466,6 +2788,25 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [imagePreview],
   )
 
+  const imagePreviewFullscreenSize = useMemo(() => {
+    const screen = Dimensions.get('screen')
+    return {
+      width: Math.max(windowDimensions.width, screen.width),
+      height: Math.max(windowDimensions.height, screen.height),
+    }
+  }, [windowDimensions.height, windowDimensions.width])
+  const imagePreviewModalStyle = useMemo(
+    () => [styles.imagePreviewModal, imagePreviewFullscreenSize],
+    [imagePreviewFullscreenSize],
+  )
+  const imagePreviewViewerStyle = useMemo(
+    () => ({
+      ...styles.imagePreviewViewer,
+      ...imagePreviewFullscreenSize,
+    }),
+    [imagePreviewFullscreenSize],
+  )
+
   const closeImagePreview = useCallback(() => {
     if (imagePreviewTimerRef.current) {
       clearTimeout(imagePreviewTimerRef.current)
@@ -2478,16 +2819,16 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const renderImagePreviewHeader = useCallback(
     (currentIndex?: number) => (
-      <View style={[styles.imagePreviewHeader, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.imagePreviewHeader, { paddingTop: Math.max(insets.top, 24) + 18 }]}>
         <Text style={styles.imagePreviewIndicator}>
           {`${(currentIndex ?? imagePreview?.index ?? 0) + 1}/${imagePreview?.uris.length ?? 1}`}
         </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close image preview"
-          hitSlop={12}
+          hitSlop={{ top: 18, right: 18, bottom: 18, left: 18 }}
           onPress={closeImagePreview}
-          style={styles.imagePreviewCloseButton}
+          style={[styles.imagePreviewCloseButton, { top: Math.max(insets.top, 24) + 10 }]}
         >
           <Text style={styles.imagePreviewCloseText}>{'\u00D7'}</Text>
         </Pressable>
@@ -2591,10 +2932,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         visible={!!imagePreview}
         animationType="fade"
         presentationStyle="fullScreen"
+        transparent={false}
         statusBarTranslucent
+        hardwareAccelerated
         onRequestClose={closeImagePreview}
       >
-        <View style={styles.imagePreviewModal}>
+        <View style={imagePreviewModalStyle}>
           {imagePreview ? (
             <ImageViewer
               key={imagePreview.openedAt}
@@ -2607,7 +2950,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               saveToLocalByLongPress={false}
               backgroundColor={colors.neutral.black}
               renderHeader={renderImagePreviewHeader}
-              style={styles.imagePreviewViewer}
+              renderIndicator={() => <View />}
+              style={imagePreviewViewerStyle}
             />
           ) : null}
         </View>
@@ -2635,7 +2979,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
           <Pressable
             style={styles.liveEditor}
-            onPress={() => contentInputRef.current?.focus()}
+            onPress={() => {
+              if (suppressNextEditorFocusRef.current || imageActionSheetVisible) {
+                suppressNextEditorFocusRef.current = false
+                return
+              }
+              contentInputRef.current?.focus()
+            }}
             accessible={false}
           >
             <ScrollView
@@ -2776,6 +3126,65 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+      <Modal
+        visible={imageActionSheetVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={handleCloseImageActions}
+      >
+        <Pressable
+          accessibilityLabel="关闭图片操作弹窗"
+          style={styles.imageActionDialogBackdrop}
+          onPress={handleImageActionBackdropPress}
+        >
+          <Pressable onPress={() => {}} style={styles.imageActionDialogCard}>
+            <Text style={styles.imageActionDialogTitle}>图片操作</Text>
+            {imageActionItems.map((item, index) => (
+              <View key={item.key}>
+                {index > 0 && <View style={styles.imageActionDialogDivider} />}
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => handleImageActionItemPress(item)}
+                  style={({ pressed }) => [
+                    styles.imageActionDialogItem,
+                    pressed && styles.imageActionDialogItemPressed,
+                  ]}
+                >
+                  <View style={styles.imageActionDialogIconSlot}>
+                    {item.icon ? (
+                      <Icon
+                        name={item.icon}
+                        size={21}
+                        color={item.destructive ? colors.func.danger : colors.semantic.icon.primary}
+                      />
+                    ) : null}
+                  </View>
+                  <Text
+                    style={[
+                      styles.imageActionDialogLabel,
+                      item.destructive && styles.imageActionDialogLabelDestructive,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              </View>
+            ))}
+            <View style={styles.imageActionDialogCancelSeparator} />
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleImageActionBackdropPress}
+              style={({ pressed }) => [
+                styles.imageActionDialogCancelButton,
+                pressed && styles.imageActionDialogItemPressed,
+              ]}
+            >
+              <Text style={styles.imageActionDialogCancelLabel}>取消</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <ActionSheet
         visible={exitSheetVisible}
         onClose={() => setExitSheetVisible(false)}
