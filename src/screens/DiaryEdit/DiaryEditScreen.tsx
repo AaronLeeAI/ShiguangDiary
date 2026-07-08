@@ -136,6 +136,8 @@ const CONTINUED_EMPTY_LINE_FORMATS: FormatTool[] = ['orderedList', 'unorderedLis
 const DIVIDER_TEXT = '---'
 const IMAGE_MARKDOWN_LINE = /^!\[([^\]]*)\]\(([^)]+)\)$/
 const IMAGE_EDITOR_LINE = /^@@image:([a-z0-9-]+)@@$/
+const IMAGE_EDITOR_TOKEN_LIKE_LINE = /^@@image:[a-z0-9-]*@*$/
+const IMAGE_EDITOR_RECOVERABLE_LINE = /^@@image:([a-z0-9-]+)@*$/
 const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
@@ -174,7 +176,7 @@ const getImageUriFromEditorLine = (line: string) => {
   if (markdownUri) {
     return markdownUri
   }
-  const imageId = IMAGE_EDITOR_LINE.exec(line.trim())?.[1]
+  const imageId = IMAGE_EDITOR_RECOVERABLE_LINE.exec(line.trim())?.[1]
   return imageId ? editorImageUriMap.get(imageId) : undefined
 }
 
@@ -195,6 +197,14 @@ const serializeEditorImageLine = (line: string) => {
 }
 
 const isImageLayoutSpacerLine = (line: string) => line === IMAGE_LAYOUT_SPACER_LINE
+
+const isImageEditorTokenLikeLine = (line: string) => IMAGE_EDITOR_TOKEN_LIKE_LINE.test(line.trim())
+
+const isCompleteImageEditorLine = (line: string) => IMAGE_EDITOR_LINE.test(line.trim())
+
+const isUnsafeImageEditorLine = (line: string) =>
+  isImageEditorTokenLikeLine(line) &&
+  (!isCompleteImageEditorLine(line) || !getImageUriFromEditorLine(line))
 
 const normalizeSelection = (selection: TextSelection, max: number): TextSelection => {
   const start = Math.max(0, Math.min(selection.start, max))
@@ -408,7 +418,7 @@ const getPreviousLineRange = (text: string, lineRange: TextSelection): TextSelec
 
 const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) => {
   const lineText = getLineText(text, lineRange)
-  if (getImageUriFromEditorLine(lineText)) {
+  if (getImageUriFromEditorLine(lineText) || isImageEditorTokenLikeLine(lineText)) {
     return lineRange
   }
   if (!isImageLayoutSpacerLine(lineText)) {
@@ -422,7 +432,7 @@ const getImageLayoutBlockStartLine = (text: string, lineRange: TextSelection) =>
       return null
     }
     const previousText = getLineText(text, previous)
-    if (getImageUriFromEditorLine(previousText)) {
+    if (getImageUriFromEditorLine(previousText) || isImageEditorTokenLikeLine(previousText)) {
       return previous
     }
     if (!isImageLayoutSpacerLine(previousText)) {
@@ -449,21 +459,31 @@ const getCursorAfterImageLayoutBlock = (text: string, imageLineRange: TextSelect
   return next ? next.start : blockEndLine.end
 }
 
-const snapSelectionAwayFromImageLayout = (selection: TextSelection, text: string) => {
+const snapSelectionAwayFromProtectedLayout = (selection: TextSelection, text: string) => {
   const normalized = normalizeSelection(selection, text.length)
   if (normalized.start !== normalized.end) {
     return normalized
   }
   const lineRange = getCurrentLineRange(text, normalized.start)
   const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
-  if (!imageLineRange) {
-    return normalized
+  if (imageLineRange) {
+    const cursor = getCursorAfterImageLayoutBlock(text, imageLineRange)
+    return { start: cursor, end: cursor }
   }
-  const cursor = getCursorAfterImageLayoutBlock(text, imageLineRange)
-  return { start: cursor, end: cursor }
+  if (getLineText(text, lineRange) === DIVIDER_TEXT) {
+    const cursor =
+      lineRange.end < text.length && text[lineRange.end] === '\n'
+        ? lineRange.end + 1
+        : lineRange.end
+    return { start: cursor, end: cursor }
+  }
+  return normalized
 }
 
-const shouldRenderImageSafeCaret = (text: string, selection: TextSelection) => {
+const isProtectedLayoutLineBeforeCaret = (line: string) =>
+  isImageLayoutSpacerLine(line) || line === DIVIDER_TEXT
+
+const shouldRenderProtectedLayoutSafeCaret = (text: string, selection: TextSelection) => {
   const normalized = normalizeSelection(selection, text.length)
   if (normalized.start !== normalized.end) {
     return false
@@ -473,7 +493,7 @@ const shouldRenderImageSafeCaret = (text: string, selection: TextSelection) => {
     return false
   }
   const previous = getPreviousLineRange(text, lineRange)
-  return !!previous && isImageLayoutSpacerLine(getLineText(text, previous))
+  return !!previous && isProtectedLayoutLineBeforeCaret(getLineText(text, previous))
 }
 
 const findImageLineAtPositions = (text: string, positions: number[]): TextSelection | null => {
@@ -487,9 +507,33 @@ const findImageLineAtPositions = (text: string, positions: number[]): TextSelect
   return null
 }
 
+const findUnsafeImageEditorLine = (text: string): TextSelection | null => {
+  const lines = text.split('\n')
+  let offset = 0
+  for (const line of lines) {
+    if (isUnsafeImageEditorLine(line)) {
+      return { start: offset, end: offset + line.length }
+    }
+    offset += line.length + 1
+  }
+  return null
+}
+
 const getPreviousImageLineAtLineStart = (text: string, lineRange: TextSelection) => {
   const previous = getPreviousLineRange(text, lineRange)
   return previous ? getImageLayoutBlockStartLine(text, previous) : null
+}
+
+const getImageLineForBackspace = (text: string, selection: TextSelection) => {
+  const normalized = normalizeSelection(selection, text.length)
+  if (normalized.start !== normalized.end) {
+    return findImageLineAtPositions(text, [normalized.start, normalized.end])
+  }
+  const lineRange = getCurrentLineRange(text, normalized.start)
+  return (
+    getImageLayoutBlockStartLine(text, lineRange) ??
+    (lineRange.start === normalized.start ? getPreviousImageLineAtLineStart(text, lineRange) : null)
+  )
 }
 
 const getImageLayoutBlockRemovalRange = (text: string, imageLineRange: TextSelection) => {
@@ -905,6 +949,9 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
       outputLines.push(serializeEditorImageLine(line))
       return
     }
+    if (isImageEditorTokenLikeLine(line)) {
+      return
+    }
 
     let output =
       line === DIVIDER_TEXT
@@ -934,7 +981,12 @@ const serializeRichDocumentToMarkdown = (doc: RichDocument) => {
 const countContentChars = (text: string) =>
   text
     .split('\n')
-    .filter(line => !isImageLayoutSpacerLine(line) && !getImageUriFromEditorLine(line))
+    .filter(
+      line =>
+        !isImageLayoutSpacerLine(line) &&
+        !getImageUriFromEditorLine(line) &&
+        !isImageEditorTokenLikeLine(line),
+    )
     .join('\n')
     .replace(/\s/g, '').length
 
@@ -1003,9 +1055,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     }
     const textWithoutLayoutSpacers = plainText
       .split('\n')
-      .filter(line => !isImageLayoutSpacerLine(line))
+      .filter(line => !isImageLayoutSpacerLine(line) && !isImageEditorTokenLikeLine(line))
       .join('\n')
-    return title.trim().length > 0 || textWithoutLayoutSpacers.trim().length > 0
+    return (
+      title.trim().length > 0 ||
+      textWithoutLayoutSpacers.trim().length > 0 ||
+      plainText.split('\n').some(line => !!getImageUriFromEditorLine(line))
+    )
   }, [hydrated, plainText, title])
 
   useEffect(() => {
@@ -1222,7 +1278,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
-      const selection = snapSelectionAwayFromImageLayout(event.nativeEvent.selection, plainText)
+      const selection = snapSelectionAwayFromProtectedLayout(event.nativeEvent.selection, plainText)
       setContentSelection(selection)
       if (
         selection.start !== event.nativeEvent.selection.start ||
@@ -1302,8 +1358,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         nextText.length,
       )
       const cursor = selection.start + text.length
-      syncRichDocument(nextText, nextRanges, { start: cursor, end: cursor })
-      requestAnimationFrame(() => contentInputRef.current?.focus())
+      const nextSelection = { start: cursor, end: cursor }
+      syncRichDocument(nextText, nextRanges, nextSelection)
+      requestAnimationFrame(() => {
+        contentInputRef.current?.focus()
+        requestAnimationFrame(() => {
+          contentInputRef.current?.setNativeProps({ selection: nextSelection })
+        })
+      })
     },
     [activeFormatState, contentSelection, formatRanges, plainText, syncRichDocument],
   )
@@ -1352,7 +1414,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const deletedOnlyPreviousNewline = diff.insertedLength === 0 && deletedText === '\n'
 
       if (diff.insertedLength === 0 && deletedLength > 0) {
-        const imageLineRange = findImageLineAtPositions(plainText, [diff.start, diff.previousEnd])
+        const imageLineRange =
+          findImageLineAtPositions(plainText, [
+            diff.start,
+            diff.previousEnd,
+            Math.max(0, diff.start - 1),
+            Math.min(plainText.length, diff.previousEnd + 1),
+          ]) ?? getImageLineForBackspace(plainText, contentSelection)
         if (imageLineRange) {
           const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
           const imageDiff = {
@@ -1372,6 +1440,28 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           )
           const selection = { start: removalRange.cursor, end: removalRange.cursor }
           syncRichDocument(textWithoutImage, nextRanges, selection)
+          requestAnimationFrame(() => {
+            contentInputRef.current?.setNativeProps({ selection })
+          })
+          return
+        }
+
+        const unsafeImageLineRange = findUnsafeImageEditorLine(nextText)
+        if (unsafeImageLineRange) {
+          const removalRange = getImageLayoutBlockRemovalRange(nextText, unsafeImageLineRange)
+          const textWithoutUnsafeImage = `${nextText.slice(0, removalRange.start)}${nextText.slice(
+            removalRange.end,
+          )}`
+          const cleanupDiff = getTextDiff(plainText, textWithoutUnsafeImage)
+          const nextRanges = updateRangesForTextChange(
+            formatRanges,
+            cleanupDiff,
+            [],
+            textWithoutUnsafeImage.length,
+          )
+          const cursor = Math.max(0, Math.min(removalRange.cursor, textWithoutUnsafeImage.length))
+          const selection = { start: cursor, end: cursor }
+          syncRichDocument(textWithoutUnsafeImage, nextRanges, selection)
           requestAnimationFrame(() => {
             contentInputRef.current?.setNativeProps({ selection })
           })
@@ -1477,7 +1567,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       syncRichDocument(nextText, nextRanges, { start: diff.nextEnd, end: diff.nextEnd })
     },
-    [activeFormatState, clearBlockFormatState, formatRanges, plainText, syncRichDocument],
+    [
+      activeFormatState,
+      clearBlockFormatState,
+      contentSelection,
+      formatRanges,
+      plainText,
+      syncRichDocument,
+    ],
   )
 
   const handleContentKeyPress = useCallback(
@@ -1490,35 +1587,6 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         return
       }
       const lineRange = getCurrentLineRange(plainText, selection.start)
-      const imageLineRange =
-        findImageLineAtPositions(plainText, [selection.start]) ??
-        (lineRange.start === selection.start
-          ? getPreviousImageLineAtLineStart(plainText, lineRange)
-          : null)
-      if (imageLineRange) {
-        const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
-        const imageDiff = {
-          start: removalRange.start,
-          previousEnd: removalRange.end,
-          nextEnd: removalRange.start,
-          insertedLength: 0,
-        }
-        const textWithoutImage = `${plainText.slice(0, removalRange.start)}${plainText.slice(
-          removalRange.end,
-        )}`
-        const nextRanges = updateRangesForTextChange(
-          formatRanges,
-          imageDiff,
-          [],
-          textWithoutImage.length,
-        )
-        const nextSelection = { start: removalRange.cursor, end: removalRange.cursor }
-        syncRichDocument(textWithoutImage, nextRanges, nextSelection)
-        requestAnimationFrame(() => {
-          contentInputRef.current?.setNativeProps({ selection: nextSelection })
-        })
-        return
-      }
       if (lineRange.start !== 0 || lineRange.end > lineRange.start) {
         return
       }
@@ -1636,7 +1704,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       }
 
       if (tool === 'divider') {
-        insertPlainText(`${plainText ? '\n' : ''}${DIVIDER_TEXT}\n`, [])
+        const selection = normalizeSelection(contentSelection, plainText.length)
+        const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
+        insertPlainText(`${prefix}${DIVIDER_TEXT}\n`, [])
         return
       }
 
@@ -1720,8 +1790,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   }, [activeFormatState, selectionFormats])
 
   const contentCharCount = useMemo(() => countContentChars(plainText), [plainText])
-  const imageSafeCaretVisible = useMemo(
-    () => shouldRenderImageSafeCaret(plainText, contentSelection),
+  const protectedLayoutSafeCaretVisible = useMemo(
+    () => shouldRenderProtectedLayoutSafeCaret(plainText, contentSelection),
     [contentSelection, plainText],
   )
 
@@ -1785,7 +1855,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const contentNode = line ? renderRichInline(line, lineStart) : '\n'
       const imageUri = getImageUriFromEditorLine(line)
 
-      if (isImageLayoutSpacerLine(line)) {
+      if (isImageLayoutSpacerLine(line) || (isImageEditorTokenLikeLine(line) && !imageUri)) {
         return null
       }
 
@@ -1794,11 +1864,11 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         end: lineEnd,
       })
       if (
-        imageSafeCaretVisible &&
+        protectedLayoutSafeCaretVisible &&
         !line &&
         contentSelection.start === lineStart &&
         previousLineRange &&
-        isImageLayoutSpacerLine(getLineText(plainText, previousLineRange))
+        isProtectedLayoutLineBeforeCaret(getLineText(plainText, previousLineRange))
       ) {
         return (
           <View key={`rich-line-${index}`} style={styles.liveMarkdownImageCaretLine}>
@@ -1852,7 +1922,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         </Text>
       )
     })
-  }, [contentSelection.start, formatRanges, imageSafeCaretVisible, plainText, renderRichInline])
+  }, [
+    contentSelection.start,
+    formatRanges,
+    protectedLayoutSafeCaretVisible,
+    plainText,
+    renderRichInline,
+  ])
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -1992,7 +2068,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               placeholder=""
               multiline
               selection={contentSelection}
-              caretHidden={imageSafeCaretVisible}
+              caretHidden={protectedLayoutSafeCaretVisible}
               onSelectionChange={handleContentSelectionChange}
               onKeyPress={handleContentKeyPress}
               onScroll={handleContentScroll}
