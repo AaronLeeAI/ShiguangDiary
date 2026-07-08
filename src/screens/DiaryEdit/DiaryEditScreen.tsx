@@ -165,7 +165,7 @@ const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
 const PROTECTED_SELECTION_SHIELD_MS = 240
 const PROGRAMMATIC_SELECTION_LOCK_MS = 1200
-type FocusContentOptions = { forceKeyboard?: boolean }
+type FocusContentOptions = { forceKeyboard?: boolean; targetTextLength?: number }
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
   { length: IMAGE_LAYOUT_SPACER_LINES },
   () => IMAGE_LAYOUT_SPACER_LINE,
@@ -1621,11 +1621,17 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [keyboardVisible, setKeyboardVisible] = useState(false)
   const [fakeCaretVisible, setFakeCaretVisible] = useState(true)
   const keyboardVisibleRef = useRef(false)
+  const plainTextLengthRef = useRef(0)
+  const pendingContentFocusRef = useRef<{
+    selection: TextSelection
+    options?: FocusContentOptions
+  } | null>(null)
   const [exitSheetVisible, setExitSheetVisible] = useState(false)
   const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
   const [weatherLabel, setWeatherLabel] = useState(DEFAULT_WEATHER)
   const [locating, setLocating] = useState(false)
   const [weatherLoading, setWeatherLoading] = useState(false)
+  plainTextLengthRef.current = plainText.length
   const lastLocationRef = useRef<Coordinates | null>(null)
   const allowLeaveRef = useRef(false)
   const contentPressInAtRef = useRef(0)
@@ -2109,6 +2115,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const focusContentAtSelection = useCallback(
     (selection: TextSelection, options?: FocusContentOptions) => {
       const lockedSelection = { ...selection }
+      const targetTextLength = options?.targetTextLength
+      const shouldWaitForTextCommit =
+        typeof targetTextLength === 'number' && plainTextLengthRef.current < targetTextLength
       const shouldResetAndroidFocus =
         Platform.OS === 'android' && options?.forceKeyboard && !keyboardVisibleRef.current
       suppressNextEditorFocusRef.current = false
@@ -2118,6 +2127,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         until: Date.now() + PROGRAMMATIC_SELECTION_LOCK_MS,
       }
       setContentSelection(lockedSelection)
+
+      if (shouldWaitForTextCommit) {
+        pendingContentFocusRef.current = {
+          selection: lockedSelection,
+          options: { ...options, targetTextLength: undefined },
+        }
+        return
+      }
 
       const applySelection = () => {
         contentInputRef.current?.focus()
@@ -2155,6 +2172,22 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     },
     [],
   )
+
+  useEffect(() => {
+    const pendingFocus = pendingContentFocusRef.current
+    if (!pendingFocus) {
+      return
+    }
+    const targetTextLength = pendingFocus.options?.targetTextLength
+    if (typeof targetTextLength === 'number' && plainText.length < targetTextLength) {
+      return
+    }
+    pendingContentFocusRef.current = null
+    focusContentAtSelection(pendingFocus.selection, {
+      ...pendingFocus.options,
+      targetTextLength: undefined,
+    })
+  }, [focusContentAtSelection, plainText.length])
 
   const restoreSnapshot = useCallback(
     (snapshot: EditorSnapshot) => {
@@ -2214,7 +2247,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const cursor = selection.start + text.length
       const nextSelection = { start: cursor, end: cursor }
       syncRichDocument(nextText, nextRanges, nextSelection)
-      focusContentAtSelection(nextSelection, focusOptions)
+      focusContentAtSelection(nextSelection, { ...focusOptions, targetTextLength: nextText.length })
     },
     [
       activeFormatState,
@@ -2250,7 +2283,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       syncRichDocument(nextText, nextRanges, nextSelection)
 
       if (shouldFocus) {
-        focusContentAtSelection(nextSelection, focusOptions)
+        focusContentAtSelection(nextSelection, {
+          ...focusOptions,
+          targetTextLength: nextText.length,
+        })
       }
     },
     [focusContentAtSelection, formatRanges, plainText, syncRichDocument],
@@ -3420,17 +3456,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             </Text>
           </View>
 
-          <Pressable
-            style={styles.liveEditor}
-            onPress={() => {
-              if (suppressNextEditorFocusRef.current || imageActionSheetVisible) {
-                suppressNextEditorFocusRef.current = false
-                return
-              }
-              focusContentAtSelection(contentSelection, { forceKeyboard: true })
-            }}
-            accessible={false}
-          >
+          <View style={styles.liveEditor}>
             <ScrollView
               ref={previewScrollRef}
               pointerEvents="none"
@@ -3477,7 +3503,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             >
               {renderImageInteractionBlocks()}
             </ScrollView>
-          </Pressable>
+          </View>
         </View>
 
         <View style={styles.bottomSection}>
