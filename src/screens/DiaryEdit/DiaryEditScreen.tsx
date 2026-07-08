@@ -514,6 +514,10 @@ const getEditableBoundaryBeforeProtectedLine = (text: string, lineRange: TextSel
     return null
   }
 
+  if (previousLineRange.start === previousLineRange.end) {
+    return { start: previousLineRange.start, end: previousLineRange.start }
+  }
+
   return { start: lineRange.start, end: lineRange.start }
 }
 
@@ -2231,20 +2235,26 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       if (diff.insertedLength > 0 && diff.previousEnd === diff.start && insertedText !== '\n') {
         const insertionLineRange = getCurrentLineRange(plainText, diff.start)
         const insertionImageLineRange = getImageLayoutBlockStartLine(plainText, insertionLineRange)
-        const shouldInsertBeforeProtectedLine =
+        const editableBoundary =
           insertionImageLineRange?.start === insertionLineRange.start &&
-          insertionLineRange.start === diff.start &&
-          !!getEditableBoundaryBeforeProtectedLine(plainText, insertionLineRange)
+          insertionLineRange.start === diff.start
+            ? getEditableBoundaryBeforeProtectedLine(plainText, insertionLineRange)
+            : null
 
-        if (shouldInsertBeforeProtectedLine) {
-          const boundaryText = insertedText.endsWith('\n') ? insertedText : `${insertedText}\n`
-          const redirectedText = `${plainText.slice(0, diff.start)}${boundaryText}${plainText.slice(
-            diff.start,
+        if (editableBoundary) {
+          const insertAt = editableBoundary.start
+          const usesExistingLineBreak = insertAt < diff.start
+          const boundaryText =
+            usesExistingLineBreak || insertedText.endsWith('\n')
+              ? insertedText
+              : `${insertedText}\n`
+          const redirectedText = `${plainText.slice(0, insertAt)}${boundaryText}${plainText.slice(
+            insertAt,
           )}`
           const redirectedDiff = {
-            start: diff.start,
-            previousEnd: diff.start,
-            nextEnd: diff.start + boundaryText.length,
+            start: insertAt,
+            previousEnd: insertAt,
+            nextEnd: insertAt + boundaryText.length,
             insertedLength: boundaryText.length,
           }
           const insertionFormats = insertionFormatsFromState(
@@ -2260,7 +2270,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             appliedInsertionFormats,
             redirectedText.length,
           )
-          const cursor = diff.start + insertedText.length
+          const cursor = insertAt + insertedText.length
           const selection = { start: cursor, end: cursor }
           syncRichDocument(redirectedText, nextRanges, selection)
           requestAnimationFrame(() => {

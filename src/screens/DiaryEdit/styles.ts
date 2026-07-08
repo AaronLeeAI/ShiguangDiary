@@ -143,7 +143,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     height: 168,
-    borderRadius: 12,
     overflow: 'hidden',
     marginVertical: spacing.xs,
     backgroundColor: colors.semantic.bg.subtle,
