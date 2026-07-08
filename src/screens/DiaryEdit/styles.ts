@@ -164,6 +164,10 @@ export const styles = StyleSheet.create({
   liveMarkdownImageTouchBlock: {
     width: '100%',
   },
+  liveMarkdownImageTailTouchBlock: {
+    width: '100%',
+    minHeight: 280,
+  },
   liveMarkdownImageTouchBlockPressed: {
     opacity: 0.92,
   },

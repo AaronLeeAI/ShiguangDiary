@@ -164,7 +164,7 @@ const IMAGE_EDITOR_RECOVERABLE_LINE = /^@@image:([a-z0-9-]+)@*$/
 const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
 const PROTECTED_SELECTION_SHIELD_MS = 240
-const PROGRAMMATIC_SELECTION_LOCK_MS = 520
+const PROGRAMMATIC_SELECTION_LOCK_MS = 1200
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
   { length: IMAGE_LAYOUT_SPACER_LINES },
   () => IMAGE_LAYOUT_SPACER_LINE,
@@ -2040,8 +2040,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             })
             return
           }
+        } else {
+          programmaticContentSelectionRef.current = null
         }
-        programmaticContentSelectionRef.current = null
       }
 
       if (isSelectionTouchingProtectedLayout(plainText, rawSelection)) {
@@ -2105,6 +2106,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const focusContentAtSelection = useCallback((selection: TextSelection) => {
     const lockedSelection = { ...selection }
+    suppressNextEditorFocusRef.current = false
+    contentPressInAtRef.current = 0
     programmaticContentSelectionRef.current = {
       selection: lockedSelection,
       until: Date.now() + PROGRAMMATIC_SELECTION_LOCK_MS,
@@ -2116,11 +2119,15 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       contentInputRef.current?.setNativeProps({ selection: lockedSelection })
     }
 
+    applySelection()
     requestAnimationFrame(() => {
       applySelection()
       requestAnimationFrame(applySelection)
     })
-    setTimeout(applySelection, 80)
+    const delayedSelectionRetries = [80, 180, 320, 520, 760]
+    delayedSelectionRetries.forEach(delay => {
+      setTimeout(applySelection, delay)
+    })
     setTimeout(() => {
       if (
         programmaticContentSelectionRef.current &&
@@ -2128,7 +2135,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       ) {
         programmaticContentSelectionRef.current = null
       }
-    }, PROGRAMMATIC_SELECTION_LOCK_MS + 40)
+    }, PROGRAMMATIC_SELECTION_LOCK_MS + 80)
   }, [])
 
   const restoreSnapshot = useCallback(
@@ -3009,7 +3016,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     const lines = plainText.split('\n')
     let offset = 0
     let orderedIndex = 1
-    return lines.map((line, index) => {
+    const blocks = lines.map((line, index) => {
       const lineStart = offset
       const lineEnd = lineStart + line.length
       const effectiveEnd = Math.max(lineEnd, lineStart + 1)
@@ -3135,6 +3142,29 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         </View>
       )
     })
+
+    const tailLineRange = getCurrentLineRange(plainText, plainText.length)
+    const previousTailLineRange = getPreviousLineRange(plainText, tailLineRange)
+    const shouldRenderTailFocusTarget =
+      tailLineRange.start === tailLineRange.end &&
+      previousTailLineRange &&
+      isProtectedLayoutLineBeforeCaret(getLineText(plainText, previousTailLineRange))
+
+    if (shouldRenderTailFocusTarget) {
+      blocks.push(
+        <Pressable
+          key="image-touch-tail-after"
+          accessibilityRole="button"
+          accessibilityLabel="在图片后继续输入"
+          onPress={() =>
+            focusContentAtSelection({ start: plainText.length, end: plainText.length })
+          }
+          style={styles.liveMarkdownImageTailTouchBlock}
+        />,
+      )
+    }
+
+    return blocks
   }, [focusContentAtSelection, formatRanges, handlePreviewImagePress, plainText, renderRichInline])
 
   const imagePreviewUrls = useMemo(
