@@ -156,6 +156,14 @@ export const styles = StyleSheet.create({
     minHeight: typography.bodyM.lineHeight,
     justifyContent: 'center',
   },
+  imagePreviewModal: {
+    flex: 1,
+    backgroundColor: colors.neutral.black,
+  },
+  imagePreviewViewer: {
+    flex: 1,
+    backgroundColor: colors.neutral.black,
+  },
   imagePreviewHeader: {
     position: 'absolute',
     top: 0,

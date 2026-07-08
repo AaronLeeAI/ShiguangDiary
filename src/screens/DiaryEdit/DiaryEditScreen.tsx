@@ -57,7 +57,8 @@ type FormatState = Partial<Record<FormatTool, boolean>>
 type FormatRange = { start: number; end: number; formats: FormatTool[] }
 type RichDocument = { text: string; ranges: FormatRange[] }
 type EditorSnapshot = RichDocument & { selection: TextSelection }
-type ImagePreviewState = { uris: string[]; index: number }
+type ImagePreviewRequest = { uris: string[]; index: number }
+type ImagePreviewState = ImagePreviewRequest & { openedAt: number }
 
 type DiaryTool =
   | 'image'
@@ -1096,6 +1097,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [locating, setLocating] = useState(false)
   const allowLeaveRef = useRef(false)
   const contentPressInAtRef = useRef(0)
+  const imagePreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const imagePreviewKeyboardHideRef = useRef<ReturnType<typeof Keyboard.addListener> | null>(null)
   const headerTime = useMemo(() => formatHeaderTime(new Date()), [])
   const hasEditableContent = useCallback(() => {
     if (!hydrated) {
@@ -1130,6 +1133,16 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       locationProvider: 'auto',
     })
   }, [])
+
+  useEffect(
+    () => () => {
+      if (imagePreviewTimerRef.current) {
+        clearTimeout(imagePreviewTimerRef.current)
+      }
+      imagePreviewKeyboardHideRef.current?.remove()
+    },
+    [],
+  )
 
   useEffect(
     () =>
@@ -1328,6 +1341,39 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     contentPressInAtRef.current = Date.now()
   }, [])
 
+  const openImagePreview = useCallback(
+    (previewState: ImagePreviewRequest) => {
+      if (imagePreviewTimerRef.current) {
+        clearTimeout(imagePreviewTimerRef.current)
+        imagePreviewTimerRef.current = null
+      }
+      imagePreviewKeyboardHideRef.current?.remove()
+      imagePreviewKeyboardHideRef.current = null
+
+      contentInputRef.current?.blur()
+      Keyboard.dismiss()
+
+      const showPreview = () => {
+        if (imagePreviewTimerRef.current) {
+          clearTimeout(imagePreviewTimerRef.current)
+          imagePreviewTimerRef.current = null
+        }
+        imagePreviewKeyboardHideRef.current?.remove()
+        imagePreviewKeyboardHideRef.current = null
+        setImagePreview({ ...previewState, openedAt: Date.now() })
+      }
+
+      if (keyboardVisible) {
+        imagePreviewKeyboardHideRef.current = Keyboard.addListener('keyboardDidHide', showPreview)
+        imagePreviewTimerRef.current = setTimeout(showPreview, 900)
+        return
+      }
+
+      requestAnimationFrame(showPreview)
+    },
+    [keyboardVisible],
+  )
+
   const handleContentSelectionChange = useCallback(
     (event: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
       const rawSelection = normalizeSelection(event.nativeEvent.selection, plainText.length)
@@ -1343,8 +1389,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         const previewState = getImagePreviewStateForLine(plainText, imageLineRange)
         if (previewState) {
           contentPressInAtRef.current = 0
-          Keyboard.dismiss()
-          setImagePreview(previewState)
+          openImagePreview(previewState)
         }
       }
 
@@ -1356,7 +1401,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         })
       }
     },
-    [plainText],
+    [openImagePreview, plainText],
   )
 
   const handleContentScroll = useCallback(
@@ -2003,6 +2048,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   )
 
   const closeImagePreview = useCallback(() => {
+    if (imagePreviewTimerRef.current) {
+      clearTimeout(imagePreviewTimerRef.current)
+      imagePreviewTimerRef.current = null
+    }
+    imagePreviewKeyboardHideRef.current?.remove()
+    imagePreviewKeyboardHideRef.current = null
     setImagePreview(null)
   }, [])
 
@@ -2119,23 +2170,28 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       <Modal
         visible={!!imagePreview}
-        transparent
         animationType="fade"
+        presentationStyle="fullScreen"
+        statusBarTranslucent
         onRequestClose={closeImagePreview}
       >
-        {imagePreview ? (
-          <ImageViewer
-            imageUrls={imagePreviewUrls}
-            index={imagePreview.index}
-            enableSwipeDown
-            enableImageZoom
-            onSwipeDown={closeImagePreview}
-            onCancel={closeImagePreview}
-            saveToLocalByLongPress={false}
-            backgroundColor={colors.neutral.black}
-            renderHeader={renderImagePreviewHeader}
-          />
-        ) : null}
+        <View style={styles.imagePreviewModal}>
+          {imagePreview ? (
+            <ImageViewer
+              key={imagePreview.openedAt}
+              imageUrls={imagePreviewUrls}
+              index={imagePreview.index}
+              enableSwipeDown
+              enableImageZoom
+              onSwipeDown={closeImagePreview}
+              onCancel={closeImagePreview}
+              saveToLocalByLongPress={false}
+              backgroundColor={colors.neutral.black}
+              renderHeader={renderImagePreviewHeader}
+              style={styles.imagePreviewViewer}
+            />
+          ) : null}
+        </View>
       </Modal>
 
       <KeyboardAvoidingView
