@@ -165,6 +165,7 @@ const IMAGE_LAYOUT_SPACER_LINE = '\u200B'
 const IMAGE_LAYOUT_SPACER_LINES = 7
 const PROTECTED_SELECTION_SHIELD_MS = 240
 const PROGRAMMATIC_SELECTION_LOCK_MS = 1200
+type FocusContentOptions = { forceKeyboard?: boolean }
 const IMAGE_LAYOUT_SPACER_BLOCK = Array.from(
   { length: IMAGE_LAYOUT_SPACER_LINES },
   () => IMAGE_LAYOUT_SPACER_LINE,
@@ -1618,6 +1619,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const redoStackRef = useRef<EditorSnapshot[]>([])
   const [historyStatus, setHistoryStatus] = useState({ undo: 0, redo: 0 })
   const [keyboardVisible, setKeyboardVisible] = useState(false)
+  const [fakeCaretVisible, setFakeCaretVisible] = useState(true)
   const keyboardVisibleRef = useRef(false)
   const [exitSheetVisible, setExitSheetVisible] = useState(false)
   const [locationLabel, setLocationLabel] = useState(DEFAULT_LOCATION)
@@ -2104,39 +2106,55 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [],
   )
 
-  const focusContentAtSelection = useCallback((selection: TextSelection) => {
-    const lockedSelection = { ...selection }
-    suppressNextEditorFocusRef.current = false
-    contentPressInAtRef.current = 0
-    programmaticContentSelectionRef.current = {
-      selection: lockedSelection,
-      until: Date.now() + PROGRAMMATIC_SELECTION_LOCK_MS,
-    }
-    setContentSelection(lockedSelection)
-
-    const applySelection = () => {
-      contentInputRef.current?.focus()
-      contentInputRef.current?.setNativeProps({ selection: lockedSelection })
-    }
-
-    applySelection()
-    requestAnimationFrame(() => {
-      applySelection()
-      requestAnimationFrame(applySelection)
-    })
-    const delayedSelectionRetries = [80, 180, 320, 520, 760]
-    delayedSelectionRetries.forEach(delay => {
-      setTimeout(applySelection, delay)
-    })
-    setTimeout(() => {
-      if (
-        programmaticContentSelectionRef.current &&
-        areTextSelectionsEqual(programmaticContentSelectionRef.current.selection, lockedSelection)
-      ) {
-        programmaticContentSelectionRef.current = null
+  const focusContentAtSelection = useCallback(
+    (selection: TextSelection, options?: FocusContentOptions) => {
+      const lockedSelection = { ...selection }
+      const shouldResetAndroidFocus =
+        Platform.OS === 'android' && options?.forceKeyboard && !keyboardVisibleRef.current
+      suppressNextEditorFocusRef.current = false
+      contentPressInAtRef.current = 0
+      programmaticContentSelectionRef.current = {
+        selection: lockedSelection,
+        until: Date.now() + PROGRAMMATIC_SELECTION_LOCK_MS,
       }
-    }, PROGRAMMATIC_SELECTION_LOCK_MS + 80)
-  }, [])
+      setContentSelection(lockedSelection)
+
+      const applySelection = () => {
+        contentInputRef.current?.focus()
+        contentInputRef.current?.setNativeProps({ selection: lockedSelection })
+      }
+
+      if (shouldResetAndroidFocus) {
+        contentInputRef.current?.setNativeProps({ selection: lockedSelection })
+        contentInputRef.current?.blur()
+        Keyboard.dismiss()
+      } else {
+        applySelection()
+      }
+
+      requestAnimationFrame(() => {
+        if (!shouldResetAndroidFocus) {
+          applySelection()
+        }
+        requestAnimationFrame(applySelection)
+      })
+      const delayedSelectionRetries = shouldResetAndroidFocus
+        ? [90, 180, 320, 520, 760, 1040]
+        : [80, 180, 320, 520, 760]
+      delayedSelectionRetries.forEach(delay => {
+        setTimeout(applySelection, delay)
+      })
+      setTimeout(() => {
+        if (
+          programmaticContentSelectionRef.current &&
+          areTextSelectionsEqual(programmaticContentSelectionRef.current.selection, lockedSelection)
+        ) {
+          programmaticContentSelectionRef.current = null
+        }
+      }, PROGRAMMATIC_SELECTION_LOCK_MS + 80)
+    },
+    [],
+  )
 
   const restoreSnapshot = useCallback(
     (snapshot: EditorSnapshot) => {
@@ -2168,7 +2186,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   }, [restoreSnapshot])
 
   const insertPlainText = useCallback(
-    (text: string, formats?: FormatTool[]) => {
+    (text: string, formats?: FormatTool[], focusOptions?: FocusContentOptions) => {
       const selection = normalizeSelection(contentSelection, plainText.length)
       const insertionFormats =
         formats ??
@@ -2196,7 +2214,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const cursor = selection.start + text.length
       const nextSelection = { start: cursor, end: cursor }
       syncRichDocument(nextText, nextRanges, nextSelection)
-      focusContentAtSelection(nextSelection)
+      focusContentAtSelection(nextSelection, focusOptions)
     },
     [
       activeFormatState,
@@ -2209,7 +2227,14 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   )
 
   const applyPlainTextEdit = useCallback(
-    (start: number, end: number, insertedText: string, cursor: number, shouldFocus = true) => {
+    (
+      start: number,
+      end: number,
+      insertedText: string,
+      cursor: number,
+      shouldFocus = true,
+      focusOptions?: FocusContentOptions,
+    ) => {
       const safeStart = Math.max(0, Math.min(start, plainText.length))
       const safeEnd = Math.max(safeStart, Math.min(end, plainText.length))
       const nextText = `${plainText.slice(0, safeStart)}${insertedText}${plainText.slice(safeEnd)}`
@@ -2225,7 +2250,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       syncRichDocument(nextText, nextRanges, nextSelection)
 
       if (shouldFocus) {
-        focusContentAtSelection(nextSelection)
+        focusContentAtSelection(nextSelection, focusOptions)
       }
     },
     [focusContentAtSelection, formatRanges, plainText, syncRichDocument],
@@ -2328,14 +2353,23 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     const nextLine = getNextLineRange(plainText, blockEndLine)
     if (nextLine && nextLine.start === nextLine.end) {
       const selection = { start: nextLine.start, end: nextLine.start }
-      focusContentAtSelection(selection)
+      focusContentAtSelection(selection, { forceKeyboard: true })
       return
     }
 
     const hasFollowingNewline =
       blockEndLine.end < plainText.length && plainText[blockEndLine.end] === '\n'
     const insertAt = hasFollowingNewline ? blockEndLine.end + 1 : blockEndLine.end
-    applyPlainTextEdit(insertAt, insertAt, '\n', hasFollowingNewline ? insertAt : insertAt + 1)
+    applyPlainTextEdit(
+      insertAt,
+      insertAt,
+      '\n',
+      hasFollowingNewline ? insertAt : insertAt + 1,
+      true,
+      {
+        forceKeyboard: true,
+      },
+    )
   }, [applyPlainTextEdit, focusContentAtSelection, getCurrentImageActionLine, plainText])
 
   const imageActionItems = useMemo<ImageActionItem[]>(
@@ -2395,19 +2429,19 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       })
 
       if (response.didCancel) {
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        focusContentAtSelection(contentSelection, { forceKeyboard: true })
         return
       }
       if (response.errorCode) {
         toast.error(response.errorMessage ?? '图片选择失败')
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        focusContentAtSelection(contentSelection, { forceKeyboard: true })
         return
       }
 
       const assets = (response.assets ?? []).filter(asset => !!asset.uri)
       if (assets.length <= 0) {
         toast.info('未选择图片')
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        focusContentAtSelection(contentSelection, { forceKeyboard: true })
         return
       }
 
@@ -2415,12 +2449,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
       const suffix = '\n'
       const markdown = assets.map(createImageEditorBlock).join('\n')
-      insertPlainText(`${prefix}${markdown}${suffix}`, [])
+      insertPlainText(`${prefix}${markdown}${suffix}`, [], { forceKeyboard: true })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '图片选择失败')
-      requestAnimationFrame(() => contentInputRef.current?.focus())
+      focusContentAtSelection(contentSelection, { forceKeyboard: true })
     }
-  }, [contentSelection, insertPlainText, plainText])
+  }, [contentSelection, focusContentAtSelection, insertPlainText, plainText])
 
   const handleContentChange = useCallback(
     (nextText: string) => {
@@ -2859,6 +2893,20 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     [contentSelection, plainText],
   )
 
+  useEffect(() => {
+    if (!protectedLayoutSafeCaretVisible) {
+      setFakeCaretVisible(false)
+      return undefined
+    }
+
+    setFakeCaretVisible(true)
+    const interval = setInterval(() => {
+      setFakeCaretVisible(visible => !visible)
+    }, 530)
+
+    return () => clearInterval(interval)
+  }, [protectedLayoutSafeCaretVisible])
+
   const renderRichInline = useCallback(
     (line: string, lineStart: number) => {
       if (!line) {
@@ -2951,7 +2999,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       ) {
         return (
           <View key={`rich-line-${index}`} style={styles.liveMarkdownImageCaretLine}>
-            <View style={styles.liveMarkdownFakeCaret} />
+            <View
+              style={[
+                styles.liveMarkdownFakeCaret,
+                !fakeCaretVisible && styles.liveMarkdownFakeCaretHidden,
+              ]}
+            />
           </View>
         )
       }
@@ -3006,6 +3059,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     })
   }, [
     contentSelection.start,
+    fakeCaretVisible,
     formatRanges,
     protectedLayoutSafeCaretVisible,
     plainText,
@@ -3079,7 +3133,9 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
             key={`image-touch-empty-after-${index}`}
             accessibilityRole="button"
             accessibilityLabel="在图片后继续输入"
-            onPress={() => focusContentAtSelection({ start: lineStart, end: lineStart })}
+            onPress={() =>
+              focusContentAtSelection({ start: lineStart, end: lineStart }, { forceKeyboard: true })
+            }
             style={styles.liveMarkdownImageTouchBlock}
           >
             <View
@@ -3157,7 +3213,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           accessibilityRole="button"
           accessibilityLabel="在图片后继续输入"
           onPress={() =>
-            focusContentAtSelection({ start: plainText.length, end: plainText.length })
+            focusContentAtSelection(
+              { start: plainText.length, end: plainText.length },
+              { forceKeyboard: true },
+            )
           }
           style={styles.liveMarkdownImageTailTouchBlock}
         />,
@@ -3368,7 +3427,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
                 suppressNextEditorFocusRef.current = false
                 return
               }
-              contentInputRef.current?.focus()
+              focusContentAtSelection(contentSelection, { forceKeyboard: true })
             }}
             accessible={false}
           >
@@ -3402,6 +3461,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               onPressIn={handleContentPressIn}
               onKeyPress={handleContentKeyPress}
               onScroll={handleContentScroll}
+              showSoftInputOnFocus
               textAlignVertical="top"
               style={contentInputStyles}
               maxLength={EDITOR_LIMITS.CONTENT_MAX}

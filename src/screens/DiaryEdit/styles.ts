@@ -294,6 +294,9 @@ export const styles = StyleSheet.create({
     borderRadius: 1,
     backgroundColor: colors.neutral.black,
   },
+  liveMarkdownFakeCaretHidden: {
+    opacity: 0,
+  },
   liveMarkdownDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.semantic.divider.default,
