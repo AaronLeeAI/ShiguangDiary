@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  Animated,
   Dimensions,
   Image,
   Keyboard,
@@ -1607,7 +1608,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [imageActionSheetVisible, setImageActionSheetVisible] = useState(false)
   const [contentSelectionShielded, setContentSelectionShielded] = useState(false)
   const previewScrollRef = useRef<ScrollView>(null)
-  const imageOverlayScrollRef = useRef<ScrollView>(null)
+  const imageInteractionTranslateYRef = useRef(new Animated.Value(0))
   const contentInputRef = useRef<TextInput>(null)
   const lastSerializedContentRef = useRef<string | null>(null)
   const latestSnapshotRef = useRef<EditorSnapshot>({
@@ -2104,10 +2105,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         y,
         animated: false,
       })
-      imageOverlayScrollRef.current?.scrollTo({
-        y,
-        animated: false,
-      })
+      imageInteractionTranslateYRef.current.setValue(-y)
     },
     [],
   )
@@ -3492,17 +3490,21 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
               style={contentInputStyles}
               maxLength={EDITOR_LIMITS.CONTENT_MAX}
             />
-            <ScrollView
-              ref={imageOverlayScrollRef}
+            <View
               pointerEvents="box-none"
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
               style={styles.liveImageInteractionScroller}
-              contentContainerStyle={styles.livePreviewContent}
               importantForAccessibility="no-hide-descendants"
             >
-              {renderImageInteractionBlocks()}
-            </ScrollView>
+              <Animated.View
+                pointerEvents="box-none"
+                style={[
+                  styles.livePreviewContent,
+                  { transform: [{ translateY: imageInteractionTranslateYRef.current }] },
+                ]}
+              >
+                {renderImageInteractionBlocks()}
+              </Animated.View>
+            </View>
           </View>
         </View>
 

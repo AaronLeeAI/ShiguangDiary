@@ -73,6 +73,7 @@ export const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
     elevation: 10,
+    overflow: 'hidden',
   },
   livePreviewContent: {
     paddingTop: spacing.xs,
