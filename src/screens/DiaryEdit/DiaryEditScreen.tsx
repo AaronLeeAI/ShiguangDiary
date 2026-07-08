@@ -507,6 +507,24 @@ const findImageLineAtPositions = (text: string, positions: number[]): TextSelect
   return null
 }
 
+const findImageLineInDeletedRange = (
+  text: string,
+  start: number,
+  end: number,
+): TextSelection | null => {
+  let position = Math.max(0, Math.min(start, text.length))
+  const safeEnd = Math.max(position, Math.min(end, text.length))
+  while (position < safeEnd) {
+    const lineRange = getCurrentLineRange(text, position)
+    const imageLineRange = getImageLayoutBlockStartLine(text, lineRange)
+    if (imageLineRange) {
+      return imageLineRange
+    }
+    position = Math.max(position + 1, lineRange.end + 1)
+  }
+  return null
+}
+
 const findUnsafeImageEditorLine = (text: string): TextSelection | null => {
   const lines = text.split('\n')
   let offset = 0
@@ -551,17 +569,19 @@ const getImageLayoutBlockRemovalRange = (text: string, imageLineRange: TextSelec
   return { start: imageLineRange.start, end: blockEndLine.end, cursor: imageLineRange.start }
 }
 
-const findDividerLineForDeletion = (
+const findDividerLineInDeletedRange = (
   text: string,
   start: number,
   end: number,
 ): TextSelection | null => {
-  const positions = [start, end, Math.max(0, start - 1), Math.max(0, end - 1)]
-  for (const position of positions) {
+  let position = Math.max(0, Math.min(start, text.length))
+  const safeEnd = Math.max(position, Math.min(end, text.length))
+  while (position < safeEnd) {
     const lineRange = getCurrentLineRange(text, position)
     if (getLineText(text, lineRange) === DIVIDER_TEXT) {
       return lineRange
     }
+    position = Math.max(position + 1, lineRange.end + 1)
   }
   return null
 }
@@ -1415,12 +1435,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
       if (diff.insertedLength === 0 && deletedLength > 0) {
         const imageLineRange =
-          findImageLineAtPositions(plainText, [
-            diff.start,
-            diff.previousEnd,
-            Math.max(0, diff.start - 1),
-            Math.min(plainText.length, diff.previousEnd + 1),
-          ]) ?? getImageLineForBackspace(plainText, contentSelection)
+          findImageLineInDeletedRange(plainText, diff.start, diff.previousEnd) ??
+          (deletedText === '\n' ? getImageLineForBackspace(plainText, contentSelection) : null)
         if (imageLineRange) {
           const removalRange = getImageLayoutBlockRemovalRange(plainText, imageLineRange)
           const imageDiff = {
@@ -1474,7 +1490,11 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         deletedLength > 0 &&
         deletedLength <= DIVIDER_TEXT.length + 2
       ) {
-        const dividerLineRange = findDividerLineForDeletion(plainText, diff.start, diff.previousEnd)
+        const dividerLineRange = findDividerLineInDeletedRange(
+          plainText,
+          diff.start,
+          diff.previousEnd,
+        )
         if (dividerLineRange) {
           const removalRange = getWholeLineRemovalRange(plainText, dividerLineRange)
           const dividerDiff = {
