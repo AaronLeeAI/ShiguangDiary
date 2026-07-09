@@ -39,7 +39,13 @@ import { ActionSheet } from '@/components/ActionSheet'
 import { Icon, type IconName } from '@/components/Icon'
 import { Loading } from '@/components/Loading'
 import { toast } from '@/components/Toast'
-import { EDITOR_LIMITS, useEditor } from '@features/editor'
+import {
+  EDITOR_LIMITS,
+  WebMarkdownEditor,
+  useEditor,
+  type WebMarkdownEditorHandle,
+  type WebMarkdownFormatCommand,
+} from '@features/editor'
 import { haptic } from '@animations/haptics'
 import { colors } from '@theme'
 
@@ -1220,6 +1226,18 @@ const countContentChars = (text: string) =>
     .join('\n')
     .replace(/\s/g, '').length
 
+const extractMarkdownImageUris = (markdown: string) => {
+  const uris: string[] = []
+  const imagePattern = /!\[[^\]]*\]\(([^)]+)\)/g
+  let match: RegExpExecArray | null = null
+  while ((match = imagePattern.exec(markdown))) {
+    if (match[1]) {
+      uris.push(match[1])
+    }
+  }
+  return uris
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
@@ -1607,6 +1625,8 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   const [imageActionTarget, setImageActionTarget] = useState<ImageActionTarget | null>(null)
   const [imageActionSheetVisible, setImageActionSheetVisible] = useState(false)
   const [contentSelectionShielded, setContentSelectionShielded] = useState(false)
+  const [webEditorPlainText, setWebEditorPlainText] = useState('')
+  const webEditorRef = useRef<WebMarkdownEditorHandle>(null)
   const previewScrollRef = useRef<ScrollView>(null)
   const imageInteractionTranslateYRef = useRef(new Animated.Value(0))
   const contentInputRef = useRef<TextInput>(null)
@@ -1649,16 +1669,12 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     if (!hydrated) {
       return true
     }
-    const textWithoutLayoutSpacers = plainText
-      .split('\n')
-      .filter(line => !isImageLayoutSpacerLine(line) && !isImageEditorTokenLikeLine(line))
-      .join('\n')
     return (
       title.trim().length > 0 ||
-      textWithoutLayoutSpacers.trim().length > 0 ||
-      plainText.split('\n').some(line => !!getImageUriFromEditorLine(line))
+      webEditorPlainText.trim().length > 0 ||
+      extractMarkdownImageUris(content).length > 0
     )
-  }, [hydrated, plainText, title])
+  }, [content, hydrated, title, webEditorPlainText])
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
@@ -1720,25 +1736,19 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
   }, [])
 
   useEffect(() => {
-    if (!hydrated || lastSerializedContentRef.current === content) {
+    if (!hydrated) {
       return
     }
 
-    const doc = parseMarkdownToRichDocument(content)
-    const serialized = serializeRichDocumentToMarkdown(doc)
-    lastSerializedContentRef.current = serialized
-    const selection = normalizeSelection(contentSelection, doc.text.length)
-    latestSnapshotRef.current = { text: doc.text, ranges: doc.ranges, selection }
+    // 方案 A 下 WebView/contenteditable 是唯一编辑面。
+    // 旧的 RN TextInput 解析/重序列化链路会把 Web 编辑器产出的 Markdown 再次改写，
+    // 特别是图片块，会重新进入 @@image + 零宽占位行模型，导致光标和行高继续错乱。
+    // 因此这里只记录外部内容版本，不再同步旧 plainText/ranges 状态。
+    lastSerializedContentRef.current = content
     undoStackRef.current = []
     redoStackRef.current = []
     refreshHistoryStatus()
-    setPlainText(doc.text)
-    setFormatRanges(doc.ranges)
-    setContentSelection(selection)
-    if (serialized !== content) {
-      setContent(serialized)
-    }
-  }, [content, contentSelection, hydrated, refreshHistoryStatus, setContent])
+  }, [content, hydrated, refreshHistoryStatus])
 
   const syncRichDocument = useCallback(
     (
@@ -2454,6 +2464,22 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     handleCloseImageActions()
   }, [handleCloseImageActions])
 
+  const handleWebEditorMarkdownChange = useCallback(
+    (markdown: string) => {
+      setContent(markdown)
+    },
+    [setContent],
+  )
+
+  const handleWebEditorImagePress = useCallback(
+    (uri: string) => {
+      const uris = extractMarkdownImageUris(content)
+      const index = Math.max(0, uris.indexOf(uri))
+      openImagePreview({ uris: uris.length > 0 ? uris : [uri], index })
+    },
+    [content, openImagePreview],
+  )
+
   const handleInsertImages = useCallback(async () => {
     try {
       const response = await launchImageLibrary({
@@ -2463,32 +2489,30 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       })
 
       if (response.didCancel) {
-        focusContentAtSelection(contentSelection, { forceKeyboard: true })
+        webEditorRef.current?.focus()
         return
       }
       if (response.errorCode) {
         toast.error(response.errorMessage ?? '图片选择失败')
-        focusContentAtSelection(contentSelection, { forceKeyboard: true })
+        webEditorRef.current?.focus()
         return
       }
 
-      const assets = (response.assets ?? []).filter(asset => !!asset.uri)
-      if (assets.length <= 0) {
+      const uris = (response.assets ?? [])
+        .map(asset => asset.uri)
+        .filter((uri): uri is string => !!uri)
+      if (uris.length <= 0) {
         toast.info('未选择图片')
-        focusContentAtSelection(contentSelection, { forceKeyboard: true })
+        webEditorRef.current?.focus()
         return
       }
 
-      const selection = normalizeSelection(contentSelection, plainText.length)
-      const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
-      const suffix = '\n'
-      const markdown = assets.map(createImageEditorBlock).join('\n')
-      insertPlainText(`${prefix}${markdown}${suffix}`, [], { forceKeyboard: true })
+      webEditorRef.current?.insertImages(uris)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '图片选择失败')
-      focusContentAtSelection(contentSelection, { forceKeyboard: true })
+      webEditorRef.current?.focus()
     }
-  }, [contentSelection, focusContentAtSelection, insertPlainText, plainText])
+  }, [])
 
   const handleContentChange = useCallback(
     (nextText: string) => {
@@ -2815,74 +2839,38 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 
   const handleToolPress = useCallback(
     (tool: DiaryTool) => {
-      if (
-        tool === 'indent' ||
-        tool === 'alignCenter' ||
-        tool === 'orderedList' ||
-        tool === 'unorderedList' ||
-        tool === 'quote'
-      ) {
-        toggleCurrentLineFormat(tool)
-        return
-      }
-
-      if (isFormatTool(tool)) {
-        const selection = normalizeSelection(contentSelection, plainText.length)
-        if (selection.end > selection.start) {
-          applyFormatToSelectedText(tool)
-        } else {
-          const activeNow =
-            activeFormatState[tool] ??
-            formatsAtPosition(formatRanges, selection.start, plainText.length).includes(tool)
-          toggleFormatMode(tool, activeNow)
-        }
-        return
-      }
-
-      if (tool === 'divider') {
-        const selection = normalizeSelection(contentSelection, plainText.length)
-        const prefix = selection.start > 0 && plainText[selection.start - 1] !== '\n' ? '\n' : ''
-        insertPlainText(`${prefix}${DIVIDER_TEXT}\n`, [])
-        return
-      }
-
-      if (tool === 'time') {
-        insertPlainText(formatInsertTime(new Date()))
-        return
-      }
-
       if (tool === 'image') {
         handleInsertImages()
         return
       }
 
+      if (tool === 'divider') {
+        webEditorRef.current?.insertDivider()
+        return
+      }
+
+      if (tool === 'time') {
+        webEditorRef.current?.insertText(formatInsertTime(new Date()))
+        return
+      }
+
       if (tool === 'link') {
-        const selection = normalizeSelection(contentSelection, plainText.length)
-        toast.info(
-          selection.end > selection.start
-            ? '链接地址输入框待接入，当前不插入占位文本'
-            : '请先选择要添加链接的文字',
-        )
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        toast.info('链接地址输入框待接入，当前先保留 Web 编辑器选区')
+        webEditorRef.current?.focus()
         return
       }
 
       if (tool === 'mic') {
         toast.info('语音转文本需要接入原生语音识别能力')
-        requestAnimationFrame(() => contentInputRef.current?.focus())
+        webEditorRef.current?.focus()
+        return
+      }
+
+      if (isFormatTool(tool)) {
+        webEditorRef.current?.applyFormat(tool as WebMarkdownFormatCommand)
       }
     },
-    [
-      activeFormatState,
-      applyFormatToSelectedText,
-      contentSelection,
-      formatRanges,
-      handleInsertImages,
-      insertPlainText,
-      plainText,
-      toggleCurrentLineFormat,
-      toggleFormatMode,
-    ],
+    [handleInsertImages],
   )
 
   const selectionFormats = useMemo(
@@ -2925,7 +2913,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     ]
   }, [activeFormatState, selectionFormats])
 
-  const contentCharCount = useMemo(() => countContentChars(plainText), [plainText])
+  const contentCharCount = useMemo(() => webEditorPlainText.replace(/\s/g, '').length, [webEditorPlainText])
   const protectedLayoutSafeCaretVisible = useMemo(
     () => shouldRenderProtectedLayoutSafeCaret(plainText, contentSelection),
     [contentSelection, plainText],
@@ -3459,56 +3447,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
           </View>
 
           <View style={styles.liveEditor}>
-            <ScrollView
-              ref={previewScrollRef}
-              pointerEvents="none"
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              style={styles.livePreviewScroller}
-              contentContainerStyle={styles.livePreviewContent}
-              importantForAccessibility="no-hide-descendants"
-            >
-              {hasRenderableRichContent(plainText, formatRanges) ? (
-                renderRichTextBlocks()
-              ) : (
-                <Text style={styles.livePlaceholder}>请输入...</Text>
-              )}
-            </ScrollView>
-            <TextInput
-              ref={contentInputRef}
-              value={plainText}
-              onChangeText={handleContentChange}
-              placeholder=""
-              multiline
-              selection={contentSelection}
-              selectionColor={contentSelectionShielded ? 'transparent' : colors.brand.primary}
-              selectionHandleColor={contentSelectionShielded ? 'transparent' : colors.brand.primary}
-              cursorColor={colors.brand.primary}
-              caretHidden={protectedLayoutSafeCaretVisible}
-              onSelectionChange={handleContentSelectionChange}
-              onPressIn={handleContentPressIn}
-              onKeyPress={handleContentKeyPress}
-              onScroll={handleContentScroll}
-              showSoftInputOnFocus
-              textAlignVertical="top"
-              style={contentInputStyles}
-              maxLength={EDITOR_LIMITS.CONTENT_MAX}
+            <WebMarkdownEditor
+              ref={webEditorRef}
+              markdown={content}
+              onChangeMarkdown={handleWebEditorMarkdownChange}
+              onChangePlainText={setWebEditorPlainText}
+              onImagePress={handleWebEditorImagePress}
             />
-            <View
-              pointerEvents="box-none"
-              style={styles.liveImageInteractionScroller}
-              importantForAccessibility="no-hide-descendants"
-            >
-              <Animated.View
-                pointerEvents="box-none"
-                style={[
-                  styles.livePreviewContent,
-                  { transform: [{ translateY: imageInteractionTranslateYRef.current }] },
-                ]}
-              >
-                {renderImageInteractionBlocks()}
-              </Animated.View>
-            </View>
           </View>
         </View>
 
@@ -3700,3 +3645,13 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 }
 
 export default DiaryEditScreen
+
+
+
+
+
+
+
+
+
+
