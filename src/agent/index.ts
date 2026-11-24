@@ -33,6 +33,9 @@ export { memoryAdapter, normalizeMemoryCategory } from './memory'
 export type { AgentMemory, MemoryCategory, MemoryRepositoryAdapter } from './memory'
 export { analyzeMood, autoTag, weeklyReport } from './features/insights'
 export { narrateWeeklyReport, narrateDiary } from './features/narration'
+// 检索体检验（真机自检，无需人工标注）
+export { buildSelfCheckQueries, formatSelfCheckReport, runSelfCheck } from './rag/eval/selfCheck'
+export type { SelfCheckProgress, SelfCheckReport } from './rag/eval/selfCheck'
 // 凭据安全存储
 export {
   getLLMApiKey,

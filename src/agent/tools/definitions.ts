@@ -8,6 +8,7 @@ import { normalizeMemoryCategory } from '../memory'
 import type { MemoryRepositoryAdapter } from '../memory'
 import type { DiaryRepositoryAdapter, TTSAdapter } from './context'
 import { toExcerpt, toMillis } from './context'
+import { keywordSearchDiaries } from './keywordSearch'
 
 /** 暴露给 LLM 的工具清单 */
 export const toolDefinitions: ToolDefinition[] = [
@@ -16,7 +17,7 @@ export const toolDefinitions: ToolDefinition[] = [
     function: {
       name: 'search_diaries',
       description:
-        '按关键词、情绪、时间范围检索用户的日记。返回匹配的日记标题、正文摘要、心情、日期。用于回答"我某段时间写了什么""找找关于XX的日记"等问题。',
+        '按关键词、情绪、时间范围检索用户的日记。关键词走中文分词 + BM25 相关性排序，支持"火锅 老王"这类多词组合，不需要完整句子；没有关键词时按时间倒序返回最近的日记。返回匹配的日记标题、正文摘要、心情、日期。用于回答"我某段时间写了什么""找找关于XX的日记"等问题。',
       parameters: {
         type: 'object',
         properties: {
@@ -200,32 +201,23 @@ export function createToolExecutor(
   const impls: Record<string, (args: Args) => Promise<unknown>> = {
     async search_diaries(a) {
       const all = await repo.list()
-      const kw = String(a.keyword ?? '').toLowerCase()
-      const mood = String(a.mood ?? '').toLowerCase()
-      const start = a.startDate ? new Date(String(a.startDate)).getTime() : -Infinity
-      const end = a.endDate ? new Date(String(a.endDate)).getTime() + 86400000 : Infinity
       const requestedLimit = Number(a.limit ?? 10)
       const limit = Number.isFinite(requestedLimit)
         ? Math.max(1, Math.min(maxDiaryResults, Math.floor(requestedLimit)))
         : 10
-      const hits = all
-        .filter(d => {
-          const t = toMillis(d.createdAt)
-          if (t < start || t > end) {
-            return false
-          }
-          if (mood && (d.mood ?? '').toLowerCase() !== mood) {
-            return false
-          }
-          if (kw && !`${d.title}${d.content}`.toLowerCase().includes(kw)) {
-            return false
-          }
-          return true
-        })
-        .sort((x, y) => toMillis(y.createdAt) - toMillis(x.createdAt))
-        .slice(0, limit)
-        .map(d => toExcerpt(d))
-      return { count: hits.length, diaries: hits }
+      const result = keywordSearchDiaries(all, {
+        keyword: a.keyword == null ? undefined : String(a.keyword),
+        mood: a.mood == null ? undefined : String(a.mood),
+        startDate: a.startDate == null ? undefined : String(a.startDate),
+        endDate: a.endDate == null ? undefined : String(a.endDate),
+        limit,
+      })
+      return {
+        count: result.diaries.length,
+        matched: result.matched,
+        sort: result.mode === 'ranked' ? 'relevance' : 'recency',
+        diaries: result.diaries.map(d => toExcerpt(d)),
+      }
     },
 
     async semantic_search_diaries(a) {

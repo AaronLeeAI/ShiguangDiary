@@ -154,5 +154,9 @@ DeerFlow 的记忆/编排边界、DeepSeek Harness 的会话与工具权限思�
 - **评测门禁**：`src/agent/rag/eval/` 提供 recall@k / MRR / nDCG@k 与黄金集，
   CI 中断言 `hybrid recall@5 ≥ 0.9` 且不低于纯向量。当前合成集结果：
   dense `0.900 / 0.800 / 0.826` → hybrid `1.000 / 0.900 / 0.926`。
+- **关键词检索同源**：`search_diaries` 从子串匹配改为同一套 BM25（中文 2-gram、
+  多词组合、标题加权），单字/符号查询保留子串兜底。
+- **真机体检**：长按助手页右上角索引状态胶囊，可用"标题自询"在真实日记上跑
+  label-free 的 recall@5 / MRR 对比，不需要人工标注。
 
 详细设计、取舍与真机复测步骤见 [docs/ai/RagRetrievalUpgrade.md](./docs/ai/RagRetrievalUpgrade.md)。

@@ -14,7 +14,14 @@ import {
 import { Icon } from '@/components/Icon'
 import type { IconName } from '@/components/Icon'
 import { useTheme, type Theme } from '@theme'
-import { clearAgentSession, loadAgentSession, runAgent, saveAgentSession } from '../../agent'
+import {
+  clearAgentSession,
+  formatSelfCheckReport,
+  loadAgentSession,
+  runAgent,
+  runSelfCheck,
+  saveAgentSession,
+} from '../../agent'
 import type {
   AgentEvent,
   ChatMessage,
@@ -153,6 +160,7 @@ export default function AgentChat({ repo, tts, rag, memory, onOpenDiary }: Props
   const [ragStatus, setRagStatus] = useState<LocalRagStatus | null>(null)
   const [ragProgress, setRagProgress] = useState<RagProgress | null>(null)
   const [ragBusy, setRagBusy] = useState(false)
+  const [selfChecking, setSelfChecking] = useState(false)
   const [memoryRefreshKey, setMemoryRefreshKey] = useState(0)
   const [bubbles, setBubbles] = useState<Bubble[]>([])
   const [busy, setBusy] = useState(false)
@@ -290,6 +298,38 @@ export default function AgentChat({ repo, tts, rag, memory, onOpenDiary }: Props
         { text: '下载并启用', onPress: () => prepareLocalRag().catch(() => undefined) },
       ],
     )
+  }
+
+  /**
+   * 检索体检：用每篇日记的标题当查询，看能不能把自己检回来。
+   * 不需要人工标注，能在真机上验证索引是否健康、混合召回是否真的优于纯向量。
+   */
+  const runLocalSelfCheck = async () => {
+    if (!rag || ragBusy || selfChecking) {
+      return
+    }
+    if (ragStatus?.state !== 'ready' || (ragStatus.indexedDiaries ?? 0) === 0) {
+      Alert.alert('检索体检', '请先启用本地语义检索，建好索引后再体检。')
+      return
+    }
+    setSelfChecking(true)
+    setStatus('正在体检本地检索…')
+    try {
+      const diaries = await repo.list()
+      const report = await runSelfCheck(rag, diaries, {
+        k: 5,
+        maxQueries: 40,
+        onProgress: progress =>
+          setStatus(`正在体检本地检索… ${progress.completed}/${progress.total}`),
+      })
+      Alert.alert('检索体检结果', formatSelfCheckReport(report))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      Alert.alert('体检失败', message)
+    } finally {
+      setSelfChecking(false)
+      setStatus('')
+    }
   }
 
   const confirmTool = useCallback(
@@ -545,16 +585,19 @@ export default function AgentChat({ repo, tts, rag, memory, onOpenDiary }: Props
         {activeView === 'chat' && !!rag && (
           <TouchableOpacity
             accessibilityRole="button"
+            accessibilityHint="点击可重新建立索引；长按可做一次本地检索体检"
             onPress={requestPrepareLocalRag}
+            onLongPress={runLocalSelfCheck}
+            delayLongPress={600}
             disabled={ragBusy || ragStatus?.state === 'working'}
             style={styles.ragPill}
           >
-            {ragBusy || ragStatus?.state === 'working' ? (
+            {ragBusy || selfChecking || ragStatus?.state === 'working' ? (
               <ActivityIndicator size="small" color={theme.colors.brand.primary} />
             ) : (
               <View style={[styles.statusDot, ragReady && styles.statusDotReady]} />
             )}
-            <Text style={styles.ragPillText}>{ragLabel}</Text>
+            <Text style={styles.ragPillText}>{selfChecking ? '体检中…' : ragLabel}</Text>
           </TouchableOpacity>
         )}
       </View>
