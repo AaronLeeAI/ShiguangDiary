@@ -15,6 +15,8 @@ import {
   attachmentDao,
   draftDao,
   preferenceDao,
+  diaryEmbeddingDao,
+  agentMemoryDao,
 } from '../dao'
 import { withTransaction } from '../core/transaction'
 import { toDatabaseError } from '../core/errors'
@@ -26,6 +28,8 @@ import type {
   AttachmentModel,
   DraftModel,
   PreferenceModel,
+  DiaryEmbeddingModel,
+  AgentMemoryModel,
 } from '../models'
 
 /** 包装 Repository 方法，归一化底层异常为 DatabaseError。 */
@@ -55,8 +59,8 @@ export const diaryRepository = {
    */
   async create(diary: DiaryModel, attachments: AttachmentModel[] = []): Promise<void> {
     try {
-      await withTransaction(async tx => {
-        await tx.executeSql(
+      await withTransaction(tx => {
+        tx.executeSql(
           `INSERT INTO diary (id, notebookId, title, content, cover, weather, location, mood, isPinned, isEncrypted, isDraft, createdAt, updatedAt, deletedAt)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -77,7 +81,7 @@ export const diaryRepository = {
           ],
         )
         for (const a of attachments) {
-          await tx.executeSql(
+          tx.executeSql(
             'INSERT INTO attachment (id, diaryId, type, url, thumbnail, size, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [a.id, a.diaryId, a.type, a.url, a.thumbnail, a.size, a.createdAt],
           )
@@ -153,3 +157,55 @@ export const preferenceRepository = {
   set: (preference: PreferenceModel) => wrap('INSERT_FAILED', () => preferenceDao.set(preference)),
   remove: (key: string) => wrap('DELETE_FAILED', () => preferenceDao.delete(key)),
 }
+
+/**
+ * 本地语义索引仓储。
+ * 每篇日记的旧分块与新分块在同一事务中替换，避免留下半套向量。
+ */
+export const diaryEmbeddingRepository = {
+  listByModel: (modelId: string) =>
+    wrap('QUERY_FAILED', () => diaryEmbeddingDao.findByModel(modelId)),
+
+  async replaceDiary(
+    modelId: string,
+    diaryId: string,
+    sourceHash: string,
+    sourceUpdatedAt: number,
+    vectors: readonly string[],
+  ): Promise<void> {
+    try {
+      await withTransaction(tx => {
+        tx.executeSql('DELETE FROM diary_embedding WHERE modelId = ? AND diaryId = ?', [
+          modelId,
+          diaryId,
+        ])
+        for (let chunkIndex = 0; chunkIndex < vectors.length; chunkIndex++) {
+          tx.executeSql(
+            `INSERT INTO diary_embedding
+             (diaryId, chunkIndex, modelId, sourceHash, sourceUpdatedAt, vector)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [diaryId, chunkIndex, modelId, sourceHash, sourceUpdatedAt, vectors[chunkIndex]],
+          )
+        }
+      })
+    } catch (error) {
+      throw toDatabaseError(error, 'TRANSACTION_FAILED')
+    }
+  },
+
+  removeDiary: (modelId: string, diaryId: string) =>
+    wrap('DELETE_FAILED', () => diaryEmbeddingDao.deleteByDiary(modelId, diaryId)),
+
+  clear: (modelId: string) => wrap('DELETE_FAILED', () => diaryEmbeddingDao.clear(modelId)),
+}
+
+/** AI 助手长期记忆仓储。 */
+export const agentMemoryRepository = {
+  list: () => wrap('QUERY_FAILED', () => agentMemoryDao.findAll()),
+  create: (memory: AgentMemoryModel) => wrap('INSERT_FAILED', () => agentMemoryDao.insert(memory)),
+  update: (id: string, memory: Partial<AgentMemoryModel>) =>
+    wrap('UPDATE_FAILED', () => agentMemoryDao.update(id, memory)),
+  remove: (id: string) => wrap('DELETE_FAILED', () => agentMemoryDao.delete(id)),
+}
+
+export type { AgentMemoryModel, DiaryEmbeddingModel }

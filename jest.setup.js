@@ -35,6 +35,17 @@ jest.mock('react-native-fs', () => ({
   unlink: jest.fn(async () => undefined),
   readDir: jest.fn(async () => []),
   stat: jest.fn(async () => ({ size: 0 })),
+  hash: jest.fn(async () => ''),
+  moveFile: jest.fn(async () => undefined),
+  downloadFile: jest.fn(() => ({
+    jobId: 1,
+    promise: Promise.resolve({ statusCode: 200, bytesWritten: 0 }),
+  })),
+}))
+
+jest.mock('onnxruntime-react-native', () => ({
+  InferenceSession: { create: jest.fn() },
+  Tensor: jest.fn(),
 }))
 
 jest.mock('react-native-mmkv', () => {
@@ -51,6 +62,25 @@ jest.mock('react-native-mmkv', () => {
     }
   }
   return { MMKV }
+})
+
+jest.mock('react-native-keychain', () => {
+  let password = null
+  return {
+    ACCESSIBLE: { WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly' },
+    SECURITY_LEVEL: { SECURE_SOFTWARE: 1 },
+    setGenericPassword: jest.fn(async (_username, value) => {
+      password = value
+      return { service: 'test', storage: 'test' }
+    }),
+    getGenericPassword: jest.fn(async () =>
+      password ? { service: 'test', username: 'llm-credentials', password } : false,
+    ),
+    resetGenericPassword: jest.fn(async () => {
+      password = null
+      return true
+    }),
+  }
 })
 
 jest.mock('react-native-sqlite-storage', () => {

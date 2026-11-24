@@ -46,6 +46,7 @@ export type RootStackParamList = {
   AppLock: undefined
   AppLockGesture: undefined
   StickyNote: undefined
+  AgentChat: undefined
 
   // 对话框/弹层
   Modal: { type: string; props?: unknown }

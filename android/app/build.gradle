@@ -85,6 +85,11 @@ android {
         versionCode 1
         versionName "1.0.0-rc.1"
     }
+    // RN 0.76 ships libreactnative.so from ReactAndroid. Native C++ modules may
+    // also surface the identical prefab library, so let the app package one copy.
+    packagingOptions {
+        pickFirst '**/libreactnative.so'
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')

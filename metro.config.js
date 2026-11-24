@@ -26,6 +26,15 @@ const config = {
     ],
     sourceExts: ['ts', 'tsx', 'js', 'jsx', 'json'],
     resolveRequest: (context, moduleName, platform) => {
+      // Metro in React Native 0.76 can fail to resolve explicit `.js` imports
+      // inside onnxruntime-common even though the CommonJS files are present.
+      // Let Metro perform its normal extension lookup for just that package.
+      const isOnnxRuntimeCommon = /[\\/]onnxruntime-common[\\/]dist[\\/]cjs[\\/]/.test(
+        context.originModulePath,
+      )
+      if (isOnnxRuntimeCommon && moduleName.startsWith('./') && moduleName.endsWith('.js')) {
+        return context.resolveRequest(context, moduleName.slice(0, -3), platform)
+      }
       // Resolve SVG imports
       if (moduleName.endsWith('.svg')) {
         return context.resolveRequest(context, moduleName, platform)

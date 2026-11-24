@@ -39,6 +39,7 @@ import { ProfileScreen } from '@/screens/Profile'
 import { SearchScreen } from '@/screens/Search'
 import { SettingsScreen } from '@/screens/Settings'
 import { StatisticsScreen } from '@/screens/Statistics'
+import { AgentChatScreen } from '@/screens/AgentChat'
 import {
   NotebookCreate,
   NotebookDetail,
@@ -200,6 +201,7 @@ export function AppNavigator() {
         <Stack.Screen name={ROUTES.APP_LOCK} component={AppLock} />
         <Stack.Screen name={ROUTES.APP_LOCK_GESTURE} component={AppLockGesture} />
         <Stack.Screen name={ROUTES.STICKY_NOTE} component={StickyNote} />
+        <Stack.Screen name={ROUTES.AGENT_CHAT} component={AgentChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   )

@@ -154,6 +154,48 @@ const migrations: Migration[] = [
       }
     },
   },
+  {
+    version: 3,
+    description: 'Local semantic diary index',
+    up: async () => {
+      const db = await getDatabase()
+      await db.executeSql(`
+        CREATE TABLE IF NOT EXISTS diary_embedding (
+          diaryId TEXT NOT NULL,
+          chunkIndex INTEGER NOT NULL,
+          modelId TEXT NOT NULL,
+          sourceHash TEXT NOT NULL,
+          sourceUpdatedAt INTEGER NOT NULL,
+          vector TEXT NOT NULL,
+          PRIMARY KEY (diaryId, chunkIndex, modelId)
+        )
+      `)
+      await db.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_diary_embedding_model ON diary_embedding (modelId, diaryId)',
+      )
+    },
+  },
+  {
+    version: 4,
+    description: 'User-approved agent memories',
+    up: async () => {
+      const db = await getDatabase()
+      await db.executeSql(`
+        CREATE TABLE IF NOT EXISTS agent_memory (
+          id TEXT PRIMARY KEY,
+          content TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT 'context',
+          sourceDiaryId TEXT,
+          createdAt INTEGER NOT NULL,
+          updatedAt INTEGER NOT NULL,
+          deletedAt INTEGER
+        )
+      `)
+      await db.executeSql(
+        'CREATE INDEX IF NOT EXISTS idx_agent_memory_active ON agent_memory (deletedAt, updatedAt DESC)',
+      )
+    },
+  },
 ]
 
 /**

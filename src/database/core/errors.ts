@@ -51,6 +51,24 @@ export function toDatabaseError(
   if (error instanceof DatabaseError) {
     return error
   }
-  const message = error instanceof Error ? error.message : String(error)
+  const message = describeDatabaseError(error)
   return new DatabaseError(code, message, error)
+}
+
+function describeDatabaseError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  if (typeof error === 'object' && error !== null) {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim()) {
+      return message
+    }
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return '未知数据库错误'
+    }
+  }
+  return String(error)
 }

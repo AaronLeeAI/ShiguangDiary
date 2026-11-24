@@ -26,6 +26,16 @@ apply plugin: "com.facebook.react.rootproject"
 // native tasks avoids a Windows/AGP prefab configuration failure while preserving
 // the native build path if the New Architecture is enabled later.
 subprojects { subproject ->
+    // onnxruntime-react-native declares latest.integration internally. Pin the
+    // native artifacts so builds are reproducible and do not need Maven's
+    // dynamic-version metadata path (which is fragile on some Windows JDKs).
+    subproject.configurations.configureEach {
+        resolutionStrategy.force(
+            "com.microsoft.onnxruntime:onnxruntime-android:1.24.3",
+            "com.microsoft.onnxruntime:onnxruntime-extensions-android:0.13.0"
+        )
+    }
+
     if (subproject.name == "react-native-screens") {
         subproject.afterEvaluate {
             if (rootProject.findProperty("newArchEnabled") != "true") {

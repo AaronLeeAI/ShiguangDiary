@@ -25,6 +25,7 @@ import type { ProfileMenuItem, ProfileScreenProps } from './types'
 
 const MENU_GROUPS: ProfileMenuItem[][] = [
   [
+    { key: 'agent-chat', label: 'AI 助手', icon: 'chart', showArrow: true, route: 'AgentChat' },
     { key: 'settings', label: '设置', icon: 'settings', showArrow: true, route: 'Settings' },
     {
       key: 'recycle',

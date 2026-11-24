@@ -126,3 +126,5 @@ release/
 
 # Generated documentation
 docs/api/
+# Agent LLM 凭据（含 API Key，勿提交）
+src/agent/llmCredentials.ts

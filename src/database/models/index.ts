@@ -96,3 +96,29 @@ export interface PreferenceModel {
   value: string
   updatedAt: number
 }
+
+/** 本地语义检索缓存；只保存量化向量，不复制日记正文。 */
+export interface DiaryEmbeddingModel {
+  diaryId: string
+  chunkIndex: number
+  modelId: string
+  sourceHash: string
+  sourceUpdatedAt: number
+  vector: string
+}
+
+/**
+ * AI 助手长期记忆。
+ *
+ * 与原始日记、语义向量分开保存：这里只存放用户明确确认过的简短事实，
+ * 方便用户独立查看、修改或删除。
+ */
+export interface AgentMemoryModel {
+  id: string
+  content: string
+  category: 'person' | 'goal' | 'preference' | 'habit' | 'context'
+  sourceDiaryId: string | null
+  createdAt: number
+  updatedAt: number
+  deletedAt: number | null
+}

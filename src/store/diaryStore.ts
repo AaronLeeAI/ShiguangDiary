@@ -106,6 +106,15 @@ const diaryModelFromDomain = (d: Partial<Diary>): Partial<DiaryModel> => {
   if (d.isDraft !== undefined) {
     out.isDraft = d.isDraft ? 1 : 0
   }
+  if (d.createdAt !== undefined) {
+    out.createdAt = d.createdAt
+  }
+  if (d.updatedAt !== undefined) {
+    out.updatedAt = d.updatedAt
+  }
+  if (d.deletedAt !== undefined) {
+    out.deletedAt = d.deletedAt
+  }
   return out
 }
 

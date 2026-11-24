@@ -24,9 +24,12 @@ import { ToastProvider } from '@/components/Toast'
 import { registerServices } from '@services'
 import { useDiaryStore } from '@store/diaryStore'
 import { warmupHaptics } from '@animations/haptics'
+import { initAgent } from '@/agent/setup'
 
 // 注册全部业务 Service 到 ServiceRegistry（幂等，进程级单例）
 registerServices()
+// AI 助手：从系统 Keychain / Keystore 异步加载配置，不把密钥打进安装包。
+initAgent().catch(() => undefined)
 // Task17:预热触觉反馈原生模块(避免首次 haptic 调用延迟),无原生模块时静默跳过
 warmupHaptics()
 

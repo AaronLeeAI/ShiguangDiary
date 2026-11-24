@@ -14,6 +14,8 @@ import type {
   AttachmentModel,
   DraftModel,
   PreferenceModel,
+  DiaryEmbeddingModel,
+  AgentMemoryModel,
 } from '../models'
 
 const pickUpdateEntries = <T extends object>(patch: Partial<T>): [string, unknown][] =>
@@ -79,6 +81,91 @@ export const diaryDao = {
   async delete(id: string): Promise<void> {
     const db = await getDatabase()
     await db.executeSql('UPDATE diary SET deletedAt = ? WHERE id = ?', [Date.now(), id])
+  },
+}
+
+/**
+ * 本地语义索引 DAO
+ *
+ * 向量以 int8 + Base64 形式保存；日记正文不会在索引表中重复落盘。
+ */
+export const diaryEmbeddingDao = {
+  async findByModel(modelId: string): Promise<DiaryEmbeddingModel[]> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql(
+      'SELECT * FROM diary_embedding WHERE modelId = ? ORDER BY diaryId, chunkIndex',
+      [modelId],
+    )
+    return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i))
+  },
+
+  async deleteByDiary(modelId: string, diaryId: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM diary_embedding WHERE modelId = ? AND diaryId = ?', [
+      modelId,
+      diaryId,
+    ])
+  },
+
+  async clear(modelId: string): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql('DELETE FROM diary_embedding WHERE modelId = ?', [modelId])
+  },
+}
+
+/** 用户确认过的 AI 长期记忆 DAO。 */
+export const agentMemoryDao = {
+  async findAll(): Promise<AgentMemoryModel[]> {
+    const db = await getDatabase()
+    const [results] = await db.executeSql(
+      'SELECT * FROM agent_memory WHERE deletedAt IS NULL ORDER BY updatedAt DESC',
+    )
+    return Array.from({ length: results.rows.length }, (_, i) => results.rows.item(i))
+  },
+
+  async insert(memory: AgentMemoryModel): Promise<void> {
+    const db = await getDatabase()
+    await db.executeSql(
+      `INSERT INTO agent_memory
+       (id, content, category, sourceDiaryId, createdAt, updatedAt, deletedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        memory.id,
+        memory.content,
+        memory.category,
+        memory.sourceDiaryId,
+        memory.createdAt,
+        memory.updatedAt,
+        memory.deletedAt,
+      ],
+    )
+  },
+
+  async update(id: string, memory: Partial<AgentMemoryModel>): Promise<void> {
+    const entries = pickUpdateEntries<AgentMemoryModel>(memory).filter(
+      ([key]) => key !== 'createdAt' && key !== 'deletedAt',
+    )
+    if (entries.length === 0) {
+      return
+    }
+    const db = await getDatabase()
+    const fields = entries.map(([key]) => `${key} = ?`).join(', ')
+    const values = entries.map(([, value]) => value)
+    await db.executeSql(`UPDATE agent_memory SET ${fields}, updatedAt = ? WHERE id = ?`, [
+      ...values,
+      Date.now(),
+      id,
+    ])
+  },
+
+  async delete(id: string): Promise<void> {
+    const db = await getDatabase()
+    const now = Date.now()
+    await db.executeSql('UPDATE agent_memory SET deletedAt = ?, updatedAt = ? WHERE id = ?', [
+      now,
+      now,
+      id,
+    ])
   },
 }
 
