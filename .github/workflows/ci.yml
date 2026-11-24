@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint / Typecheck / Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint (flat config)
+        run: npm run lint
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Prettier
+        run: npm run format:check
+
+      - name: Jest
+        run: npm run test:ci
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  bundle:
+    name: Metro bundle (Android, minified)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 不跑原生构建，只验证 JS/TS 依赖图能打包成功，
+      # 用来拦截“import 写错、依赖漏装、循环引用导致打包失败”这类问题。
+      - name: Build JS bundle
+        run: |
+          mkdir -p /tmp/bundle/assets
+          npx react-native bundle \
+            --platform android \
+            --entry-file index.js \
+            --dev false \
+            --minify true \
+            --bundle-output /tmp/bundle/index.android.bundle \
+            --assets-dest /tmp/bundle/assets
+
+      - name: Report bundle size
+        run: ls -lh /tmp/bundle/index.android.bundle

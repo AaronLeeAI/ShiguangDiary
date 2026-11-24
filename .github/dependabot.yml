@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  # JS 依赖：每周一检查，按生态分组成少量 PR，避免 PR 洪水
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '02:00'
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      react-native-runtime:
+        patterns:
+          - react
+          - react-native
+          - react-test-renderer
+          - '@react-native/*'
+          - '@react-navigation/*'
+      dev-toolchain:
+        dependency-type: development
+        patterns:
+          - eslint*
+          - '@eslint/*'
+          - typescript*
+          - prettier
+          - jest
+          - '@types/*'
+          - '@commitlint/*'
+          - lint-staged
+          - husky
+      native-deps:
+        patterns:
+          - react-native-*
+    ignore:
+      # RN 大版本升级需要原生回归，必须手动做
+      - dependency-name: react-native
+        update-types: ['version-update:semver-major']
+      - dependency-name: react
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci

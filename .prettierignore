@@ -1,0 +1,30 @@
+# 依赖与产物
+node_modules/
+package-lock.json
+coverage/
+dist/
+build/
+artifacts/
+
+# 原生工程（由各自工具链管理格式）
+android/
+ios/
+vendor/
+
+# 第三方补丁
+patches/
+
+# 二进制/资源
+assets/images/
+assets/font/
+assets/audio/
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.ttf
+**/*.otf
+
+# 自动生成
+docs/api/
