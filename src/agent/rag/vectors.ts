@@ -1,5 +1,3 @@
-/* eslint-disable no-bitwise */
-
 const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 export function normalizeVector(vector: ArrayLike<number>): Float32Array {
@@ -92,4 +90,43 @@ export function similarityToEncodedVector(
     score += Number(normalizedQuery[index] ?? 0) * (signed / 127)
   }
   return Math.max(-1, Math.min(1, score))
+}
+
+/** 把 int8 + Base64 还原成 [-1, 1] 的浮点向量，供 MMR 计算候选之间的相似度。 */
+export function decodeVector(encodedVector: string): Float32Array | null {
+  const bytes = base64ToBytes(encodedVector)
+  if (bytes.length === 0) {
+    return null
+  }
+  const vector = new Float32Array(bytes.length)
+  for (let index = 0; index < bytes.length; index++) {
+    const signed = bytes[index] > 127 ? bytes[index] - 256 : bytes[index]
+    vector[index] = signed / 127
+  }
+  return vector
+}
+
+/**
+ * 两个已解码向量的余弦相似度，映射到 0..1（MMR 需要非负相似度）。
+ * 维度不一致时返回 0，视为不相似。
+ */
+export function cosineSimilarity01(a: Float32Array | null, b: Float32Array | null): number {
+  if (!a || !b || a.length !== b.length || a.length === 0) {
+    return 0
+  }
+  let dot = 0
+  let normA = 0
+  let normB = 0
+  for (let index = 0; index < a.length; index++) {
+    const left = a[index] ?? 0
+    const right = b[index] ?? 0
+    dot += left * right
+    normA += left * left
+    normB += right * right
+  }
+  if (normA === 0 || normB === 0) {
+    return 0
+  }
+  const cosine = dot / (Math.sqrt(normA) * Math.sqrt(normB))
+  return Math.max(0, Math.min(1, (cosine + 1) / 2))
 }

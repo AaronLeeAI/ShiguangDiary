@@ -400,6 +400,9 @@ export default function AgentChat({ repo, tts, rag, memory, onOpenDiary }: Props
           setStatus(event.message)
           setRagProgress(event)
           break
+        case 'grounding_report':
+          setStatus('提醒：回答里的日期与来源不完全一致，建议打开原文核对')
+          break
         case 'token':
           setStatus('')
           setBubbles(previous =>

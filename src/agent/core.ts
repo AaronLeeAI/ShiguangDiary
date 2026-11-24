@@ -6,6 +6,11 @@
  */
 import { llmConfig } from './config'
 import { compactHistory, serializeToolResult } from './context'
+import {
+  detectInstructionOverride,
+  verifyAnswerGrounding,
+  wrapUntrustedEvidence,
+} from './guardrails'
 import { complete, streamComplete } from './llm/client'
 import { toolDefinitions, createToolExecutor } from './tools/definitions'
 import type { DiaryRepositoryAdapter, TTSAdapter } from './tools/context'
@@ -57,6 +62,9 @@ function toSource(value: unknown): DiarySource | null {
     ...(typeof item.score === 'number' ? { score: item.score } : {}),
   }
 }
+
+/** 返回日记原文的工具：结果需要按"不可信证据"处理，并做注入探测。 */
+const EVIDENCE_TOOLS = new Set(['search_diaries', 'semantic_search_diaries', 'get_diary'])
 
 function extractDiarySources(toolName: string, data: unknown): DiarySource[] | undefined {
   if (
@@ -119,6 +127,9 @@ export async function runAgent(
     args: Record<string, unknown>
   }
 
+  /** 本轮实际召回过的来源，用于回答生成后的接地校验。 */
+  const collectedSources: DiarySource[] = []
+
   const executeOne = async ({ call, args }: PreparedCall): Promise<ToolResult> => {
     const name = call.function.name
 
@@ -139,13 +150,29 @@ export async function runAgent(
     onEvent({ type: 'tool_start', name, args })
     try {
       const data = await execute(name, args)
-      const content = serializeToolResult(data, options.maxToolResultChars)
+      const serialized = serializeToolResult(data, options.maxToolResultChars)
+      const sources = extractDiarySources(name, data)
+
+      // 日记正文属于"用户数据"，可能被粘贴进看起来像指令的文字。
+      // 包上边界标记 + 探测命中情况，避免模型把内容当指令执行。
+      let content = serialized
+      if (EVIDENCE_TOOLS.has(name)) {
+        const signal = detectInstructionOverride(serialized)
+        if (signal.suspected) {
+          onEvent({ type: 'prompt_injection_suspected', tool: name, matches: signal.matches })
+        }
+        content = wrapUntrustedEvidence(serialized, `${name} 结果`)
+      }
+      if (sources) {
+        collectedSources.push(...sources)
+      }
+
       onEvent({
         type: 'tool_end',
         name,
         ok: true,
-        preview: content.slice(0, 80),
-        sources: extractDiarySources(name, data),
+        preview: serialized.slice(0, 80),
+        sources,
       })
       return { tool_call_id: call.id, name, content, ok: true }
     } catch (err) {
@@ -195,6 +222,15 @@ export async function runAgent(
       // 没有工具调用 → 本轮即为最终答案
       if (finishReason !== 'tool_calls' || calls.length === 0) {
         const answer = assistantMsg.content ?? ''
+        // 生成侧接地校验：答案里写了检索结果里不存在的完整日期时提醒用户核对。
+        const grounding = verifyAnswerGrounding(answer, collectedSources)
+        if (grounding.checked && grounding.unsupportedDates.length > 0) {
+          onEvent({
+            type: 'grounding_report',
+            unsupportedDates: grounding.unsupportedDates,
+            citedTitles: grounding.citedTitles,
+          })
+        }
         onEvent({ type: 'done', answer, steps: round })
         return answer
       }

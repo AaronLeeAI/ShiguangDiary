@@ -83,7 +83,7 @@ export const toolDefinitions: ToolDefinition[] = [
     function: {
       name: 'semantic_search_diaries',
       description:
-        '在设备本地按语义检索日记片段。即使用户问题与日记没有相同关键词，也能按含义找到相关记录。用于回忆经历、查找主题、理解长期变化；结果包含来源标题、日期和相关片段。',
+        '在设备本地按语义检索日记片段（向量 + 关键词混合召回，按名次融合）。即使用户问题与日记没有相同关键词，也能按含义找到相关记录；人名、地名、专有名词等字面信息同样能命中。用于回忆经历、查找主题、理解长期变化。返回结果带 signals 字段（dense 语义相似度 / sparse 关键词得分），并可能带 lowConfidence=true 表示证据不足。',
       parameters: {
         type: 'object',
         properties: {
@@ -92,6 +92,11 @@ export const toolDefinitions: ToolDefinition[] = [
           startDate: { type: 'string', description: '可选，起始日期 YYYY-MM-DD' },
           endDate: { type: 'string', description: '可选，结束日期 YYYY-MM-DD' },
           limit: { type: 'number', description: '最多返回条数，默认 6' },
+          multiQuery: {
+            type: 'boolean',
+            description:
+              '可选。首次检索结果很少或 lowConfidence=true 时设为 true：会去掉口语外壳、拆分复合句后多问法召回再融合',
+          },
         },
         required: ['query'],
       },
@@ -256,6 +261,7 @@ export function createToolExecutor(
         all,
         {
           limit,
+          multiQuery: a.multiQuery === true,
           ...(a.mood ? { mood: String(a.mood) } : {}),
           ...(a.startDate ? { startDate: String(a.startDate) } : {}),
           ...(a.endDate ? { endDate: String(a.endDate) } : {}),

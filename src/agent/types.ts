@@ -90,6 +90,10 @@ export type AgentEvent =
   | { type: 'thinking' }
   | { type: 'done'; answer: string; steps: number }
   | { type: 'error'; message: string }
+  /** 工具返回的日记文本里出现了"试图改写模型行为"的片段（间接提示注入） */
+  | { type: 'prompt_injection_suspected'; tool: string; matches: string[] }
+  /** 答案里提到的完整日期在检索来源中找不到，提示用户核对 */
+  | { type: 'grounding_report'; unsupportedDates: string[]; citedTitles: string[] }
 
 /** 日记精简视图（喂给 LLM，避免把整库原文塞进上下文） */
 export interface DiaryExcerpt {
