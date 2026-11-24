@@ -49,7 +49,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
     <View testID={testID} style={[styles.container, style]}>
       {tabs.map(tab => {
         const isActive = tab.name === activeTab
-        const iconName = isActive ? tab.activeIcon ?? tab.icon : tab.icon
+        const iconName = isActive ? (tab.activeIcon ?? tab.icon) : tab.icon
         const iconColor = isActive ? colors.neutral.gray60 : colors.neutral.gray50
         return (
           <Pressable

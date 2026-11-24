@@ -8,22 +8,22 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| value | string | — | 密码值 |
-| onChangeText | (text) => void | — | 值变更回调 |
-| placeholder | string | '请输入密码' | 占位文字 |
-| label | string | — | 标签文字 |
-| error | string | — | 错误提示 |
-| disabled | boolean | false | 禁用 |
-| autoFocus | boolean | false | 自动聚焦 |
+| Prop         | 类型           | 默认值       | 说明       |
+| ------------ | -------------- | ------------ | ---------- |
+| value        | string         | —            | 密码值     |
+| onChangeText | (text) => void | —            | 值变更回调 |
+| placeholder  | string         | '请输入密码' | 占位文字   |
+| label        | string         | —            | 标签文字   |
+| error        | string         | —            | 错误提示   |
+| disabled     | boolean        | false        | 禁用       |
+| autoFocus    | boolean        | false        | 自动聚焦   |
 
 ## 用法
 
 ```tsx
-import {PasswordInput} from '@components';
+import { PasswordInput } from '@components'
 
-<PasswordInput
+;<PasswordInput
   value={password}
   onChangeText={setPassword}
   label="密码"

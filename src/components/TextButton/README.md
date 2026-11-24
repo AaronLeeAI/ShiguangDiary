@@ -8,16 +8,16 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| title | string | — | 按钮文字 |
-| onPress | () => void | — | 点击回调 |
-| color | string | brand.primary | 文字颜色 |
-| size | 'small' \| 'medium' \| 'large' | 'medium' | 尺寸 |
-| disabled | boolean | false | 禁用 |
-| underline | boolean | false | 下划线 |
-| icon | ReactNode | — | 前置/后置图标 |
-| iconPosition | 'left' \| 'right' | 'left' | 图标位置 |
+| Prop         | 类型                           | 默认值        | 说明          |
+| ------------ | ------------------------------ | ------------- | ------------- |
+| title        | string                         | —             | 按钮文字      |
+| onPress      | () => void                     | —             | 点击回调      |
+| color        | string                         | brand.primary | 文字颜色      |
+| size         | 'small' \| 'medium' \| 'large' | 'medium'      | 尺寸          |
+| disabled     | boolean                        | false         | 禁用          |
+| underline    | boolean                        | false         | 下划线        |
+| icon         | ReactNode                      | —             | 前置/后置图标 |
+| iconPosition | 'left' \| 'right'              | 'left'        | 图标位置      |
 
 ## 用法
 

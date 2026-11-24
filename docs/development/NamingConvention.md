@@ -4,14 +4,14 @@
 
 ## 1. 通用规则
 
-| 类型 | 规则 | 示例 |
-|------|------|------|
-| 变量名 | 语义化，避免缩写 | `userName` ✅, `un` ❌ |
-| 函数名 | 动词开头 | `getUser`, `handlePress` |
-| 类型名 | 名词 | `User`, `DiaryCardProps` |
-| 常量 | 业务常量用 camelCase，全局配置用 UPPER_SNAKE | `routes`, `MAX_LENGTH` |
-| 事件回调 | `on<Event>` 前缀 | `onPress`, `onChange` |
-| 私有函数 | `_` 前缀（不强制） | `_handlePress` |
+| 类型     | 规则                                         | 示例                     |
+| -------- | -------------------------------------------- | ------------------------ |
+| 变量名   | 语义化，避免缩写                             | `userName` ✅, `un` ❌   |
+| 函数名   | 动词开头                                     | `getUser`, `handlePress` |
+| 类型名   | 名词                                         | `User`, `DiaryCardProps` |
+| 常量     | 业务常量用 camelCase，全局配置用 UPPER_SNAKE | `routes`, `MAX_LENGTH`   |
+| 事件回调 | `on<Event>` 前缀                             | `onPress`, `onChange`    |
+| 私有函数 | `_` 前缀（不强制）                           | `_handlePress`           |
 
 ## 2. React 组件命名
 
@@ -95,22 +95,22 @@ store/
 
 ### 5.1 RESTful 风格
 
-| 操作 | 方法 | 路径 |
-|------|------|------|
-| 列表 | GET | `/diaries` |
-| 详情 | GET | `/diaries/:id` |
-| 创建 | POST | `/diaries` |
-| 更新 | PUT | `/diaries/:id` |
+| 操作 | 方法   | 路径           |
+| ---- | ------ | -------------- |
+| 列表 | GET    | `/diaries`     |
+| 详情 | GET    | `/diaries/:id` |
+| 创建 | POST   | `/diaries`     |
+| 更新 | PUT    | `/diaries/:id` |
 | 删除 | DELETE | `/diaries/:id` |
 
 ### 5.2 函数命名
 
 ```typescript
-diaryRepository.list();
-diaryRepository.findById(id);
-diaryRepository.create(data);
-diaryRepository.update(id, data);
-diaryRepository.remove(id);
+diaryRepository.list()
+diaryRepository.findById(id)
+diaryRepository.create(data)
+diaryRepository.update(id, data)
+diaryRepository.remove(id)
 ```
 
 ## 6. 数据库命名
@@ -197,5 +197,5 @@ refactor/database
   export const ROUTES = {
     HOME: 'Home',
     DIARY_VIEW: 'DiaryView',
-  };
+  }
   ```

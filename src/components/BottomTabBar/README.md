@@ -16,19 +16,19 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| currentTab | `BottomTabName` | - | 受控激活态 |
-| onTabPress | `(tab) => void` | - | Tab 点击回调 |
-| defaultTab | `BottomTabName` | `'Home'` | 非受控默认 Tab |
-| tabs | `BottomTabConfig[]` | `BOTTOM_TABS` | 自定义 Tab 列表 |
-| testID | `string` | - | 测试 ID |
-| style | `ViewStyle` | - | 样式覆盖 |
+| Prop       | 类型                | 默认值        | 说明            |
+| ---------- | ------------------- | ------------- | --------------- |
+| currentTab | `BottomTabName`     | -             | 受控激活态      |
+| onTabPress | `(tab) => void`     | -             | Tab 点击回调    |
+| defaultTab | `BottomTabName`     | `'Home'`      | 非受控默认 Tab  |
+| tabs       | `BottomTabConfig[]` | `BOTTOM_TABS` | 自定义 Tab 列表 |
+| testID     | `string`            | -             | 测试 ID         |
+| style      | `ViewStyle`         | -             | 样式覆盖        |
 
 ## 类型
 
 ```typescript
-type BottomTabName = 'Home' | 'Notebook' | 'Album' | 'Profile';
+type BottomTabName = 'Home' | 'Notebook' | 'Album' | 'Profile'
 ```
 
 ## 使用示例
@@ -36,18 +36,18 @@ type BottomTabName = 'Home' | 'Notebook' | 'Album' | 'Profile';
 ### 受控模式（推荐 - 与 React Navigation 配合）
 
 ```tsx
-import {BottomTabBar} from '@/components/BottomTabBar';
+import { BottomTabBar } from '@/components/BottomTabBar'
 
-<BottomTabBar
+;<BottomTabBar
   currentTab={currentTab}
-  onTabPress={(tab) => navigation.navigate(ROUTES.MAIN_TABS, {screen: tab})}
+  onTabPress={tab => navigation.navigate(ROUTES.MAIN_TABS, { screen: tab })}
 />
 ```
 
 ### 非受控模式
 
 ```tsx
-<BottomTabBar defaultTab="Home" onTabPress={(tab) => console.log(tab)} />
+<BottomTabBar defaultTab="Home" onTabPress={tab => console.log(tab)} />
 ```
 
 ### 与 BottomTabBar 整合到 Tab Navigator

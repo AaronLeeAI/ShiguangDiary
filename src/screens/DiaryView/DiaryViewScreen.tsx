@@ -155,8 +155,8 @@ const renderMarkdownBlocks = (markdown: string) => {
         headingMatch[1].length === 1
           ? styles.markdownHeading1
           : headingMatch[1].length === 2
-          ? styles.markdownHeading2
-          : styles.markdownHeading3
+            ? styles.markdownHeading2
+            : styles.markdownHeading3
       blocks.push(
         <Text key={key} style={[styles.content, headingStyle]}>
           {renderInlineMarkdown(headingMatch[2], key)}

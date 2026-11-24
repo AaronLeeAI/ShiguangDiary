@@ -15,15 +15,15 @@ Basic release security review:
 
 ## Findings
 
-| Area | Result | Notes |
-| --- | --- | --- |
-| Android permissions | PASS | Merged APK now exposes only `INTERNET`, `VIBRATE`, and AndroidX dynamic receiver permission. Unused storage/notification/alarm/background permissions were removed via manifest-merger rules. |
-| Backup | PASS | App manifest sets `android:allowBackup="false"`. |
-| Export paths | PASS | JSON backup/export uses app document storage bucket; UI reports the generated path. |
-| Logs | PASS with note | Logger disables debug/info below warn in release via `__DEV__`; errors/warnings remain for diagnostics. |
-| Secrets | PASS | No release keystore or secrets were added. |
-| Signing | RC ONLY | APK is signed with debug key for RC verification. Production release must use private release keystore outside git. |
-| Debug/dev endpoints | PASS | Static scan found no newly introduced debug route or token. |
+| Area                | Result         | Notes                                                                                                                                                                                         |
+| ------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Android permissions | PASS           | Merged APK now exposes only `INTERNET`, `VIBRATE`, and AndroidX dynamic receiver permission. Unused storage/notification/alarm/background permissions were removed via manifest-merger rules. |
+| Backup              | PASS           | App manifest sets `android:allowBackup="false"`.                                                                                                                                              |
+| Export paths        | PASS           | JSON backup/export uses app document storage bucket; UI reports the generated path.                                                                                                           |
+| Logs                | PASS with note | Logger disables debug/info below warn in release via `__DEV__`; errors/warnings remain for diagnostics.                                                                                       |
+| Secrets             | PASS           | No release keystore or secrets were added.                                                                                                                                                    |
+| Signing             | RC ONLY        | APK is signed with debug key for RC verification. Production release must use private release keystore outside git.                                                                           |
+| Debug/dev endpoints | PASS           | Static scan found no newly introduced debug route or token.                                                                                                                                   |
 
 ## Permission Evidence
 

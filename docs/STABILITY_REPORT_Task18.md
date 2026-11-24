@@ -51,17 +51,17 @@ Store fallback and optimistic-degrade warnings are routed through `createLogger(
 
 ## Reliability Matrix
 
-| Area | Result | Evidence |
-| --- | --- | --- |
-| Startup retry | Improved | `reload()` no longer self-blocks on `loading` guard |
-| Concurrent init | Improved | Shared `initializing` promise in database bootstrap |
-| Database migration | Improved | Version 2 index migration is idempotent with `IF NOT EXISTS` |
-| DAO updates | Improved | Empty/undefined patches are guarded |
-| Rendering | Improved | Stable FlatList callbacks and virtualization defaults |
-| Logging | Improved | Store warnings use scoped logger |
-| Cache cleanup | Existing capability confirmed | `fileStorage.clearCache()` only clears cache bucket |
-| Release build | Passed locally | `.\gradlew.bat clean assembleRelease --no-daemon --stacktrace` generated release APK |
-| Secrets/signing | No secrets committed | Release signing remains documented, not hard-coded |
+| Area               | Result                        | Evidence                                                                             |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------------------------ |
+| Startup retry      | Improved                      | `reload()` no longer self-blocks on `loading` guard                                  |
+| Concurrent init    | Improved                      | Shared `initializing` promise in database bootstrap                                  |
+| Database migration | Improved                      | Version 2 index migration is idempotent with `IF NOT EXISTS`                         |
+| DAO updates        | Improved                      | Empty/undefined patches are guarded                                                  |
+| Rendering          | Improved                      | Stable FlatList callbacks and virtualization defaults                                |
+| Logging            | Improved                      | Store warnings use scoped logger                                                     |
+| Cache cleanup      | Existing capability confirmed | `fileStorage.clearCache()` only clears cache bucket                                  |
+| Release build      | Passed locally                | `.\gradlew.bat clean assembleRelease --no-daemon --stacktrace` generated release APK |
+| Secrets/signing    | No secrets committed          | Release signing remains documented, not hard-coded                                   |
 
 ## Regression Verification
 

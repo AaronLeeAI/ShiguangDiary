@@ -15,13 +15,13 @@ Basic accessibility review for release candidate readiness:
 
 ## Findings
 
-| Area | Result | Evidence / Action |
-| --- | --- | --- |
-| Touch targets | PASS | Primary entries use shared `SettingsRow`, `BottomTabBar`, cards, and FAB components with established hit areas. |
-| Disabled states | PASS | RC-incomplete settings/profile entries now use `disabled` states and `敬请期待` hints rather than navigating to stubs. |
-| Screen-reader basics | PASS | `SettingsRow` exposes `accessibilityRole="button"`, labels, and disabled state. |
-| Reduced motion | PASS | `useReduceMotion` and animation wrappers remain present; haptics are safe/no-throw. |
-| Contrast | PASS (static) | Touched UI uses semantic theme colors rather than ad-hoc colors. |
+| Area                 | Result        | Evidence / Action                                                                                                      |
+| -------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Touch targets        | PASS          | Primary entries use shared `SettingsRow`, `BottomTabBar`, cards, and FAB components with established hit areas.        |
+| Disabled states      | PASS          | RC-incomplete settings/profile entries now use `disabled` states and `敬请期待` hints rather than navigating to stubs. |
+| Screen-reader basics | PASS          | `SettingsRow` exposes `accessibilityRole="button"`, labels, and disabled state.                                        |
+| Reduced motion       | PASS          | `useReduceMotion` and animation wrappers remain present; haptics are safe/no-throw.                                    |
+| Contrast             | PASS (static) | Touched UI uses semantic theme colors rather than ad-hoc colors.                                                       |
 
 ## Not Executed
 

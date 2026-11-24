@@ -128,7 +128,6 @@ async function statToMetadata(
     size = typeof stat.size === 'number' ? stat.size : 0
   } catch (e) {
     log.warn('stat failed for backup', filename, e)
-    size = 0
   }
   return {
     filename,

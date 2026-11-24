@@ -20,13 +20,13 @@
 
 ### DateTimePicker
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| value | `number` | 必填 | 当前时间戳(ms) |
-| onChange | `(ts) => void` | 必填 | 值变化回调 |
-| mode | `'date' \| 'time' \| 'datetime'` | `'date'` | 选择模式 |
-| minimumDate | `number` | - | 最小日期 |
-| maximumDate | `number` | - | 最大日期 |
+| Prop        | 类型                             | 默认值   | 说明           |
+| ----------- | -------------------------------- | -------- | -------------- |
+| value       | `number`                         | 必填     | 当前时间戳(ms) |
+| onChange    | `(ts) => void`                   | 必填     | 值变化回调     |
+| mode        | `'date' \| 'time' \| 'datetime'` | `'date'` | 选择模式       |
+| minimumDate | `number`                         | -        | 最小日期       |
+| maximumDate | `number`                         | -        | 最大日期       |
 
 ### DateTimePickerField
 

@@ -201,7 +201,7 @@ export async function runAgent(
 
       // 先解析全部调用；只读工具可并行，写工具始终串行并等待用户确认。
       const prepared: PreparedCall[] = calls.map(call => {
-        let args: Record<string, unknown> = {}
+        let args: Record<string, unknown>
         try {
           args = JSON.parse(call.function.arguments || '{}')
         } catch {

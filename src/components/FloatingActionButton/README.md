@@ -15,15 +15,15 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| onPress | `() => void` | 必填 | 点击回调 |
-| icon | `IconName` | `'add'` | 图标 |
-| children | `ReactNode` | - | 自定义内容（覆盖默认图标） |
-| variant | `'primary' \| 'danger'` | `'primary'` | 视觉变体 |
-| size | `'small' \| 'medium' \| 'large'` | `'large'` | 尺寸 |
-| accessibilityLabel | `string` | `'新建'` | 无障碍标签 |
-| disabled | `boolean` | `false` | 禁用 |
+| Prop               | 类型                             | 默认值      | 说明                       |
+| ------------------ | -------------------------------- | ----------- | -------------------------- |
+| onPress            | `() => void`                     | 必填        | 点击回调                   |
+| icon               | `IconName`                       | `'add'`     | 图标                       |
+| children           | `ReactNode`                      | -           | 自定义内容（覆盖默认图标） |
+| variant            | `'primary' \| 'danger'`          | `'primary'` | 视觉变体                   |
+| size               | `'small' \| 'medium' \| 'large'` | `'large'`   | 尺寸                       |
+| accessibilityLabel | `string`                         | `'新建'`    | 无障碍标签                 |
+| disabled           | `boolean`                        | `false`     | 禁用                       |
 
 ## 使用示例
 

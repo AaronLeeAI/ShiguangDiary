@@ -8,15 +8,15 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| children | ReactNode | — | 页面内容 |
-| scroll | boolean | false | 启用 ScrollView 包裹 |
-| keyboardAvoiding | boolean | false | 启用 KeyboardAvoidingView |
-| padded | boolean | false | 添加水平内边距（spacing.base） |
-| edges | ('top' \| 'bottom' \| 'left' \| 'right')[] | ['top', 'bottom'] | SafeArea 适配边 |
-| statusBarStyle | 'dark-content' \| 'light-content' | 'dark-content' | StatusBar 样式 |
-| backgroundColor | string | — | 自定义背景色（默认 theme.colors.semantic.bg.canvas） |
+| Prop             | 类型                                       | 默认值            | 说明                                                 |
+| ---------------- | ------------------------------------------ | ----------------- | ---------------------------------------------------- |
+| children         | ReactNode                                  | —                 | 页面内容                                             |
+| scroll           | boolean                                    | false             | 启用 ScrollView 包裹                                 |
+| keyboardAvoiding | boolean                                    | false             | 启用 KeyboardAvoidingView                            |
+| padded           | boolean                                    | false             | 添加水平内边距（spacing.base）                       |
+| edges            | ('top' \| 'bottom' \| 'left' \| 'right')[] | ['top', 'bottom'] | SafeArea 适配边                                      |
+| statusBarStyle   | 'dark-content' \| 'light-content'          | 'dark-content'    | StatusBar 样式                                       |
+| backgroundColor  | string                                     | —                 | 自定义背景色（默认 theme.colors.semantic.bg.canvas） |
 
 ## 用法
 

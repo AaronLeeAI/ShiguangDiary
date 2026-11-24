@@ -240,7 +240,9 @@ export class LocalSemanticRagService implements SemanticRagAdapter {
           vectors.push(encodeVector(await this.embedding.embed(chunk.embeddingText)))
         }
       } catch (error) {
-        throw new Error(`第 ${index + 1} 篇日记的本地向量生成失败：${describeError(error)}`)
+        throw new Error(`第 ${index + 1} 篇日记的本地向量生成失败：${describeError(error)}`, {
+          cause: error,
+        })
       }
       try {
         await this.store.replaceDiary(
@@ -251,7 +253,9 @@ export class LocalSemanticRagService implements SemanticRagAdapter {
           vectors,
         )
       } catch (error) {
-        throw new Error(`第 ${index + 1} 篇日记的本地索引保存失败：${describeError(error)}`)
+        throw new Error(`第 ${index + 1} 篇日记的本地索引保存失败：${describeError(error)}`, {
+          cause: error,
+        })
       }
       reportProgress(
         onProgress,

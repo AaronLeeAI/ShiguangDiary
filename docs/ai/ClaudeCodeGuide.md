@@ -14,13 +14,13 @@
 
 ### 2.1 Task 类型
 
-| 类型 | 说明 | 限制 |
-|------|------|------|
-| `bootstrap` | 工程初始化 | 禁止开发页面/组件逻辑 |
-| `feature` | 功能开发 | 必须 TDD，先写测试 |
-| `refactor` | 重构 | 必须说明动机和方案 |
-| `fix` | Bug 修复 | 必须说明复现步骤和修复方案 |
-| `review` | 代码审查 | 按 ReviewChecklist 执行 |
+| 类型        | 说明       | 限制                       |
+| ----------- | ---------- | -------------------------- |
+| `bootstrap` | 工程初始化 | 禁止开发页面/组件逻辑      |
+| `feature`   | 功能开发   | 必须 TDD，先写测试         |
+| `refactor`  | 重构       | 必须说明动机和方案         |
+| `fix`       | Bug 修复   | 必须说明复现步骤和修复方案 |
+| `review`    | 代码审查   | 按 ReviewChecklist 执行    |
 
 ### 2.2 执行步骤
 
@@ -36,11 +36,13 @@
 ## 3. 开发规范
 
 详见：
+
 - [`docs/development/Architecture.md`](Architecture.md)
 - [`docs/development/CodingStyle.md`](CodingStyle.md)
 - [`docs/development/ComponentConvention.md`](ComponentConvention.md)
 
 关键点：
+
 - 所有组件通过 `@components` 引用
 - 所有样式通过 `@theme` 访问
 - 所有路由通过 `@navigation` 引用
@@ -96,6 +98,7 @@ npm run test:coverage # 生成覆盖率报告
 格式：`<type>: <description>`
 
 类型：
+
 - `feat`：新功能
 - `fix`：修复
 - `refactor`：重构

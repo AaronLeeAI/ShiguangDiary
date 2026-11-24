@@ -505,10 +505,10 @@ export default function AgentChat({ repo, tts, rag, memory, onOpenDiary }: Props
     ragBusy || ragStatus?.state === 'working'
       ? `${ragProgress?.percent ?? 0}%`
       : ragReady
-      ? `${ragStatus.indexedDiaries} 篇已连接`
-      : ragStatus?.state === 'error'
-      ? '需要重试'
-      : '尚未启用'
+        ? `${ragStatus.indexedDiaries} 篇已连接`
+        : ragStatus?.state === 'error'
+          ? '需要重试'
+          : '尚未启用'
 
   return (
     <KeyboardAvoidingView

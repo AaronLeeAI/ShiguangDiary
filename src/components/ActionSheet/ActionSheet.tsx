@@ -84,8 +84,8 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
                           item.disabled
                             ? colors.semantic.icon.disabled
                             : item.destructive
-                            ? colors.func.danger
-                            : colors.semantic.icon.primary
+                              ? colors.func.danger
+                              : colors.semantic.icon.primary
                         }
                       />
                     </View>

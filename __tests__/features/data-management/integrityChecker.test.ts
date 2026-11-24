@@ -31,7 +31,7 @@ const diary = (id: string, notebookId: string | null = null): DiaryModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  } as DiaryModel)
+  }) as DiaryModel
 
 const notebook = (id: string): NotebookModel =>
   ({
@@ -45,7 +45,7 @@ const notebook = (id: string): NotebookModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  } as NotebookModel)
+  }) as NotebookModel
 
 const album = (id: string, diaryIds: string[]): AlbumModel =>
   ({
@@ -57,7 +57,7 @@ const album = (id: string, diaryIds: string[]): AlbumModel =>
     createdAt: 1,
     updatedAt: 1,
     deletedAt: null,
-  } as AlbumModel)
+  }) as AlbumModel
 
 const attachment = (id: string, diaryId: string): AttachmentModel =>
   ({
@@ -68,7 +68,7 @@ const attachment = (id: string, diaryId: string): AttachmentModel =>
     thumbnail: null,
     size: 0,
     createdAt: 1,
-  } as AttachmentModel)
+  }) as AttachmentModel
 
 const allValid = {
   diaries: [diary('d1', 'nb1'), diary('d2', 'nb1')],

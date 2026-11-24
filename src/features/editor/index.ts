@@ -17,4 +17,7 @@ export { isDirty, validateEditor, draftKey, charCount } from './services/editorE
 export type { EditorSnapshot, EditorMode, EditorFieldError, EditorValidationResult } from './types'
 export { EDITOR_LIMITS } from './types'
 export { WebMarkdownEditor } from './components/WebMarkdownEditor'
-export type { WebMarkdownEditorHandle, WebMarkdownFormatCommand } from './components/WebMarkdownEditor'
+export type {
+  WebMarkdownEditorHandle,
+  WebMarkdownFormatCommand,
+} from './components/WebMarkdownEditor'

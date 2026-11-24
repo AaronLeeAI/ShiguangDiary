@@ -15,22 +15,22 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| item | `Notebook` | 必填 | 日记本数据 |
-| onPress | `() => void` | - | 点击回调 |
-| onLongPress | `() => void` | - | 长按回调 |
-| coverColor | `string` | - | 自定义封面色 |
-| style | `ViewStyle` | - | 容器样式 |
+| Prop        | 类型         | 默认值 | 说明         |
+| ----------- | ------------ | ------ | ------------ |
+| item        | `Notebook`   | 必填   | 日记本数据   |
+| onPress     | `() => void` | -      | 点击回调     |
+| onLongPress | `() => void` | -      | 长按回调     |
+| coverColor  | `string`     | -      | 自定义封面色 |
+| style       | `ViewStyle`  | -      | 容器样式     |
 
 ## 使用示例
 
 ```tsx
-import {DiaryBookCard} from '@/components/DiaryBookCard';
+import { DiaryBookCard } from '@/components/DiaryBookCard'
 
-<DiaryBookCard
+;<DiaryBookCard
   item={notebook}
-  onPress={() => navigation.navigate('NotebookDetail', {id: notebook.id})}
+  onPress={() => navigation.navigate('NotebookDetail', { id: notebook.id })}
   onLongPress={() => showActions(notebook)}
 />
 ```

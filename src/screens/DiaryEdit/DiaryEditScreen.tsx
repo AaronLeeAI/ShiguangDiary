@@ -548,8 +548,8 @@ const findProtectedLayoutRangeInSelection = (text: string, selection: TextSelect
     const nextPosition = protectedRange
       ? protectedRange.end
       : lineRange.end < text.length && text[lineRange.end] === '\n'
-      ? lineRange.end + 1
-      : text.length + 1
+        ? lineRange.end + 1
+        : text.length + 1
     if (nextPosition <= position) {
       position += 1
     } else {
@@ -939,7 +939,7 @@ const insertionFormatsFromState = (
 ) => {
   const inherited = formatsAtPosition(ranges, position, textLength)
   return FORMAT_TOOLS.filter(tool =>
-    isBlockFormatTool(tool) ? inherited.includes(tool) : state[tool] ?? inherited.includes(tool),
+    isBlockFormatTool(tool) ? inherited.includes(tool) : (state[tool] ?? inherited.includes(tool)),
   )
 }
 
@@ -1029,17 +1029,21 @@ const parseInlineMarkdownToRich = (line: string, inheritedFormats: FormatTool[])
     const token = line.startsWith('**', index)
       ? { raw: '**', format: 'bold' as FormatTool }
       : line.startsWith('~~', index)
-      ? { raw: '~~', format: 'strikethrough' as FormatTool }
-      : line.startsWith('++', index)
-      ? { raw: '++', format: 'underline' as FormatTool }
-      : line[index] === '*'
-      ? { raw: '*', format: 'italic' as FormatTool }
-      : null
+        ? { raw: '~~', format: 'strikethrough' as FormatTool }
+        : line.startsWith('++', index)
+          ? { raw: '++', format: 'underline' as FormatTool }
+          : line[index] === '*'
+            ? { raw: '*', format: 'italic' as FormatTool }
+            : null
     if (
       token &&
       (active.has(token.format) || line.indexOf(token.raw, index + token.raw.length) !== -1)
     ) {
-      active.has(token.format) ? active.delete(token.format) : active.add(token.format)
+      if (active.has(token.format)) {
+        active.delete(token.format)
+      } else {
+        active.add(token.format)
+      }
       index += token.raw.length
       continue
     }
@@ -1229,7 +1233,7 @@ const countContentChars = (text: string) =>
 const extractMarkdownImageUris = (markdown: string) => {
   const uris: string[] = []
   const imagePattern = /!\[[^\]]*\]\(([^)]+)\)/g
-  let match: RegExpExecArray | null = null
+  let match: RegExpExecArray | null
   while ((match = imagePattern.exec(markdown))) {
     if (match[1]) {
       uris.push(match[1])
@@ -1907,7 +1911,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
         throw nativeLocationError
       }
       if (!hasPermission) {
-        throw new Error('未授予定位权限，且暂时无法通过 IP 获取位置')
+        throw new Error('未授予定位权限，且暂时无法通过 IP 获取位置', { cause: ipError })
       }
       throw ipError
     }
@@ -2885,7 +2889,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
       }
       return isBlockFormatTool(tool)
         ? selectionFormats.includes(tool)
-        : activeFormatState[tool] ?? selectionFormats.includes(tool)
+        : (activeFormatState[tool] ?? selectionFormats.includes(tool))
     },
     [activeFormatState, selectionFormats],
   )
@@ -2894,7 +2898,7 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     const activeFormats = FORMAT_TOOLS.filter(tool =>
       isBlockFormatTool(tool)
         ? selectionFormats.includes(tool)
-        : activeFormatState[tool] ?? selectionFormats.includes(tool),
+        : (activeFormatState[tool] ?? selectionFormats.includes(tool)),
     )
     return [
       styles.contentInput,
@@ -2913,7 +2917,10 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
     ]
   }, [activeFormatState, selectionFormats])
 
-  const contentCharCount = useMemo(() => webEditorPlainText.replace(/\s/g, '').length, [webEditorPlainText])
+  const contentCharCount = useMemo(
+    () => webEditorPlainText.replace(/\s/g, '').length,
+    [webEditorPlainText],
+  )
   const protectedLayoutSafeCaretVisible = useMemo(
     () => shouldRenderProtectedLayoutSafeCaret(plainText, contentSelection),
     [contentSelection, plainText],
@@ -3645,13 +3652,3 @@ export const DiaryEditScreen: React.FC<DiaryEditScreenProps> = ({ navigation, ro
 }
 
 export default DiaryEditScreen
-
-
-
-
-
-
-
-
-
-

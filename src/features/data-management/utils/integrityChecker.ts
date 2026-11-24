@@ -82,7 +82,7 @@ export function checkIntegrity(args: {
 
   // album.diaryIds(JSON 数组字符串)引用不存在的 diary
   for (const album of albums) {
-    let ids: string[] = []
+    let ids: string[]
     try {
       ids = JSON.parse(album.diaryIds) as string[]
     } catch {

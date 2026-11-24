@@ -4,12 +4,12 @@
 
 ## 1. 组件分类
 
-| 类别 | 说明 | 示例 |
-|------|------|------|
-| 展示组件 | 仅依赖 props，无状态 | `DiaryCard`, `TopBar` |
-| 容器组件 | 连接 store / API | `DiaryListScreen` |
-| 高阶组件 | 复用通用能力 | `withSafeArea`, `withTheme` |
-| 业务组件 | 包含业务逻辑 | `SearchBar`, `DiaryEditor` |
+| 类别     | 说明                 | 示例                        |
+| -------- | -------------------- | --------------------------- |
+| 展示组件 | 仅依赖 props，无状态 | `DiaryCard`, `TopBar`       |
+| 容器组件 | 连接 store / API     | `DiaryListScreen`           |
+| 高阶组件 | 复用通用能力         | `withSafeArea`, `withTheme` |
+| 业务组件 | 包含业务逻辑         | `SearchBar`, `DiaryEditor`  |
 
 ## 2. 目录结构
 
@@ -34,9 +34,9 @@ DiaryCard/
 ```typescript
 // 组件名 + Props
 export interface DiaryCardProps {
-  item: Diary;
-  onPress?: () => void;
-  style?: ViewStyle;
+  item: Diary
+  onPress?: () => void
+  style?: ViewStyle
 }
 ```
 
@@ -47,10 +47,10 @@ export interface DiaryCardProps {
 
 ```typescript
 export interface PrimaryButtonProps {
-  title: string;            // 必填
-  onPress: () => void;      // 必填
-  variant?: 'primary' | 'secondary'; // 可选
-  disabled?: boolean;       // 可选
+  title: string // 必填
+  onPress: () => void // 必填
+  variant?: 'primary' | 'secondary' // 可选
+  disabled?: boolean // 可选
 }
 ```
 
@@ -108,9 +108,9 @@ import {styles} from './styles';
 ```typescript
 // 推荐：受控模式
 export interface TextFieldProps {
-  value?: string;
-  onChangeText?: (text: string) => void;
-  defaultValue?: string;  // 非受控支持
+  value?: string
+  onChangeText?: (text: string) => void
+  defaultValue?: string // 非受控支持
 }
 ```
 
@@ -165,12 +165,15 @@ export const DiaryCard: React.FC<Props> = (props) => {
 > 日记卡片
 
 ## Props
+
 ...
 
 ## 使用示例
+
 ...
 
 ## 设计参考
+
 - docs/project-设计-docs/components/DiaryCard.md
 ```
 

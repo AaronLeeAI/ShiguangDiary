@@ -90,17 +90,17 @@ navigation → screens → components → theme
 
 ## 5. 关键技术选型
 
-| 用途 | 选型 |
-|------|------|
-| 框架 | React Native 0.76+ |
-| 语言 | TypeScript 5.x |
-| 导航 | React Navigation 7.x |
-| 状态 | Zustand + React Query |
-| 存储 | SQLite + MMKV |
-| 动画 | Reanimated 3.x |
-| 表单 | 业务内部封装（不引入 form 库） |
-| 富文本 | react-native-pell-rich-editor |
-| 图标 | react-native-vector-icons |
+| 用途   | 选型                           |
+| ------ | ------------------------------ |
+| 框架   | React Native 0.76+             |
+| 语言   | TypeScript 5.x                 |
+| 导航   | React Navigation 7.x           |
+| 状态   | Zustand + React Query          |
+| 存储   | SQLite + MMKV                  |
+| 动画   | Reanimated 3.x                 |
+| 表单   | 业务内部封装（不引入 form 库） |
+| 富文本 | react-native-pell-rich-editor  |
+| 图标   | react-native-vector-icons      |
 
 ## 6. 性能策略
 

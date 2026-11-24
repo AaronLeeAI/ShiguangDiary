@@ -20,21 +20,21 @@
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| SearchBar | 顶部搜索 |
-| DiaryCard | 搜索结果 |
-| EmptyState | 无结果 |
-| Loading | 搜索中 |
+| 组件       | 用途     |
+| ---------- | -------- |
+| SearchBar  | 顶部搜索 |
+| DiaryCard  | 搜索结果 |
+| EmptyState | 无结果   |
+| Loading    | 搜索中   |
 
 ## 路由
 
 ```typescript
 // HomeScreen TopBar search icon
-navigation.navigate(ROUTES.SEARCH);
+navigation.navigate(ROUTES.SEARCH)
 
 // 或 modal
-navigation.navigate(ROUTES.MODAL, {type: 'Search', props: {}});
+navigation.navigate(ROUTES.MODAL, { type: 'Search', props: {} })
 ```
 
 ## 后续 TODO

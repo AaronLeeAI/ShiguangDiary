@@ -14,24 +14,24 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| variant | `EmptyStateVariant` | 必填 | 变体预设 |
-| title | `string` | 预设 | 标题 |
-| subtitle | `string` | 预设 | 副标题 |
-| customIcon | `ReactNode` | - | 自定义图标 |
-| actionLabel | `string` | - | 行动按钮文案 |
-| onAction | `() => void` | - | 行动按钮回调 |
+| Prop        | 类型                | 默认值 | 说明         |
+| ----------- | ------------------- | ------ | ------------ |
+| variant     | `EmptyStateVariant` | 必填   | 变体预设     |
+| title       | `string`            | 预设   | 标题         |
+| subtitle    | `string`            | 预设   | 副标题       |
+| customIcon  | `ReactNode`         | -      | 自定义图标   |
+| actionLabel | `string`            | -      | 行动按钮文案 |
+| onAction    | `() => void`        | -      | 行动按钮回调 |
 
 ## 预设文案
 
-| variant | 标题 | 副标题 |
-|---------|------|--------|
-| notebook | 没有属于自己的日记本 | 赶紧点击右上角的加号创建吧 |
-| album | 没有属于自己的相册 | 赶紧点击右上角的加号创建吧 |
-| noDiaryToday | 没有记录内容 | - |
-| noDraft | 草稿箱空空如也 | 已保存的草稿会自动显示在这里 |
-| search | 没有找到相关日记 | 试试别的关键词 |
+| variant      | 标题                 | 副标题                       |
+| ------------ | -------------------- | ---------------------------- |
+| notebook     | 没有属于自己的日记本 | 赶紧点击右上角的加号创建吧   |
+| album        | 没有属于自己的相册   | 赶紧点击右上角的加号创建吧   |
+| noDiaryToday | 没有记录内容         | -                            |
+| noDraft      | 草稿箱空空如也       | 已保存的草稿会自动显示在这里 |
+| search       | 没有找到相关日记     | 试试别的关键词               |
 
 ## 使用示例
 

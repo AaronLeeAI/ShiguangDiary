@@ -31,10 +31,10 @@ function compactLine(message: ChatMessage, maxChars = 160): string | null {
     message.role === 'user'
       ? '用户'
       : message.role === 'assistant'
-      ? '拾光'
-      : message.role === 'tool'
-      ? `工具${message.name ? `(${message.name})` : ''}`
-      : '系统'
+        ? '拾光'
+        : message.role === 'tool'
+          ? `工具${message.name ? `(${message.name})` : ''}`
+          : '系统'
   return `${role}：${clipped}`
 }
 

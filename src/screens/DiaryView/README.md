@@ -22,20 +22,20 @@
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| TopBar | 头部导航 |
-| ActionSheet | 更多操作菜单 |
-| PrimaryButton | 解锁加密日记 |
-| Loading | 加载态 |
-| Icon | 各处图标 |
-| Toast | 操作反馈（静态 API） |
+| 组件          | 用途                 |
+| ------------- | -------------------- |
+| TopBar        | 头部导航             |
+| ActionSheet   | 更多操作菜单         |
+| PrimaryButton | 解锁加密日记         |
+| Loading       | 加载态               |
+| Icon          | 各处图标             |
+| Toast         | 操作反馈（静态 API） |
 
 ## 路由
 
 ```typescript
 // HomeScreen.tsx
-navigation.navigate(ROUTES.DIARY_VIEW, {id: diary.id});
+navigation.navigate(ROUTES.DIARY_VIEW, { id: diary.id })
 ```
 
 ## 后续 TODO

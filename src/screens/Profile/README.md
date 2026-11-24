@@ -19,25 +19,25 @@
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| TopBar | 头部 |
-| Avatar | 用户头像 |
-| Icon | 各菜单图标 + chevron |
-| BottomTabBar | Tab 切换 |
+| 组件         | 用途                 |
+| ------------ | -------------------- |
+| TopBar       | 头部                 |
+| Avatar       | 用户头像             |
+| Icon         | 各菜单图标 + chevron |
+| BottomTabBar | Tab 切换             |
 
 ## 数据结构
 
 ```typescript
 interface ProfileMenuItem {
-  key: string;
-  label: string;
-  icon: IconName;
-  hint?: string;
-  route?: keyof RootStackParamList;
-  showArrow?: boolean;
-  onPress?: () => void;
-  destructive?: boolean;
+  key: string
+  label: string
+  icon: IconName
+  hint?: string
+  route?: keyof RootStackParamList
+  showArrow?: boolean
+  onPress?: () => void
+  destructive?: boolean
 }
 ```
 

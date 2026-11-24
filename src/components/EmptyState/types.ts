@@ -9,12 +9,7 @@
 import type { ReactNode } from 'react'
 
 export type EmptyStateVariant =
-  | 'notebook'
-  | 'album'
-  | 'noDiaryToday'
-  | 'noDraft'
-  | 'search'
-  | 'custom'
+  'notebook' | 'album' | 'noDiaryToday' | 'noDraft' | 'search' | 'custom'
 
 export interface EmptyStateConfig {
   title: string

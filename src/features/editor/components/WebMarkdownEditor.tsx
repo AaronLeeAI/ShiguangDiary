@@ -1,10 +1,4 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { WebView, type WebViewMessageEvent } from 'react-native-webview'
 
@@ -367,7 +361,10 @@ const createEditorHtml = (initialMarkdown: string, placeholder: string) => `<!do
 </html>`
 
 export const WebMarkdownEditor = forwardRef<WebMarkdownEditorHandle, WebMarkdownEditorProps>(
-  ({ markdown, placeholder = '请输入...', onChangeMarkdown, onChangePlainText, onImagePress }, ref) => {
+  (
+    { markdown, placeholder = '请输入...', onChangeMarkdown, onChangePlainText, onImagePress },
+    ref,
+  ) => {
     const webViewRef = useRef<any>(null)
     const lastMarkdownFromWebRef = useRef(markdown)
     const readyRef = useRef(false)
@@ -386,7 +383,9 @@ export const WebMarkdownEditor = forwardRef<WebMarkdownEditorHandle, WebMarkdown
         if (!readyRef.current) {
           return
         }
-        runCommand(`window.__diaryEditor && window.__diaryEditor.setMarkdown(${JSON.stringify(nextMarkdown)})`)
+        runCommand(
+          `window.__diaryEditor && window.__diaryEditor.setMarkdown(${JSON.stringify(nextMarkdown)})`,
+        )
       },
       [runCommand],
     )
@@ -422,7 +421,7 @@ export const WebMarkdownEditor = forwardRef<WebMarkdownEditorHandle, WebMarkdown
 
     const handleMessage = useCallback(
       (event: WebViewMessageEvent) => {
-        let message: EditorMessage | null = null
+        let message: EditorMessage
         try {
           message = JSON.parse(event.nativeEvent.data) as EditorMessage
         } catch (_err) {
@@ -498,7 +497,3 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
 })
-
-
-
-

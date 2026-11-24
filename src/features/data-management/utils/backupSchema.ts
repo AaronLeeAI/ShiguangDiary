@@ -14,15 +14,6 @@ import {
   type BackupStats,
 } from '../types'
 
-const EMPTY_STATS: BackupStats = {
-  notebooks: 0,
-  diaries: 0,
-  albums: 0,
-  tags: 0,
-  attachments: 0,
-  drafts: 0,
-}
-
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -109,30 +100,29 @@ export function validateBackupPayload(raw: unknown): ImportValidation {
   }
 
   // stats(若缺失则按集合长度回填,便于诊断)
-  let stats: BackupStats = EMPTY_STATS
-  if (isObject(raw.stats)) {
-    stats = {
-      notebooks: isNumber(raw.stats.notebooks)
-        ? (raw.stats.notebooks as number)
-        : picked.notebooks.length,
-      diaries: isNumber(raw.stats.diaries) ? (raw.stats.diaries as number) : picked.diaries.length,
-      albums: isNumber(raw.stats.albums) ? (raw.stats.albums as number) : picked.albums.length,
-      tags: isNumber(raw.stats.tags) ? (raw.stats.tags as number) : picked.tags.length,
-      attachments: isNumber(raw.stats.attachments)
-        ? (raw.stats.attachments as number)
-        : picked.attachments.length,
-      drafts: isNumber(raw.stats.drafts) ? (raw.stats.drafts as number) : picked.drafts.length,
-    }
-  } else {
-    stats = {
-      notebooks: picked.notebooks.length,
-      diaries: picked.diaries.length,
-      albums: picked.albums.length,
-      tags: picked.tags.length,
-      attachments: picked.attachments.length,
-      drafts: picked.drafts.length,
-    }
-  }
+  const stats: BackupStats = isObject(raw.stats)
+    ? {
+        notebooks: isNumber(raw.stats.notebooks)
+          ? (raw.stats.notebooks as number)
+          : picked.notebooks.length,
+        diaries: isNumber(raw.stats.diaries)
+          ? (raw.stats.diaries as number)
+          : picked.diaries.length,
+        albums: isNumber(raw.stats.albums) ? (raw.stats.albums as number) : picked.albums.length,
+        tags: isNumber(raw.stats.tags) ? (raw.stats.tags as number) : picked.tags.length,
+        attachments: isNumber(raw.stats.attachments)
+          ? (raw.stats.attachments as number)
+          : picked.attachments.length,
+        drafts: isNumber(raw.stats.drafts) ? (raw.stats.drafts as number) : picked.drafts.length,
+      }
+    : {
+        notebooks: picked.notebooks.length,
+        diaries: picked.diaries.length,
+        albums: picked.albums.length,
+        tags: picked.tags.length,
+        attachments: picked.attachments.length,
+        drafts: picked.drafts.length,
+      }
 
   if (errors.length > 0) {
     return { valid: false, errors, payload: null }

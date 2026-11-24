@@ -4,8 +4,10 @@
 
 import type { TextInputProps, ViewStyle } from 'react-native'
 
-export interface TextAreaProps
-  extends Omit<TextInputProps, 'style' | 'multiline' | 'placeholderTextColor'> {
+export interface TextAreaProps extends Omit<
+  TextInputProps,
+  'style' | 'multiline' | 'placeholderTextColor'
+> {
   value: string
   onChangeText: (text: string) => void
   placeholder?: string

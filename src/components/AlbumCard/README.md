@@ -13,18 +13,18 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| item | `Album` | 必填 | 相册数据 |
-| onPress | `() => void` | - | 点击回调 |
-| onLongPress | `() => void` | - | 长按回调 |
+| Prop        | 类型         | 默认值 | 说明     |
+| ----------- | ------------ | ------ | -------- |
+| item        | `Album`      | 必填   | 相册数据 |
+| onPress     | `() => void` | -      | 点击回调 |
+| onLongPress | `() => void` | -      | 长按回调 |
 
 ## 使用示例
 
 ```tsx
-import {AlbumCard} from '@/components/AlbumCard';
+import { AlbumCard } from '@/components/AlbumCard'
 
-<AlbumCard item={album} onPress={handleOpen} />
+;<AlbumCard item={album} onPress={handleOpen} />
 ```
 
 ## 目录结构

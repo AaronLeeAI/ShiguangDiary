@@ -15,14 +15,14 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| source | `{uri} \| number` | - | 图片源 |
-| name | `string` | - | 文字头像 |
-| size | `'large' \| 'medium' \| 'small' \| number` | `'medium'` | 尺寸 |
-| shape | `'circle' \| 'square'` | `'circle'` | 形状 |
-| onPress | `() => void` | - | 点击回调 |
-| editable | `boolean` | `false` | 是否可编辑 |
+| Prop     | 类型                                       | 默认值     | 说明       |
+| -------- | ------------------------------------------ | ---------- | ---------- |
+| source   | `{uri} \| number`                          | -          | 图片源     |
+| name     | `string`                                   | -          | 文字头像   |
+| size     | `'large' \| 'medium' \| 'small' \| number` | `'medium'` | 尺寸       |
+| shape    | `'circle' \| 'square'`                     | `'circle'` | 形状       |
+| onPress  | `() => void`                               | -          | 点击回调   |
+| editable | `boolean`                                  | `false`    | 是否可编辑 |
 
 ## 使用示例
 

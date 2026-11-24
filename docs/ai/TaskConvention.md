@@ -7,6 +7,7 @@
 格式：`<阶段名> <序号>：<任务名>`
 
 示例：
+
 - `Task 1：拾光日记 React Native 工程初始化`
 - `Task 2：实现首页 (Home Screen)`
 - `Task 3：实现日记编辑功能`
@@ -55,6 +56,7 @@
 ## 4. Task 输入
 
 每个 Task 必须明确：
+
 - 输入文档（设计文档、API 文档等）
 - 输入文件（现有代码、配置文件）
 - 输出文件（要创建或修改的文件）
@@ -62,6 +64,7 @@
 ## 5. Task 输出
 
 每个 Task 必须输出：
+
 - 修改/创建的文件清单
 - 关键设计决策说明
 - 待 Review 项列表
@@ -89,6 +92,7 @@
 ## 7. Task 文档化
 
 每个 Task 完成后，建议在 `docs/task-history/` 添加任务记录：
+
 - 任务描述
 - 实施摘要
 - 关键决策
@@ -97,6 +101,7 @@
 ## 8. Task 与 Commit
 
 一个 Task 可以包含多个 commit：
+
 - 首次提交：脚手架
 - 后续提交：业务逻辑
 - 最后提交：测试 + 文档
@@ -104,6 +109,7 @@
 ## 9. Task 与 PR
 
 多 Task 的工作应在 PR 中分组：
+
 - 一个 PR = 一个完整 Feature
 - 一个 PR 可以包含多个 commit
 
@@ -112,6 +118,7 @@
 ### ✅ 正确
 
 > Task：实现 DiaryCard 组件
+>
 > - 实现 DiaryCard.tsx
 > - 创建 types.ts、styles.ts、index.ts
 > - 创建 README.md
@@ -119,6 +126,7 @@
 ### ❌ 错误
 
 > Task：实现 DiaryCard 组件
+>
 > - 实现 DiaryCard.tsx
 > - 实现日记详情页（不属于本 Task）
 > - 修改 Theme 系统（不属于本 Task）

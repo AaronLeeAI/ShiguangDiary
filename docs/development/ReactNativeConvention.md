@@ -44,15 +44,15 @@ const Component = (props: Props) => <Text>{props.name}</Text>;
 
 ### 2.2 常用 Hooks
 
-| Hook | 用途 |
-|------|------|
-| `useState` | 本地状态 |
-| `useEffect` | 副作用 |
-| `useMemo` | 缓存计算 |
-| `useCallback` | 缓存回调 |
-| `useRef` | 引用 |
-| `useContext` | Context |
-| `useTheme` | 主题（自定义） |
+| Hook          | 用途           |
+| ------------- | -------------- |
+| `useState`    | 本地状态       |
+| `useEffect`   | 副作用         |
+| `useMemo`     | 缓存计算       |
+| `useCallback` | 缓存回调       |
+| `useRef`      | 引用           |
+| `useContext`  | Context        |
+| `useTheme`    | 主题（自定义） |
 
 ### 2.3 自定义 Hook
 
@@ -196,13 +196,13 @@ import Animated, {LinearTransition, FadeIn, FadeOut} from 'react-native-reanimat
 ### 7.1 Platform.select
 
 ```typescript
-import {Platform} from 'react-native';
+import { Platform } from 'react-native'
 
 const fontFamily = Platform.select({
   android: 'Roboto',
   ios: 'SF Pro',
   default: 'System',
-});
+})
 ```
 
 ### 7.2 平台特定代码
@@ -235,11 +235,12 @@ import logo from '@assets/images/logo.png';
 ## 9. 导航
 
 ```typescript
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'
 
-const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+const navigation =
+  useNavigation<NativeStackNavigationProp<RootStackParamList>>()
 
-navigation.navigate('DiaryView', {id: '123'});
+navigation.navigate('DiaryView', { id: '123' })
 ```
 
 ## 10. 状态管理
@@ -249,12 +250,12 @@ navigation.navigate('DiaryView', {id: '123'});
 使用 React Query：
 
 ```typescript
-import {useQuery} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query'
 
-const {data, isLoading} = useQuery({
+const { data, isLoading } = useQuery({
   queryKey: ['diaries', id],
   queryFn: () => apiClient.get(`/diaries/${id}`),
-});
+})
 ```
 
 ### 10.2 客户端状态
@@ -262,10 +263,10 @@ const {data, isLoading} = useQuery({
 使用 Zustand：
 
 ```typescript
-import {useUserStore} from '@store';
+import { useUserStore } from '@store'
 
-const user = useUserStore(state => state.user);
-const login = useUserStore(state => state.login);
+const user = useUserStore(state => state.user)
+const login = useUserStore(state => state.login)
 ```
 
 ## 11. 测试

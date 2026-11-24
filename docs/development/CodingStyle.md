@@ -11,37 +11,37 @@
 
 ```typescript
 // ✅ 推荐
-const count = 5;
-const user: User | null = await fetchUser();
+const count = 5
+const user: User | null = await fetchUser()
 
 // ❌ 避免
-const count: any = 5;
+const count: any = 5
 ```
 
 ## 2. 命名规范
 
 ### 2.1 文件命名
 
-| 类型 | 命名 | 示例 |
-|------|------|------|
-| React 组件 | PascalCase | `DiaryCard.tsx` |
-| Hook | camelCase | `useTheme.ts` |
-| 工具函数 | camelCase | `formatDate.ts` |
-| 常量 | camelCase 或 UPPER_SNAKE | `routes.ts`, `APP_CONFIG.ts` |
-| 类型定义 | camelCase | `types.ts`, `models.ts` |
-| 样式 | camelCase | `styles.ts` |
+| 类型       | 命名                     | 示例                         |
+| ---------- | ------------------------ | ---------------------------- |
+| React 组件 | PascalCase               | `DiaryCard.tsx`              |
+| Hook       | camelCase                | `useTheme.ts`                |
+| 工具函数   | camelCase                | `formatDate.ts`              |
+| 常量       | camelCase 或 UPPER_SNAKE | `routes.ts`, `APP_CONFIG.ts` |
+| 类型定义   | camelCase                | `types.ts`, `models.ts`      |
+| 样式       | camelCase                | `styles.ts`                  |
 
 ### 2.2 标识符命名
 
-| 类型 | 命名风格 | 示例 |
-|------|---------|------|
-| 组件 | PascalCase | `DiaryCard` |
-| 类型/接口 | PascalCase | `DiaryCardProps`, `User` |
-| 函数/方法 | camelCase | `handlePress`, `getUserById` |
-| 变量 | camelCase | `isLoading`, `userName` |
-| 常量 | UPPER_SNAKE_CASE 或 camelCase | `MAX_LENGTH`, `routes` |
-| 枚举 | PascalCase | `ThemeMode` |
-| 私有前缀 | `_` | `_handlePress` |
+| 类型      | 命名风格                      | 示例                         |
+| --------- | ----------------------------- | ---------------------------- |
+| 组件      | PascalCase                    | `DiaryCard`                  |
+| 类型/接口 | PascalCase                    | `DiaryCardProps`, `User`     |
+| 函数/方法 | camelCase                     | `handlePress`, `getUserById` |
+| 变量      | camelCase                     | `isLoading`, `userName`      |
+| 常量      | UPPER_SNAKE_CASE 或 camelCase | `MAX_LENGTH`, `routes`       |
+| 枚举      | PascalCase                    | `ThemeMode`                  |
+| 私有前缀  | `_`                           | `_handlePress`               |
 
 ### 2.3 布尔变量前缀
 
@@ -87,34 +87,34 @@ async function getUserById(userId: string): Promise<User | null> {
 ```typescript
 // 推荐：解释原因
 // 同一秒内的多次更新需要去重，避免闪屏
-const debouncedUpdate = debounce(updateFn, 1000);
+const debouncedUpdate = debounce(updateFn, 1000)
 
 // 避免：翻译代码
 // 设置 loading 为 false
-setLoading(false);
+setLoading(false)
 ```
 
 ## 4. 导入顺序
 
 ```typescript
 // 1. React/React Native
-import React, {useState, useEffect} from 'react';
-import {View, Text} from 'react-native';
+import React, { useState, useEffect } from 'react'
+import { View, Text } from 'react-native'
 
 // 2. 第三方库
-import {NavigationContainer} from '@react-navigation/native';
-import {observer} from 'mobx-react-lite';
+import { NavigationContainer } from '@react-navigation/native'
+import { observer } from 'mobx-react-lite'
 
 // 3. 内部别名
-import {useTheme} from '@theme';
-import {apiClient} from '@api';
+import { useTheme } from '@theme'
+import { apiClient } from '@api'
 
 // 4. 相对路径
-import {Component} from './Component';
-import styles from './styles';
+import { Component } from './Component'
+import styles from './styles'
 
 // 5. 类型导入（放最后）
-import type {DiaryCardProps} from './types';
+import type { DiaryCardProps } from './types'
 ```
 
 > 由 `eslint-plugin-import` 或 IDE 自动排序。
@@ -149,11 +149,11 @@ export default (...) => ...;
 ```typescript
 // ✅ 推荐：使用 try-catch
 try {
-  const data = await fetchData();
-  setData(data);
+  const data = await fetchData()
+  setData(data)
 } catch (error) {
-  console.error('Failed to fetch data:', error);
-  showErrorToast('加载失败');
+  console.error('Failed to fetch data:', error)
+  showErrorToast('加载失败')
 }
 ```
 
@@ -161,9 +161,12 @@ try {
 
 ```typescript
 class AppError extends Error {
-  constructor(public code: string, message: string) {
-    super(message);
-    this.name = 'AppError';
+  constructor(
+    public code: string,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'AppError'
   }
 }
 ```

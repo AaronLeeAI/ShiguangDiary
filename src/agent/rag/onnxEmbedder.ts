@@ -105,7 +105,7 @@ export class OnnxMultilingualEmbeddingProvider implements EmbeddingProvider {
       try {
         input = new Tensor('string', [text], [1])
       } catch (error) {
-        throw new Error(`本地语义模型输入创建失败：${describeNativeError(error)}`)
+        throw new Error(`本地语义模型输入创建失败：${describeNativeError(error)}`, { cause: error })
       }
       try {
         const outputs = await session.run({ text: input })
@@ -127,7 +127,7 @@ export class OnnxMultilingualEmbeddingProvider implements EmbeddingProvider {
         const names = Object.keys(outputs).join(', ')
         throw new Error(`模型没有返回可用的语义向量（输出：${names || '无'}）`)
       } catch (error) {
-        throw new Error(`本地语义模型执行失败：${describeNativeError(error)}`)
+        throw new Error(`本地语义模型执行失败：${describeNativeError(error)}`, { cause: error })
       }
     })
     this.inferenceQueue = task.then(
@@ -147,7 +147,7 @@ export class OnnxMultilingualEmbeddingProvider implements EmbeddingProvider {
     try {
       this.session = await InferenceSession.create(modelPath)
     } catch (error) {
-      throw new Error(`本地语义模型加载失败：${describeNativeError(error)}`)
+      throw new Error(`本地语义模型加载失败：${describeNativeError(error)}`, { cause: error })
     }
     return this.session
   }

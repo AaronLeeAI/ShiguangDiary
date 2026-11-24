@@ -19,15 +19,15 @@
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| TopBar | 头部导航 + 标题 + 右侧操作 |
-| BottomTabBar | 底部 Tab 切换 |
-| DiaryCard | 单条日记 |
-| EmptyState | 空状态 |
-| FloatingActionButton | 新建日记入口 |
-| Loading | 加载态 |
-| Icon | TopBar 右侧图标 |
+| 组件                 | 用途                       |
+| -------------------- | -------------------------- |
+| TopBar               | 头部导航 + 标题 + 右侧操作 |
+| BottomTabBar         | 底部 Tab 切换              |
+| DiaryCard            | 单条日记                   |
+| EmptyState           | 空状态                     |
+| FloatingActionButton | 新建日记入口               |
+| Loading              | 加载态                     |
+| Icon                 | TopBar 右侧图标            |
 
 ## 目录结构
 
@@ -47,6 +47,7 @@ screens/Home/
 3. 点击更多图标 → 显示 ActionSheet（置顶、列表样式、回收站等）
 4. 下拉刷新
 5. 集成 Calendar 组件显示历史日记
+
 ```
 
 ---
@@ -58,3 +59,4 @@ screens/Home/
   - `DiaryView` (id)
   - `DiaryEdit` (id?, notebookId?)
   - `MainTabs` (其他 Tab)
+```

@@ -7,19 +7,19 @@
 
 ### 新增文件
 
-| 路径                                            | 说明                                                        |
-| ----------------------------------------------- | ----------------------------------------------------------- |
+| 路径                                            | 说明                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------ |
 | `src/agent/**`                                  | Agent 核心（循环 / LLM 客户端 / 10 个工具 / TTS / 长期记忆） |
-| `src/agent/rag/**`                              | 本地模型下载、分块、768 维向量、量化缓存和语义召回          |
-| `src/components/AgentChat/AgentChat.tsx`        | 对话界面（流式 + 工具过程 + 朗读按钮）                      |
-| `src/components/AgentChat/MemoryPanel.tsx`      | 长期记忆查看、添加、修改、删除                              |
-| `src/screens/AgentChat/**`                      | 包装页，注入真实 repo 与 TTS                                |
-| `src/agent/adapter.ts`                          | **对接本项目 diaryRepository 与 DiaryModel**                |
-| `src/agent/tts/adapter.ts`                      | 用项目已有的 `react-native-tts`（离线、零新增依赖）         |
-| `src/agent/setup.ts`                            | 异步初始化模型配置                                          |
-| `src/agent/defaults.ts`                         | 可公开的网关与模型默认值（不含密钥）                        |
-| `patches/onnxruntime-react-native+1.24.3.patch` | RN 字符串张量输入兼容补丁（安装依赖时自动应用）             |
-| `__tests__/agent/rag.test.ts`                   | 分块、池化、量化、增量索引、语义召回与隐私边界测试          |
+| `src/agent/rag/**`                              | 本地模型下载、分块、768 维向量、量化缓存和语义召回           |
+| `src/components/AgentChat/AgentChat.tsx`        | 对话界面（流式 + 工具过程 + 朗读按钮）                       |
+| `src/components/AgentChat/MemoryPanel.tsx`      | 长期记忆查看、添加、修改、删除                               |
+| `src/screens/AgentChat/**`                      | 包装页，注入真实 repo 与 TTS                                 |
+| `src/agent/adapter.ts`                          | **对接本项目 diaryRepository 与 DiaryModel**                 |
+| `src/agent/tts/adapter.ts`                      | 用项目已有的 `react-native-tts`（离线、零新增依赖）          |
+| `src/agent/setup.ts`                            | 异步初始化模型配置                                           |
+| `src/agent/defaults.ts`                         | 可公开的网关与模型默认值（不含密钥）                         |
+| `patches/onnxruntime-react-native+1.24.3.patch` | RN 字符串张量输入兼容补丁（安装依赖时自动应用）              |
+| `__tests__/agent/rag.test.ts`                   | 分块、池化、量化、增量索引、语义召回与隐私边界测试           |
 
 ### 主要修改文件
 
@@ -77,7 +77,7 @@
 | "把上周回顾念给我听"   | `weeklyReport` + 调 `read_aloud` 朗读       |
 | "记住我每周想跑步三次" | 弹窗确认后调 `remember_user_fact`           |
 | "你记得我什么"         | 调 `list_memories`，展示已确认的长期记忆    |
-| "忘记刚才那项目标"     | 精确查找后确认调用 `forget_memory`           |
+| "忘记刚才那项目标"     | 精确查找后确认调用 `forget_memory`          |
 | 点某条回复的 🔊        | 端侧 TTS 朗读该文本                         |
 
 另提供独立能力：`analyzeMood()`（自动识别情绪）、`autoTag()`（自动打标签）、

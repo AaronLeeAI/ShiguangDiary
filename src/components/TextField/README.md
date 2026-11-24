@@ -18,20 +18,20 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| value | `string` | 必填 | 输入值 |
-| onChangeText | `(text) => void` | 必填 | 值变化回调 |
-| placeholder | `string` | - | 占位符 |
-| label | `string` | - | 标签 |
-| leftIcon | `ReactNode` | - | 左侧图标 |
-| rightIcon | `ReactNode` | - | 右侧图标 |
-| clearable | `boolean` | `false` | 是否显示清空按钮 |
-| onClear | `() => void` | - | 清空回调 |
-| error | `string` | - | 错误信息 |
-| size | `'large' \| 'medium' \| 'small'` | `'medium'` | 尺寸 |
-| editable | `boolean` | `true` | 是否可编辑 |
-| onFocus / onBlur | `() => void` | - | 焦点回调 |
+| Prop             | 类型                             | 默认值     | 说明             |
+| ---------------- | -------------------------------- | ---------- | ---------------- |
+| value            | `string`                         | 必填       | 输入值           |
+| onChangeText     | `(text) => void`                 | 必填       | 值变化回调       |
+| placeholder      | `string`                         | -          | 占位符           |
+| label            | `string`                         | -          | 标签             |
+| leftIcon         | `ReactNode`                      | -          | 左侧图标         |
+| rightIcon        | `ReactNode`                      | -          | 右侧图标         |
+| clearable        | `boolean`                        | `false`    | 是否显示清空按钮 |
+| onClear          | `() => void`                     | -          | 清空回调         |
+| error            | `string`                         | -          | 错误信息         |
+| size             | `'large' \| 'medium' \| 'small'` | `'medium'` | 尺寸             |
+| editable         | `boolean`                        | `true`     | 是否可编辑       |
+| onFocus / onBlur | `() => void`                     | -          | 焦点回调         |
 
 继承 `TextInputProps` 的其余 props（`autoCapitalize`、`keyboardType` 等）。
 

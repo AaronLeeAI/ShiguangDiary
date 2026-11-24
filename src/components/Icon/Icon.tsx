@@ -37,7 +37,7 @@ export const Icon: React.FC<IconProps> = ({
   const theme = useTheme()
   const px = typeof size === 'number' ? size : ICON_SIZES[size]
   const strokeColor = color ?? theme.colors.semantic.icon.primary
-  const fillColor = variant === 'filled' ? color ?? theme.colors.semantic.icon.primary : 'none'
+  const fillColor = variant === 'filled' ? (color ?? theme.colors.semantic.icon.primary) : 'none'
   const strokeWidth = variant === 'filled' ? 0 : 2
   const path = ICON_PATHS[name]
 

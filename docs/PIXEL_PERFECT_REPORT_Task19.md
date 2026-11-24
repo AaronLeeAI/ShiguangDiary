@@ -22,16 +22,16 @@ Because no emulator/device was attached, this pass used code-level pixel consist
 
 ## Screen-Level Notes
 
-| Screen | Result | Notes |
-| --- | --- | --- |
-| Home | PASS | Release route remains stable; no Task19 layout change. |
-| Notebook | PASS | Uses shared card/list/FAB components. Sort/detail deep behaviors remain non-blocking future work. |
-| Album | PASS | Uses shared card/grid/FAB components. Detail deep behavior remains non-blocking future work. |
-| Profile | PASS | Version label now `v1.0.0-rc.1`; incomplete entries are disabled and labeled `敬请期待`. |
-| Settings | PASS | Active routes remain enabled; incomplete sub-feature routes disabled for RC. |
-| About | PASS | Uses shared release metadata; app/version text aligned. |
-| Data Management | PASS | Version label aligned; export result copy reflects actual file output path. |
-| Toast / Loading / Haptics | PASS | Existing motion/reduce-motion behavior remains guarded; haptic failures are non-fatal. |
+| Screen                    | Result | Notes                                                                                             |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| Home                      | PASS   | Release route remains stable; no Task19 layout change.                                            |
+| Notebook                  | PASS   | Uses shared card/list/FAB components. Sort/detail deep behaviors remain non-blocking future work. |
+| Album                     | PASS   | Uses shared card/grid/FAB components. Detail deep behavior remains non-blocking future work.      |
+| Profile                   | PASS   | Version label now `v1.0.0-rc.1`; incomplete entries are disabled and labeled `敬请期待`.          |
+| Settings                  | PASS   | Active routes remain enabled; incomplete sub-feature routes disabled for RC.                      |
+| About                     | PASS   | Uses shared release metadata; app/version text aligned.                                           |
+| Data Management           | PASS   | Version label aligned; export result copy reflects actual file output path.                       |
+| Toast / Loading / Haptics | PASS   | Existing motion/reduce-motion behavior remains guarded; haptic failures are non-fatal.            |
 
 ## Known UI Limitations
 

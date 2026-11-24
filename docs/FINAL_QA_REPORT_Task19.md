@@ -21,27 +21,27 @@ Task18 was verified before starting Task19:
 
 ## Code QA Findings and Fixes
 
-| Area | Finding | Action |
-| --- | --- | --- |
-| Release metadata | User-facing version was still `0.1.0` in About/Profile/data management surfaces. | Added shared app constants and aligned package, lockfile, Android `versionName`, About, Profile, Data Management labels to `1.0.0-rc.1`. |
-| Placeholder route exposure | Several incomplete secondary pages were reachable from settings/profile menus. | Disabled RC-incomplete entries and marked them `敬请期待` to avoid shipping dead-end stub routes. |
-| Test/runtime mocks | App smoke test and persistence-related unit tests depended on native modules without complete Jest setup. | Added `jest.setup.js` with safe mocks for RNFS, MMKV, SQLite, haptics, safe area, navigation smoke-test isolation. |
-| Android release permissions | Merged APK initially included unused permissions injected by optional native modules. | Hardened `AndroidManifest.xml` with manifest-merger removals; final APK only exposes INTERNET, VIBRATE, and AndroidX dynamic receiver permission. |
-| Android label | APK label was `ShiguangDiary` while product language is Chinese. | Updated Android `app_name` to `拾光日记`. |
-| Backup/export copy | Export completion copy mentioned a future share panel rather than actual generated path. | Updated dialog copy to show generated file path. |
+| Area                        | Finding                                                                                                   | Action                                                                                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Release metadata            | User-facing version was still `0.1.0` in About/Profile/data management surfaces.                          | Added shared app constants and aligned package, lockfile, Android `versionName`, About, Profile, Data Management labels to `1.0.0-rc.1`.          |
+| Placeholder route exposure  | Several incomplete secondary pages were reachable from settings/profile menus.                            | Disabled RC-incomplete entries and marked them `敬请期待` to avoid shipping dead-end stub routes.                                                 |
+| Test/runtime mocks          | App smoke test and persistence-related unit tests depended on native modules without complete Jest setup. | Added `jest.setup.js` with safe mocks for RNFS, MMKV, SQLite, haptics, safe area, navigation smoke-test isolation.                                |
+| Android release permissions | Merged APK initially included unused permissions injected by optional native modules.                     | Hardened `AndroidManifest.xml` with manifest-merger removals; final APK only exposes INTERNET, VIBRATE, and AndroidX dynamic receiver permission. |
+| Android label               | APK label was `ShiguangDiary` while product language is Chinese.                                          | Updated Android `app_name` to `拾光日记`.                                                                                                         |
+| Backup/export copy          | Export completion copy mentioned a future share panel rather than actual generated path.                  | Updated dialog copy to show generated file path.                                                                                                  |
 
 ## Verification Evidence
 
-| Check | Command / Evidence | Result |
-| --- | --- | --- |
-| Unit tests | `npm test -- --runInBand` | PASS: 6 suites, 57 tests |
-| TypeScript | `npm run typecheck` | PASS: no errors |
-| ESLint | `npm run lint` | PASS: 0 errors; existing warnings documented, non-blocking |
-| Diff hygiene | `git diff --check` | PASS |
-| Release build | `cd android && .\gradlew.bat assembleRelease --no-daemon` | PASS |
-| APK metadata | `aapt dump badging app-release.apk` | package `com.shiguangdiary`, versionName `1.0.0-rc.1`, label `拾光日记` |
-| APK signature | `apksigner verify --verbose --print-certs app-release.apk` | PASS: v2 signed with debug RC key |
-| Device availability | `adb devices`; `emulator -list-avds` | No attached device / no local AVD; install smoke test not executed in this environment |
+| Check               | Command / Evidence                                         | Result                                                                                 |
+| ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Unit tests          | `npm test -- --runInBand`                                  | PASS: 6 suites, 57 tests                                                               |
+| TypeScript          | `npm run typecheck`                                        | PASS: no errors                                                                        |
+| ESLint              | `npm run lint`                                             | PASS: 0 errors; existing warnings documented, non-blocking                             |
+| Diff hygiene        | `git diff --check`                                         | PASS                                                                                   |
+| Release build       | `cd android && .\gradlew.bat assembleRelease --no-daemon`  | PASS                                                                                   |
+| APK metadata        | `aapt dump badging app-release.apk`                        | package `com.shiguangdiary`, versionName `1.0.0-rc.1`, label `拾光日记`                |
+| APK signature       | `apksigner verify --verbose --print-certs app-release.apk` | PASS: v2 signed with debug RC key                                                      |
+| Device availability | `adb devices`; `emulator -list-avds`                       | No attached device / no local AVD; install smoke test not executed in this environment |
 
 ## Release APK
 

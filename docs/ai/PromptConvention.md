@@ -129,6 +129,7 @@
 ### 6.1 文件清单
 
 完成后输出：
+
 ```
 修改文件：
 - src/components/DiaryCard/DiaryCard.tsx
@@ -141,6 +142,7 @@
 ### 6.2 决策记录
 
 输出关键决策：
+
 ```
 关键决策：
 1. 使用 React.memo 优化渲染
@@ -219,7 +221,7 @@
 
 ### 完整 Prompt 示例
 
-```
+````
 # Task：实现 DiaryCard 组件
 
 # Role
@@ -239,9 +241,10 @@ interface DiaryCardProps {
   onPress?: () => void;
   style?: ViewStyle;
 }
-```
+````
 
 # 要求
+
 - 标题：17sp, medium, neutral.gray90
 - 正文：15sp, regular, neutral.gray60, 2 行省略
 - 时间戳：12sp, regular, neutral.gray50
@@ -251,12 +254,17 @@ interface DiaryCardProps {
 - 阴影：shadow.md
 
 # 禁止
+
 - 禁止修改 Theme Token
 - 禁止硬编码颜色/间距
 - 禁止引入新依赖
 
 # 必须
+
 - 使用 React.memo
 - 包含单元测试
 - 添加 JSDoc 注释
+
+```
+
 ```

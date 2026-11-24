@@ -34,6 +34,7 @@ navigation/
 ```
 
 **规则**：
+
 - 所有跳转必须使用 `@navigation` 提供的工具函数
 - 不直接调用 navigation.navigate 字符串硬编码
 
@@ -68,6 +69,7 @@ components/
 ```
 
 **规则**：
+
 - 组件文件夹使用 PascalCase
 - 必须包含 `index.ts` 作为入口
 - 不允许在 `index.ts` 之外暴露内部文件
@@ -185,23 +187,23 @@ assets/
 
 ## 路径别名
 
-| 别名 | 路径 |
-|------|------|
-| `@/*` | `src/*` |
-| `@assets/*` | `assets/*` |
-| `@components/*` | `src/components/*` |
-| `@screens/*` | `src/screens/*` |
-| `@navigation/*` | `src/navigation/*` |
-| `@theme` | `src/theme/index` |
-| `@hooks/*` | `src/hooks/*` |
-| `@utils/*` | `src/utils/*` |
-| `@constants/*` | `src/constants/*` |
-| `@types/*` | `src/types/*` |
-| `@services/*` | `src/services/*` |
-| `@api/*` | `src/services/api/*` |
-| `@store/*` | `src/store/*` |
-| `@database/*` | `src/database/*` |
-| `@features/*` | `src/features/*` |
+| 别名            | 路径                 |
+| --------------- | -------------------- |
+| `@/*`           | `src/*`              |
+| `@assets/*`     | `assets/*`           |
+| `@components/*` | `src/components/*`   |
+| `@screens/*`    | `src/screens/*`      |
+| `@navigation/*` | `src/navigation/*`   |
+| `@theme`        | `src/theme/index`    |
+| `@hooks/*`      | `src/hooks/*`        |
+| `@utils/*`      | `src/utils/*`        |
+| `@constants/*`  | `src/constants/*`    |
+| `@types/*`      | `src/types/*`        |
+| `@services/*`   | `src/services/*`     |
+| `@api/*`        | `src/services/api/*` |
+| `@store/*`      | `src/store/*`        |
+| `@database/*`   | `src/database/*`     |
+| `@features/*`   | `src/features/*`     |
 
 ## 引用规则
 

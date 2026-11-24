@@ -44,14 +44,7 @@ async function loadTrigger(): Promise<void> {
 
 /** 触觉反馈意图(业务层只关心"做什么",映射复用)。 */
 export type HapticIntent =
-  | 'tap'
-  | 'toggle'
-  | 'saveSuccess'
-  | 'delete'
-  | 'warning'
-  | 'error'
-  | 'longPress'
-  | 'complete'
+  'tap' | 'toggle' | 'saveSuccess' | 'delete' | 'warning' | 'error' | 'longPress' | 'complete'
 
 /** 意图 → 原生 haptic 类型字面量(纯函数,可单测)。 */
 export const HAPTIC_TYPE_MAP: Record<HapticIntent, string> = {

@@ -14,23 +14,23 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| value | `string` | 必填 | 当前值 |
-| onChangeText | `(text) => void` | 必填 | 值变化回调 |
-| onSubmit | `() => void` | - | 提交搜索 |
-| placeholder | `string` | `'搜索日记...'` | 占位符 |
-| autoFocus | `boolean` | `false` | 自动聚焦 |
-| showCancel | `boolean` | `false` | 显示取消按钮 |
-| onCancel | `() => void` | - | 取消回调 |
-| rightAction | `ReactNode` | - | 自定义右侧内容 |
+| Prop         | 类型             | 默认值          | 说明           |
+| ------------ | ---------------- | --------------- | -------------- |
+| value        | `string`         | 必填            | 当前值         |
+| onChangeText | `(text) => void` | 必填            | 值变化回调     |
+| onSubmit     | `() => void`     | -               | 提交搜索       |
+| placeholder  | `string`         | `'搜索日记...'` | 占位符         |
+| autoFocus    | `boolean`        | `false`         | 自动聚焦       |
+| showCancel   | `boolean`        | `false`         | 显示取消按钮   |
+| onCancel     | `() => void`     | -               | 取消回调       |
+| rightAction  | `ReactNode`      | -               | 自定义右侧内容 |
 
 ## 使用示例
 
 ```tsx
-import {SearchBar} from '@/components/SearchBar';
+import { SearchBar } from '@/components/SearchBar'
 
-<SearchBar
+;<SearchBar
   value={keyword}
   onChangeText={setKeyword}
   onSubmit={handleSearch}

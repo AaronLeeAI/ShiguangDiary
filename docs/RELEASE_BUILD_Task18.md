@@ -16,14 +16,14 @@ Files audited:
 
 Current release-relevant defaults:
 
-| Item | Current State | Notes |
-| --- | --- | --- |
-| Hermes | Enabled (`hermesEnabled=true`) | Suitable for React Native release performance baseline |
-| New Architecture | Disabled (`newArchEnabled=false`) | Chosen as the stable RN 0.76 / native dependency release baseline |
-| Release minify / ProGuard | Disabled (`enableProguardInReleaseBuilds=false`) | Not changed in Task18 to avoid unverified native dependency breakage |
-| Release signing | Uses debug signing placeholder | Production keystore must be configured outside source control before distribution |
-| Logger level | `warn` in release | Debug/info logs are suppressed by default |
-| Gradle wrapper | Gradle 8.10.2, `networkTimeout=60000` | Wrapper is compatible with the RN 0.76 Gradle plugin; Gradle 9.6.1 was rejected |
+| Item                      | Current State                                    | Notes                                                                             |
+| ------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Hermes                    | Enabled (`hermesEnabled=true`)                   | Suitable for React Native release performance baseline                            |
+| New Architecture          | Disabled (`newArchEnabled=false`)                | Chosen as the stable RN 0.76 / native dependency release baseline                 |
+| Release minify / ProGuard | Disabled (`enableProguardInReleaseBuilds=false`) | Not changed in Task18 to avoid unverified native dependency breakage              |
+| Release signing           | Uses debug signing placeholder                   | Production keystore must be configured outside source control before distribution |
+| Logger level              | `warn` in release                                | Debug/info logs are suppressed by default                                         |
+| Gradle wrapper            | Gradle 8.10.2, `networkTimeout=60000`            | Wrapper is compatible with the RN 0.76 Gradle plugin; Gradle 9.6.1 was rejected   |
 
 ## Dependency Pinning
 

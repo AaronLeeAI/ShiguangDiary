@@ -15,43 +15,49 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| visible | `boolean` | 必填 | 是否可见 |
-| onClose | `() => void` | 必填 | 关闭回调 |
-| title | `string` | - | 标题 |
-| description | `string` | - | 描述 |
-| items | `ActionSheetItem[]` | 必填 | 操作列表 |
-| cancelLabel | `string` | `'取消'` | 取消按钮文案 |
-| backdropDismiss | `boolean` | `true` | 点击遮罩关闭 |
+| Prop            | 类型                | 默认值   | 说明         |
+| --------------- | ------------------- | -------- | ------------ |
+| visible         | `boolean`           | 必填     | 是否可见     |
+| onClose         | `() => void`        | 必填     | 关闭回调     |
+| title           | `string`            | -        | 标题         |
+| description     | `string`            | -        | 描述         |
+| items           | `ActionSheetItem[]` | 必填     | 操作列表     |
+| cancelLabel     | `string`            | `'取消'` | 取消按钮文案 |
+| backdropDismiss | `boolean`           | `true`   | 点击遮罩关闭 |
 
 ### ActionSheetItem
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| key | `string` | 唯一标识 |
-| label | `string` | 显示文案 |
-| icon | `IconName` | 可选图标 |
-| destructive | `boolean` | 危险操作（红） |
-| disabled | `boolean` | 禁用（灰） |
-| onPress | `() => void` | 点击回调 |
+| 字段        | 类型         | 说明           |
+| ----------- | ------------ | -------------- |
+| key         | `string`     | 唯一标识       |
+| label       | `string`     | 显示文案       |
+| icon        | `IconName`   | 可选图标       |
+| destructive | `boolean`    | 危险操作（红） |
+| disabled    | `boolean`    | 禁用（灰）     |
+| onPress     | `() => void` | 点击回调       |
 
 ## 使用示例
 
 ```tsx
-import {ActionSheet} from '@/components/ActionSheet';
+import { ActionSheet } from '@/components/ActionSheet'
 
-const [visible, setVisible] = useState(false);
+const [visible, setVisible] = useState(false)
 
-<ActionSheet
+;<ActionSheet
   visible={visible}
   onClose={() => setVisible(false)}
   title="日记操作"
   items={[
-    {key: 'edit', label: '编辑', icon: 'edit', onPress: handleEdit},
-    {key: 'share', label: '分享', icon: 'share', onPress: handleShare},
-    {key: 'delete', label: '删除', icon: 'trash', destructive: true, onPress: handleDelete},
-    {key: 'move', label: '移至草稿', icon: 'save', disabled: true},
+    { key: 'edit', label: '编辑', icon: 'edit', onPress: handleEdit },
+    { key: 'share', label: '分享', icon: 'share', onPress: handleShare },
+    {
+      key: 'delete',
+      label: '删除',
+      icon: 'trash',
+      destructive: true,
+      onPress: handleDelete,
+    },
+    { key: 'move', label: '移至草稿', icon: 'save', disabled: true },
   ]}
 />
 ```

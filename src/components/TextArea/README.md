@@ -15,16 +15,16 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| value | `string` | 必填 | 输入值 |
-| onChangeText | `(text) => void` | 必填 | 值变化回调 |
-| placeholder | `string` | - | 占位符 |
-| minHeight | `number` | 120 | 最小高度(dp) |
-| maxHeight | `number` | 400 | 最大高度(dp) |
-| showCount | `boolean` | `false` | 显示字符计数 |
-| maxLength | `number` | - | 最大字符数 |
-| error | `string` | - | 错误信息 |
+| Prop         | 类型             | 默认值  | 说明         |
+| ------------ | ---------------- | ------- | ------------ |
+| value        | `string`         | 必填    | 输入值       |
+| onChangeText | `(text) => void` | 必填    | 值变化回调   |
+| placeholder  | `string`         | -       | 占位符       |
+| minHeight    | `number`         | 120     | 最小高度(dp) |
+| maxHeight    | `number`         | 400     | 最大高度(dp) |
+| showCount    | `boolean`        | `false` | 显示字符计数 |
+| maxLength    | `number`         | -       | 最大字符数   |
+| error        | `string`         | -       | 错误信息     |
 
 继承 `TextInputProps` 其余字段。
 

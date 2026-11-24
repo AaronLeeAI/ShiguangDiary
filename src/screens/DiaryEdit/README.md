@@ -20,23 +20,23 @@
 
 ## 整合的组件
 
-| 组件 | 用途 |
-|------|------|
-| TopBar | 头部 + 保存按钮 |
-| TextArea | 正文编辑 |
-| EditorToolbar | 格式化工具栏 |
-| ActionSheet | 天气/心情/位置选择 |
-| Icon | chip 图标 |
-| Toast | 操作反馈 |
+| 组件          | 用途               |
+| ------------- | ------------------ |
+| TopBar        | 头部 + 保存按钮    |
+| TextArea      | 正文编辑           |
+| EditorToolbar | 格式化工具栏       |
+| ActionSheet   | 天气/心情/位置选择 |
+| Icon          | chip 图标          |
+| Toast         | 操作反馈           |
 
 ## 路由
 
 ```typescript
 // 从 HomeScreen FAB
-navigation.navigate(ROUTES.DIARY_EDIT, {});
+navigation.navigate(ROUTES.DIARY_EDIT, {})
 
 // 从 DiaryView 编辑
-navigation.navigate(ROUTES.DIARY_EDIT, {id: diary.id});
+navigation.navigate(ROUTES.DIARY_EDIT, { id: diary.id })
 ```
 
 ## 后续 TODO

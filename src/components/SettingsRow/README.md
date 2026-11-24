@@ -16,16 +16,16 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| icon | `IconName` | - | 左侧图标 |
-| label | `string` | 必填 | 标签 |
-| hint | `string` | - | 右侧副文本 |
-| right | `ReactNode` | - | 右侧自定义内容 |
-| showArrow | `boolean` | `true` | 显示右侧 chevron |
-| disabled | `boolean` | `false` | 禁用 |
-| destructive | `boolean` | `false` | 危险项 |
-| onPress | `() => void` | - | 点击回调 |
+| Prop        | 类型         | 默认值  | 说明             |
+| ----------- | ------------ | ------- | ---------------- |
+| icon        | `IconName`   | -       | 左侧图标         |
+| label       | `string`     | 必填    | 标签             |
+| hint        | `string`     | -       | 右侧副文本       |
+| right       | `ReactNode`  | -       | 右侧自定义内容   |
+| showArrow   | `boolean`    | `true`  | 显示右侧 chevron |
+| disabled    | `boolean`    | `false` | 禁用             |
+| destructive | `boolean`    | `false` | 危险项           |
+| onPress     | `() => void` | -       | 点击回调         |
 
 ## 使用示例
 

@@ -12,14 +12,14 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| name | `IconName` | 必填 | 图标名 |
-| size | `IconSize \| number` | `'md'` | 预设或自定义数值 |
-| color | `string` | 主题色 | 颜色覆盖 |
-| variant | `'outline' \| 'filled' \| 'round'` | `'outline'` | 形态 |
-| hitSlop | `number` | - | 点击热区 |
-| testID | `string` | - | 测试 ID |
+| Prop    | 类型                               | 默认值      | 说明             |
+| ------- | ---------------------------------- | ----------- | ---------------- |
+| name    | `IconName`                         | 必填        | 图标名           |
+| size    | `IconSize \| number`               | `'md'`      | 预设或自定义数值 |
+| color   | `string`                           | 主题色      | 颜色覆盖         |
+| variant | `'outline' \| 'filled' \| 'round'` | `'outline'` | 形态             |
+| hitSlop | `number`                           | -           | 点击热区         |
+| testID  | `string`                           | -           | 测试 ID          |
 
 ## 使用示例
 

@@ -13,31 +13,37 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| variant | `'full' \| 'dialog' \| 'inline'` | 必填 | 加载形态 |
-| visible | `boolean` | - | 是否显示 |
-| text | `string` | - | 提示文案 |
-| iconSize | `number` | 24 | 旋转图标尺寸 |
-| backdropDismiss | `boolean` | `false` | 点击背景是否关闭（dialog） |
-| onDismiss | `() => void` | - | 关闭回调（dialog + backdropDismiss） |
+| Prop            | 类型                             | 默认值  | 说明                                 |
+| --------------- | -------------------------------- | ------- | ------------------------------------ |
+| variant         | `'full' \| 'dialog' \| 'inline'` | 必填    | 加载形态                             |
+| visible         | `boolean`                        | -       | 是否显示                             |
+| text            | `string`                         | -       | 提示文案                             |
+| iconSize        | `number`                         | 24      | 旋转图标尺寸                         |
+| backdropDismiss | `boolean`                        | `false` | 点击背景是否关闭（dialog）           |
+| onDismiss       | `() => void`                     | -       | 关闭回调（dialog + backdropDismiss） |
 
 ## 三种形态
 
 ### full（全屏）
+
 用于 P001 开屏、内容加载：
+
 - 全屏居中
 - 64dp 旋转图标
 - 可选 title + subtext
 
 ### dialog（弹窗）
+
 用于会员中心加载等：
+
 - 半透明黑色背景遮罩
 - 居中 80dp 白色圆角弹窗
 - 24dp 旋转图标 + 文字
 
 ### inline（内联）
+
 用于按钮内或固定区域：
+
 - 仅渲染图标（父组件控制容器）
 
 ## 使用示例

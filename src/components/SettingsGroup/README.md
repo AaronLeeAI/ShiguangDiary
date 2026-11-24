@@ -13,10 +13,10 @@
 
 ## Props
 
-| Prop | 类型 | 默认值 | 说明 |
-|------|------|-------|------|
-| children | `ReactNode` | 必填 | 子节点（多个 SettingsRow） |
-| title | `string` | - | 组标题 |
+| Prop     | 类型        | 默认值 | 说明                       |
+| -------- | ----------- | ------ | -------------------------- |
+| children | `ReactNode` | 必填   | 子节点（多个 SettingsRow） |
+| title    | `string`    | -      | 组标题                     |
 
 ## 使用示例
 

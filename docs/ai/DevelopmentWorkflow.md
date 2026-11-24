@@ -33,6 +33,7 @@
 ### 2.2 计划（Plan）
 
 使用 EnterPlanMode 制定实施计划：
+
 - 涉及哪些文件
 - 改动顺序
 - 关键决策点
@@ -41,6 +42,7 @@
 ### 2.3 Task List（TaskCreate）
 
 将计划拆分为可追踪的 Task：
+
 - 每个 Task 单一职责
 - 标注依赖关系
 - 设置 in_progress / completed
@@ -48,6 +50,7 @@
 ### 2.4 实现（Implementation）
 
 按 TaskList 顺序执行：
+
 - 严格遵循 CodingStyle
 - 实时更新 Task 状态
 - 关键决策点停下来确认
@@ -61,6 +64,7 @@
 ### 2.6 审查（Review）
 
 按 [`ReviewChecklist.md`](ReviewChecklist.md)：
+
 - 检查工程结构
 - 检查命名一致性
 - 检查 Theme 来源
@@ -100,6 +104,7 @@
 ### 4.1 已知错误
 
 如果遇到 API 不熟悉的问题：
+
 1. 使用 `claude-code-guide` agent 查询
 2. 查阅官方文档
 3. 在代码注释中说明选型理由
@@ -107,6 +112,7 @@
 ### 4.2 未知错误
 
 如果遇到无法解决的问题：
+
 1. 停止当前 Task
 2. 标注"BLOCKED"
 3. 询问用户决策
